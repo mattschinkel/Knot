@@ -177,3 +177,42 @@ def parse_program(text: str) -> list:
         if i < len(s) and s[i] in ";\n":
             i += 1
     return nodes
+
+def parse_typed_lit(s: str, i: int) -> tuple[LitExpr, int]:
+    """Parse a typed literal expression: IntLit n, BoolLit b, or StrLit s.
+
+    Args:
+        s: The input string
+        i: The starting index
+
+    Returns:
+        A tuple of (LitExpr, new_index) where new_index is the position after parsing.
+
+    Raises:
+        ParseError: If the literal is malformed.
+    """
+    # Skip whitespace
+    i = _skip_ws(s, i)
+    if i >= len(s):
+        raise ParseError("unexpected end of input")
+
+    # Parse the type prefix
+    if s[i:i+8] == "IntLit ":
+        i += 8
+    elif s[i:i+8] == "BoolLit ":
+        i += 8
+    elif s[i:i+8] == "StrLit ":
+        i += 8
+    else:
+        raise ParseError(f"expected IntLit, BoolLit, or StrLit, got {repr(s[i:i+8])}")
+
+    # Parse the integer value
+    m = _NUM.match(s, i)
+    if not m:
+        raise ParseError(f"expected integer literal, got {repr(s[i])}")
+
+    # Parse the integer value
+    result = IntLit(int(m.group()))
+    i = m.end()
+
+    return (result, i)
