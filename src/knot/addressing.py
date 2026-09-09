@@ -38,3 +38,20 @@ def generate_path(*parts) -> tuple:
             return tuple(p)
         return (p,)
     return tuple(parts)
+
+
+# Module-local label registry (design D3: sparse, module-local symbolic labels).
+_LABELS: dict[str, object] = {}
+
+
+def assign_label(label: str, node: object = None) -> str:
+    """Register a symbolic label (module-local). Returns the label string."""
+    if not isinstance(label, str) or not label:
+        raise TypeError("label must be a non-empty str")
+    _LABELS[label] = node
+    return label
+
+
+def lookup_label(label: str) -> object:
+    """Return the node registered under `label`, or None."""
+    return _LABELS.get(label)
