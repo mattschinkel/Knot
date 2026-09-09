@@ -75,10 +75,10 @@ const STATUS = {
   meta: {
     workingName: "Knot",
     publicCandidate: "Nodigma",
-    overallPhase: "Phase 0 - Core data model",
+    overallPhase: "Phase 0 - Core data model (decisions locked, ready to build)",
     overallStatus: "in-progress",
-    lastUpdated: "2026-09-08 22:49 UTC-4",
-    updatedBy: "R6 Scribe (seed)"
+    lastUpdated: "2026-09-08 23:19 UTC-4",
+    updatedBy: "R6 Scribe"
   },
   phases: [
     {n:0, name:"Core data model", status:"in-progress", owner:"R2", notes:"value/type repr, units/dimensions"},
@@ -104,10 +104,10 @@ const STATUS = {
     {id:"R6", role:"Scribe", active:true, job:"docs, examples, this dashboard, name_changes/fixes"}
   ],
   openQuestions: [
-    {q:"Phase 0 host language: Python (matches venv+CrewAI, design 22 Stage 0) or Rust (sub-200ms, Cairn/Grafema precedent)?", status:"open"},
-    {q:"Architect (R1) as a hierarchical Crew manager, or a peer that drafts tasks out-of-band?", status:"open"},
-    {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"open"},
-    {q:"Repo layout: src/knot/, src/knot/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"open"}
+    {q:"Phase 0 host language: Python or Rust?", status:"decided", dec:"Python (Rust deferred to Phase 9 if sub-200ms forces it)"},
+    {q:"Architect (R1) as a hierarchical Crew manager, or a peer that drafts tasks out-of-band?", status:"decided", dec:"Peer drafting out-of-band (4B loses coherence managing live)"},
+    {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"decided", dec:"Gated behind human approval in Phase 0 (agents propose, human runs)"},
+    {q:"Repo layout: src/knot/, src/knot/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; add vm/ (bytecode target) and docs/ (extracted spec tables)"}
   ],
   recentFixes: [
     {file:"fix_crewai_windows_console_encoding.md", problem:"CrewAI emoji logs + Windows cp1252 = charmap encode errors", fix:"force UTF-8 on stdout/stderr via PYTHONUTF8 + reconfigure()"}

@@ -209,15 +209,32 @@ Phase 1. This keeps each CrewAI run inside a 4B model's effective scope.
 
 ## 5. Open questions for the human before we spin up the crew
 
-1. Phase 0 target language for the host implementation: **Python**
-   (matches the existing venv + CrewAI; recommended by §22 Stage 0) or
-   Rust (matches the sub-200ms + Cairn/Grafema precedent)?
-2. Do we want R1 (Architect) to run as a `Process.hierarchical` manager
-   over the others, or as a peer that drafts tasks out-of-band?
-3. Shell-execution tool: allow agents to run builds/tests directly, or
-   gate all shell calls behind human approval first?
-4. Repo layout: `src/knot/` (kernel), `src/knot/ai/` (AI front-end),
-   `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/` (GBNF) — confirm or amend.
+> All four resolved 2026-09-08 by the author. Decisions below.
+
+1. **Phase 0 host language → Python.** RESOLVED. Python matches the
+   existing venv + CrewAI wiring and §22 Stage 0; fastest to bootstrap on
+   the 4B local model. Rust is deferred — revisit only if the sub-200ms
+   compile budget (§16 Phase 9) actually forces a native backend. The
+   self-hosting target is a bytecode VM, not native, so Python's speed is
+   adequate for the reference implementation.
+2. **R1 (Architect) role → peer that drafts tasks out-of-band.**
+   RESOLVED. R1 runs as a *peer* (not a `Process.hierarchical` manager).
+   Rationale: a 4B model loses coherence managing other agents
+   in-context; keeping R1 as a drafting/review peer (driven via
+   `ask_architect.py` and explicit task handoffs) is more reliable than
+   making it a live manager over R2/R4. The human stays the real manager;
+   R1 escalates decisions to the human.
+3. **Shell-execution tool → gated behind human approval first.**
+   RESOLVED. Agents do NOT get an unattended shell tool in Phase 0.
+   Rationale: Phase 0 is pure design + library code with no builds to run
+   yet; an unattended shell tool is risk for no payoff. R2/R4/R5 may
+   *request* a shell command (emit it as a structured proposal); the human
+   runs it. Revisit when Phase 1 introduces a real build/test loop.
+4. **Repo layout → confirmed as proposed.** RESOLVED.
+   `src/knot/` (kernel), `src/knot/ai/` (AI front-end), `tests/`,
+   `cli/`, `lsp/`, `fmt/`, `grammar/` (GBNF). Add `vm/` for the bytecode
+   VM target (§22.5, Phase 9) and `docs/` for extracted spec tables R6
+   produces.
 
 ## 6. Operating rules for agents (adopted from the author's Cursor rules)
 
