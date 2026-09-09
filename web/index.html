@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knot - Build Dashboard</title>
+<!--
+  Knot (working name) - one-page build dashboard.
+  Owner: R6 Scribe.  Plain HTTP or file://.  No HTTPS.
+  HOW AGENTS UPDATE: edit only the STATUS object in the <script>. The
+  page re-renders from it. Do not hand-edit <div id="app">.
+  Status values: "done" | "in-progress" | "pending" | "blocked"
+-->
+<style>
+  :root{--bg:#0e1116;--panel:#161b22;--panel2:#1c232c;--line:#2a323d;
+    --txt:#d7dde5;--dim:#8a94a3;--acc:#5eb1ff;--ok:#3fb950;--warn:#d29922;
+    --bad:#f85149;--purple:#a371f7;--teal:#39d0d8}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5
+    -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+  header.top{display:flex;flex-wrap:wrap;gap:14px;align-items:baseline;
+    justify-content:space-between;border-bottom:1px solid var(--line);
+    padding-bottom:14px;margin-bottom:22px}
+  header.top h1{margin:0;font-size:22px}
+  header.top h1 .wk{color:var(--dim);font-weight:400}
+  .meta{font-size:12px;color:var(--dim);text-align:right}
+  .meta b{color:var(--txt)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim)}
+  .full{grid-column:1/-1}
+  .pill{display:inline-block;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--dim)}
+  .pill.done{color:var(--ok);border-color:var(--ok);background:#0d1f12}
+  .pill.in-progress{color:var(--warn);border-color:var(--warn);background:#1f1a0d}
+  .pill.pending{color:var(--dim)}
+  .pill.blocked{color:var(--bad);border-color:var(--bad);background:#1f0d0d}
+  .pill.open{color:var(--warn);border-color:var(--warn);background:#1f1a0d}
+  .pill.decided{color:var(--ok);border-color:var(--ok);background:#0d1f12}
+  table{width:100%;border-collapse:collapse}
+  td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  td.num{color:var(--dim);width:34px;font-variant-numeric:tabular-nums}
+  td.owner{color:var(--acc);white-space:nowrap;width:96px}
+  .row:hover{background:var(--panel2)}
+  .crew{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .agent{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .agent .id{font-weight:700;color:var(--purple)}
+  .agent .id .on{color:var(--ok);font-size:11px;margin-left:6px}
+  .agent .id .off{color:var(--dim);font-size:11px;margin-left:6px}
+  .agent .role{font-size:12px}
+  .agent .job{font-size:11px;color:var(--dim);margin-top:3px}
+  ul{margin:6px 0;padding-left:18px}
+  li{margin:6px 0}
+  .mono{color:var(--acc);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .namebar .k{color:var(--warn);font-weight:700}
+  .namebar .n{color:var(--ok);font-weight:700}
+  .bar{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;border:1px solid var(--line);margin-top:8px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--teal))}
+  footer{margin-top:26px;color:var(--dim);font-size:11px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Knot <span class="wk">- AI-native language build dashboard</span></h1>
+    <div class="meta" id="meta"></div>
+  </header>
+  <div class="grid" id="app"></div>
+  <footer id="foot"></footer>
+</div>
+<script>
+const STATUS = {
+  meta: {
+    workingName: "Knot",
+    publicCandidate: "Nodigma",
+    overallPhase: "Phase 0 - Core data model",
+    overallStatus: "in-progress",
+    lastUpdated: "2026-09-08 22:49 UTC-4",
+    updatedBy: "R6 Scribe (seed)"
+  },
+  phases: [
+    {n:0, name:"Core data model", status:"in-progress", owner:"R2", notes:"value/type repr, units/dimensions"},
+    {n:1, name:"AST + parser + GBNF grammar", status:"pending", owner:"R2/R3", notes:"node IDs, canonical text, binary, constrained-decoding grammar"},
+    {n:2, name:"Type checker", status:"pending", owner:"R2", notes:"kernel op rules, inference, partial typing with holes"},
+    {n:3, name:"Effects / capabilities / contracts", status:"pending", owner:"R2", notes:"prohibitions become structural constraints"},
+    {n:4, name:"Holes + partial compile", status:"pending", owner:"R2", notes:"VALID / PARTIAL / INVALID + candidates"},
+    {n:5, name:"Structured errors + repairs", status:"pending", owner:"R2/R3", notes:"errors as values, no exceptions"},
+    {n:6, name:"Edit operations", status:"pending", owner:"R2", notes:"graph edits, revalidation, blast-radius"},
+    {n:7, name:"Tests / properties", status:"pending", owner:"R4", notes:"inline tests, property tests, fuzz"},
+    {n:8, name:"Modules + dependencies", status:"pending", owner:"R2", notes:""},
+    {n:9, name:"Compiler / VM (sub-200ms)", status:"pending", owner:"R2/R5", notes:"two-half: AI front-end + deterministic lowering"},
+    {n:10, name:"AI / tool capabilities", status:"pending", owner:"R3", notes:"byLLM-style typed constructs, confidence"},
+    {n:11, name:"Concurrency / memory / unsafe", status:"pending", owner:"R2", notes:"dataflow, regions"},
+    {n:12, name:"MCP server + kb + --llm mode", status:"pending", owner:"R3/R5", notes:"eval/typecheck/run/constrain/doc_query/query"}
+  ],
+  crew: [
+    {id:"R1", role:"Architect", active:true, job:"design coherence, task breakdowns, review"},
+    {id:"R2", role:"Kernel Engineer", active:true, job:"deterministic back-end; never guesses"},
+    {id:"R3", role:"AI Front-end Engineer", active:false, job:"GBNF, repairs, MCP, --llm, kb (judgment half)"},
+    {id:"R4", role:"Verifier", active:true, job:"tests, properties, partial-compile gate, fuzz"},
+    {id:"R5", role:"DX Engineer", active:false, job:"formatter, LSP, CLI, sub-200ms loop"},
+    {id:"R6", role:"Scribe", active:true, job:"docs, examples, this dashboard, name_changes/fixes"}
+  ],
+  openQuestions: [
+    {q:"Phase 0 host language: Python (matches venv+CrewAI, design 22 Stage 0) or Rust (sub-200ms, Cairn/Grafema precedent)?", status:"open"},
+    {q:"Architect (R1) as a hierarchical Crew manager, or a peer that drafts tasks out-of-band?", status:"open"},
+    {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"open"},
+    {q:"Repo layout: src/knot/, src/knot/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"open"}
+  ],
+  recentFixes: [
+    {file:"fix_crewai_windows_console_encoding.md", problem:"CrewAI emoji logs + Windows cp1252 = charmap encode errors", fix:"force UTF-8 on stdout/stderr via PYTHONUTF8 + reconfigure()"}
+  ],
+  designOpen: [
+    {q:"Node ID scheme", status:"decided", dec:"structural path + optional @label; numeric IDs compiler-internal (design 21)"},
+    {q:"Public name", status:"open", dec:"working name Knot (collides); Nodigma verified clean, not yet registered"}
+  ]
+};
+
+function pill(s){return '<span class="pill '+s+'">'+s+'</span>'}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+
+function render(){
+  const m=STATUS.meta;
+  document.getElementById("meta").innerHTML =
+    "Overall: <b>"+pill(m.overallStatus)+"</b><br>"+esc(m.overallPhase)+
+    "<br>Updated <b>"+esc(m.lastUpdated)+"</b> by <b>"+esc(m.updatedBy)+"</b>";
+
+  const done=STATUS.phases.filter(p=>p.status==="done").length;
+  const pct=Math.round(done/STATUS.phases.length*100);
+  let app="<div class='card full'><h2>Name</h2>"+
+    "<div class='namebar'>Working name: <span class='k'>"+esc(m.workingName)+"</span>"+
+    " (collides - not for release) &nbsp;|&nbsp; Public candidate: <span class='n'>"+
+    esc(m.publicCandidate)+"</span> (verified clean, not yet registered)</div></div>";
+
+  app+="<div class='card full'><h2>Build phases (design 16) - "+done+"/"+STATUS.phases.length+" done</h2>"+
+    "<div class='bar'><i style='width:"+pct+"%'></i></div>"+
+    "<table><tr><th>#</th><th>Phase</th><th>Owner</th><th>Status</th><th>Notes</th></tr>";
+  STATUS.phases.forEach(p=>{
+    app+="<tr class='row'><td class='num'>"+p.n+"</td><td>"+esc(p.name)+"</td>"+
+      "<td class='owner'>"+esc(p.owner)+"</td><td>"+pill(p.status)+"</td>"+
+      "<td style='color:var(--dim)'>"+esc(p.notes||"")+"</td></tr>";
+  });
+  app+="</table></div>";
+
+  app+="<div class='card'><h2>Active crew</h2><div class='crew'>";
+  STATUS.crew.forEach(a=>{
+    app+="<div class='agent'><div class='id'>"+esc(a.id)+" "+
+      (a.active?"<span class='on'>ACTIVE</span>":"<span class='off'>idle</span>")+
+      "</div><div class='role'>"+esc(a.role)+"</div><div class='job'>"+esc(a.job)+"</div></div>";
+  });
+  app+="</div></div>";
+
+  app+="<div class='card'><h2>Open questions (knot_agents 5)</h2><ul class='q'>";
+  STATUS.openQuestions.forEach(q=>{
+    app+="<li><span class='qq'>"+esc(q.q)+"</span> "+pill(q.status)+"</li>";
+  });
+  app+="</ul></div>";
+
+  app+="<div class='card'><h2>Design open items</h2><ul class='q'>";
+  STATUS.designOpen.forEach(q=>{
+    app+="<li><span class='qq'>"+esc(q.q)+"</span> "+pill(q.status)+
+    (q.dec?"<br><span class='dec'>"+esc(q.dec)+"</span>":"")+"</li>";
+  });
+  app+="</ul></div>";
+
+  app+="<div class='card full'><h2>Recent fixes</h2><ul class='fixes'>";
+  STATUS.recentFixes.forEach(f=>{
+    app+="<li><span class='f'>"+esc(f.file)+"</span> - "+esc(f.problem)+
+    " -> "+esc(f.fix)+"</li>";
+  });
+  app+="</ul></div>";
+
+  document.getElementById("app").innerHTML=app;
+  document.getElementById("foot").textContent=
+    "Knot build dashboard - maintained by R6 Scribe. Edit the STATUS object in "+
+    "web/index.html to update. Plain HTTP only (no HTTPS).";
+}
+render();
+</script>
+</body>
+</html>

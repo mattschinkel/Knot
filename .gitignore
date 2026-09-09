@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+pip-wheel-metadata/
+
+# Logs / runtime
+*.log
+*.tmp
+*.bak
+
+# OS junk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Editors (personal settings)
+.vscode/
+.idea/
+
+# Keep: source, docs, web, fixes, data, scripts, progress, instructions

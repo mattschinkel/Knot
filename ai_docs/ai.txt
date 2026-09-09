@@ -1,0 +1,21 @@
+# AI project instructions — LLM_Language
+
+Author: Matthew Schinkel
+
+## Purpose
+This project explores using a local LLM with free/open-source agent tooling to help build a product.
+
+## Working rules
+- Prefer local, self-hosted, open-source tooling over paid cloud APIs.
+- Do not install hacks or workarounds; all fixes should be proper.
+- Keep progress.md current: Highlights, TODOs, previous issues, scripts.
+- Follow-up items always go in progress.md TODOs.
+- When renaming variables, functions, or procedures, log them in name_changes.md.
+- Review files in ai_docs/ at the start of work.
+- When working with .css files, bump the version after edits.
+- Do not restore from backup without asking.
+- Never `git checkout HEAD` / reset to the most recent commit without the Architect's (R1) OK; take a backup first. A local git repo is maintained for the agents to use.
+- When using Windows PowerShell, do not use `&&` with commands.
+
+## Local LLM assumption
+The user already runs a local LLM (Ollama, LM Studio, llama.cpp, or another OpenAI-compatible endpoint). Agent tools should connect to that endpoint instead of cloud providers unless the user asks otherwise.

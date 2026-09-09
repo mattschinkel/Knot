@@ -1,0 +1,8 @@
+Available project instructions
+
+- ai_docs/ai.txt — project-wide AI working rules, local-LLM preference, and doc conventions
+- progress.md — highlights, TODOs, previous issues, and important scripts
+- name_changes.md — rename log for variables, functions, and procedures (create when first rename happens)
+- fixes/ — one fix_*.md per issue (problem + fix)
+
+If new instruction files are added, list them here.
