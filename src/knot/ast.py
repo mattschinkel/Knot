@@ -130,3 +130,45 @@ class OpExpr(ExprNode):
 
     def __lt__(self, other):
         return (self.op, self.children) < (other.op, other.children)
+
+class IfExpr(ExprNode):
+    def __init__(self, cond, then_branch, else_branch):
+        super().__init__()
+        self.cond = cond
+        self.then_branch = then_branch
+        self.else_branch = else_branch
+        self.children = (then_branch, else_branch)
+
+    def __repr__(self):
+        return f"IfExpr(id={self.id}, cond={self.cond}, then_branch={self.then_branch}, else_branch={self.else_branch})"
+
+    def __eq__(self, other):
+        return (isinstance(other, IfExpr) and
+                self.id == other.id and
+                self.cond == other.cond and
+                self.then_branch == other.then_branch and
+                self.else_branch == other.else_branch)
+
+    def __hash__(self):
+        return hash((self.id, self.cond, self.then_branch, self.else_branch))
+
+    def __lt__(self, other):
+        return (self.id, self.cond, self.then_branch, self.else_branch) < (other.id, other.cond, other.then_branch, other.else_branch)
+
+class CondExpr(ExprNode):
+    def __init__(self, cond):
+        self.cond = cond
+
+    def __repr__(self):
+        return f"CondExpr(cond={self.cond!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, CondExpr):
+            return False
+        return self.cond == other.cond
+
+    def __hash__(self):
+        return hash((self.cond,))
+
+    def __lt__(self, other):
+        return self.cond < other.cond
