@@ -1,18 +1,22 @@
-"""Structural path helpers for Knot AST addressing (design D2).
+"""Structural path + label + ID helpers for Knot AST addressing (D2/D3/D7).
 
 A structural path is a tuple of segments (ints or strs), e.g. (1, 2, "body").
+Numeric IDs are compiler-internal sequential ints (never written by the LLM).
 """
 from __future__ import annotations
+
+# Module-local label registry (design D3).
+_LABELS: dict[str, object] = {}
+
+# Compiler-internal sequential node IDs (design D7).
+_next_id: int = 0
 
 
 def generate_path(*parts) -> tuple:
     """Build a structural path tuple.
 
-    Accepts:
-      - no args -> ()
-      - a single dotted string "1.2.3" -> (1, 2, 3)  (int segments when numeric)
-      - a single tuple/list -> normalized tuple
-      - multiple args -> tuple of those segments
+    Accepts no args -> (); a dotted string "1.2.3" -> (1, 2, 3);
+    a tuple/list -> normalized tuple; multiple args -> tuple of segments.
     Empty / invalid dotted strings return ().
     """
     if len(parts) == 0:
@@ -32,16 +36,12 @@ def generate_path(*parts) -> tuple:
                 elif s.isidentifier() or s.replace("_", "").isalnum():
                     out.append(s)
                 else:
-                    return ()  # invalid segment
+                    return ()
             return tuple(out)
         if isinstance(p, (tuple, list)):
             return tuple(p)
         return (p,)
     return tuple(parts)
-
-
-# Module-local label registry (design D3: sparse, module-local symbolic labels).
-_LABELS: dict[str, object] = {}
 
 
 def assign_label(label: str, node: object = None) -> str:
@@ -56,37 +56,16 @@ def lookup_label(label: str) -> object:
     """Return the node registered under `label`, or None."""
     return _LABELS.get(label)
 
-def generate_id():
-    """Generate a unique node ID as a string in the format "node_N" where N is a sequential integer.
 
-    Returns:
-        str: A unique node ID string (e.g., "node_0", "node_1", etc.)
-    """
-    return f"node_{_next_label() }"
+def generate_id() -> int:
+    """Allocate the next compiler-internal numeric node ID."""
+    global _next_id
+    n = _next_id
+    _next_id += 1
+    return n
 
-__all__ = ["generate_id"]
 
-__all__ = ["generate_id"]
-
-__all__ = ["generate_id"]
-
-__all__ = ["generate_id"]
-
-__all__ = ["generate_id"]
-
-# Internal implementation details
-_label_registry = {}
-_next_label = 1
-
-# Exported API
-__all__ = ["generate_id"]
-
-# For testing purposes only
-__test__ = {"clears_on_reset": "node_1"}
-
-# Internal implementation details
-_label_registry = {}
-_next_label = 1
-
-# Exported API
-__all__ = ["generate_id"]
+def reset_ids() -> None:
+    """Reset the ID counter (tests only)."""
+    global _next_id
+    _next_id = 0
