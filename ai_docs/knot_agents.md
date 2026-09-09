@@ -2,8 +2,10 @@
 
 Author: Matthew Schinkel
 Status: design / v0.1
-Related: `ai_docs/axiom_design.md` (the language design), `two_agent_crew.py`
-(the existing CrewAI wiring to the LAN llama-server, model `LocoOperator-4B`).
+Related: `ai_docs/axiom_design.md` (the language design). The CrewAI
+wiring (`two_agent_crew.py`, `requirements.txt`, `data/`) is LOCAL-ONLY
+— not in this public repo (see `.gitignore`); it contains the LAN
+llama-server endpoint/key and must not be public.
 
 ## 0. Guiding principles for the crew
 
@@ -264,6 +266,9 @@ names the role that primarily enforces it.
   is now delegated to R1 as the on-project authority. (Author rule;
   enforced by R1; all agents with shell access — R2, R3, R4, R5 — must
   request R1's approval first.)
+- **Remote for pushes:** `origin` -> `https://github.com/mattschinkel/Knot.git`
+  (GitHub). Agents push normal commits to `origin/master`; do NOT
+  force-push or reset `origin` without R1's OK + a backup first.
 - **Do not restore from backup without asking.** Refer to backups to
   update the main code instead, unless the author (or R1) approves a
   restore. (Author rule; all agents.)

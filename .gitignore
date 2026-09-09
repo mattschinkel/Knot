@@ -25,4 +25,12 @@ Desktop.ini
 .vscode/
 .idea/
 
-# Keep: source, docs, web, fixes, data, scripts, progress, instructions
+# Local-only build tooling (NOT part of the public Knot repo)
+# CrewAI wiring + demo data + CrewAI-specific fixes. Kept local; the
+# llama-server endpoint/key live in two_agent_crew.py and must not be public.
+two_agent_crew.py
+requirements.txt
+data/
+fixes/fix_crewai_*
+
+# Keep: source, docs, web, Knot fixes, progress, instructions
