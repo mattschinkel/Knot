@@ -208,3 +208,55 @@ class MatchExpr(ExprNode):
     @property
     def children(self):
         return (self.pattern, self.body)
+
+class LetExpr(ExprNode):
+    __slots__ = ('id', 'path', 'label')
+
+    def __init__(self, id, path, label=None):
+        super().__init__(id=id, path=path, label=label)
+        self.id = id
+        self.path = path
+        self.label = label
+
+    def __repr__(self):
+        return f"LetExpr(id={self.id!r}, path={self.path!r}, label={self.label!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, LetExpr):
+            return False
+        return (self.id == other.id and self.path == other.path and self.label == other.label)
+
+    def __hash__(self):
+        return hash((self.id, self.path, self.label))
+
+    def __lt__(self, other):
+        return (self.id, self.path, self.label) < (other.id, other.path, other.label)
+
+    @property
+    def children(self):
+        return []
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+class WithExpr(ExprNode):
+    def __init__(self, id, path=None, label=None):
+        super().__init__(id, path=path, label=label)
+
+    def __repr__(self):
+        return f"WithExpr(id={self.id})"
+
+    def __eq__(self, other):
+        if not isinstance(other, WithExpr):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    @property
+    def children(self):
+        return ()
