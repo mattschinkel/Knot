@@ -35,5 +35,8 @@ fixes/fix_crewai_*
 
 # ask_architect.py also carries the llama-server endpoint + bearer token.
 ask_architect.py
+# phase_crew.py likewise carries the LAN endpoint/key and is the local
+# CrewAI runner for the agent crew. LOCAL-ONLY.
+phase_crew.py
 
 # Keep: source, docs, web, Knot fixes, progress, instructions
