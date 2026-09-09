@@ -33,26 +33,25 @@ from knot.values import Value
 
 from knot.values import Value
 
-class ExprNode(Value):
-    def __init__(self, children=()):
+class ExprNode:
+    def __init__(self, children=None):
+        self.children = children or []
         self.id = None
         self.path = None
         self.label = None
-        self.children = children
 
     def __repr__(self):
-        return f"ExprNode({self.children!r})"
+        return f"ExprNode(id={self.id}, path={self.path}, label={self.label}, children={self.children})"
 
     def __eq__(self, other):
-        if not isinstance(other, ExprNode):
-            return False
-        return self.children == other.children
+        return (isinstance(other, ExprNode) and
+                self.id == other.id and
+                self.path == other.path and
+                self.label == other.label and
+                self.children == other.children)
 
     def __hash__(self):
-        return hash(self.children)
+        return hash((self.id, self.path, self.label, tuple(self.children)))
 
-    def __iter__(self):
-        return iter(self.children)
-
-    def __len__(self):
-        return len(self.children)
+    def __lt__(self, other):
+        return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
