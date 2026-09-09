@@ -1,233 +1,229 @@
 # Phase 1 Spec — AST + Parser + GBNF Grammar (Knot kernel, Python host)
 
-> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel
-> Engineer. Verification: R4 Verifier. Human observes via the dashboard
-> (non-blocking); R1 makes all decisions.
-> Status: DRAFT for human review — no implementation code yet.
+> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
+> Status: DECIDED by R1 (autonomous) — DRAFT for crew implementation; no code yet.
 
-Phase 1 builds the **AST + parser + GBNF grammar** for the Knot kernel. It defines the node model with IDs, the canonical text parser, pretty printer, and binary serializer. The GBNF grammar is constrained to enforce valid syntax for the LLM to emit. This is the first phase where the LLM directly writes source text.
+Phase 1 builds the **AST model** and the **canonical text parser**. It introduces **node IDs**, **structural paths**, and **symbolic labels** as the LLM's addressing scheme. The phase delivers a constrained-decoding GBNF grammar that ensures only valid syntax can be emitted by the LLM. This is the foundation for Phase 2's type checker and beyond.
 
-Per the resolved decisions (`knot_agents.md` §5): host language is **Python**; R1 is a **peer** that drafts; shell is **gated**; repo layout is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
+Per the resolved decisions (`knot_agents.md` §5): host language is **Python**; R1 decides autonomously; shell is autonomous (whitelisted build/test); repo layout is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
 
 ## 1. Scope
 
 ### In Phase 1
-- AST node model (`src/knot/ast.py`) — full node hierarchy with numeric IDs
-- Canonical text parser (`src/knot/parser.py`) — bracket form, GBNF grammar
-- Pretty printer (`src/knot/pretty.py`) — human-readable view
-- Binary serializer (`src/knot/bin.py`) — node IDs, graph serialization
-- GBNF grammar (`src/knot/grammar/gbnf.py`) — constrained-decoding grammar for AIR
-- Property tests for all modules (`tests/`)
+- AST node model with **numeric IDs** (`src/knot/ast.py`)
+- Canonical text parser (bracket form) (`src/knot/parser.py`)
+- Pretty printer (`src/knot/printer.py`)
+- Binary serializer (`src/knot/bin.py`)
+- GBNF grammar for constrained-decoding (Phase 1) (`src/knot/grammar/gbnf.py`)
+- Node addressing: structural paths and symbolic labels (`src/knot/addressing.py`)
+- Property tests for all AST/serialization (`tests/ast/`, `tests/bin/`, `tests/grammar/`)
 
 ### Explicitly OUT of Phase 1
 - Type *checker* (unification, inference) — Phase 2
 - Effects, capabilities, contracts — Phase 3
-- Holes, partial compile — Phase 4
+- Holes, partial typing — Phase 4
 - Structured errors — Phase 5
 - Edit operations — Phase 6
-- Modules, dependencies — Phase 8
+- Tests / properties — Phase 7
+- Modules + dependencies — Phase 8
 - Compiler / VM — Phase 9
 - AI / tool capabilities — Phase 10
 - Concurrency — Phase 11
+- MCP server / `kb` retrieval — Phase 12
 
-## 2. Design decisions to confirm (human)
+## 2. Design decisions (DECIDED by R1)
 
-These are the choices R1 is putting forward. Each is reversible but locking them now keeps Phase 2+ stable. **Please confirm or amend.**
+These are the choices R1 has made. Each is reversible but locking them now keeps Phase 2+ stable. Each decision is FINAL, recorded by R1.
 
-- **D1 — Numeric IDs in AST.** AST nodes have a `node_id` (int) field. This is the **only** numeric ID in the model; all other IDs (labels, paths) are structural or symbolic. Rationale: enables constrained decoding (GBNF grammar), stable node identity for the LLM to write, and supports edit operations.  
-- **D2 — Bracket notation is canonical.** All LLM output is bracket form: `OP[arg1, arg2, ...]`. The shorthand `F(...)` is **not** canonical — it is a pretty-printer artifact. The GBNF grammar must enforce bracket form.  
-- **D3 — GBNF grammar is constrained.** The grammar must reject any output that contains numeric IDs, arbitrary integers, or malformed syntax. Only bracket-form expressions are valid. This ensures the LLM cannot emit invalid syntax.  
-- **D4 — Node labels are symbolic, not numeric.** The `@` syntax is a **label**, not a numeric ID. Labels are sparse, module-local, and survive optimization. The LLM may write labels to mark nodes for editing.  
-- **D5 — Structural path syntax: dot/bracket.** Paths use `.` and `[]` (e.g., `eligible.body.args[1]`) — familiar to LLMs from JSON/JS. This is the primary path syntax.  
-- **D6 — Multiple matches: compiler returns all, LLM disambiguates.** When a path matches multiple nodes, the compiler returns all candidates; the LLM must disambiguate in edits.  
-- **D7 — Label scoping: module-local.** Labels are unique within a module; `Module.label` syntax is reserved for cross-module labels.  
-- **D8 — Binary format includes node IDs.** The serialized graph uses numeric IDs for IPC and storage; the binary format is separate from the AST but round-trips to the same graph.
+- **D1 — AST nodes have numeric IDs.** Each node gets a unique numeric ID at parse time. IDs are stable within a session, used in diagnostics, blast-radius, and GBNF grammar. The LLM may read IDs from diagnostics but never writes them into source. Rationale: enables constrained decoding (GBNF grammar enforces unique IDs), supports multi-editor scenarios where numeric IDs survive rewrites, and provides stable references for diagnostics.
+- **D2 — Structural path addressing is primary.** Nodes are addressed by structural path (e.g., `eligible.body.args[1]`) from named anchors. This is the default for LLM queries and edits. Rationale: path-based addressing survives optimization; it's stable, composable, and familiar to LLMs from JSON/JS.
+- **D3 — Symbolic labels are optional, sparse, and module-local.** The LLM may label nodes with `@label` (e.g., `@guard GE[GET[u, age], 18]`). Labels are unique within a module, survive optimization, and are used for edit targeting. Rationale: enables edit operations to target specific nodes without numeric IDs; labels are sparse (not every node gets one) to avoid clutter.
+- **D4 — Canonical form is bracket notation.** All expressions are written as `OP[arg1, arg2, ...]`. The shorter `F(...)` shorthand is NOT canonical; it is only used in pretty printing. Rationale: consistent, unambiguous syntax; the bracket form is the only form the LLM emits; it enables deterministic parsing.
+- **D5 — GBNF grammar contains NO numeric IDs.** Numeric IDs are compiler-internal (D7) and never appear in source the LLM emits, so the GBNF grammar has no ID token at all. Rationale: avoids ID collisions/gaps/off-by-one in emitted syntax; IDs are assigned by the parser at parse time. This is consistent with §21 (addressing is paths + labels).
+- **D6 — AST is immutable after parse.** Once parsed, the AST is frozen; edits produce new nodes, never mutate in place. Rationale: stable node identity + cheap sharing + no aliasing bugs in the deterministic kernel.
+- **D7 — Node IDs are compiler-internal, not author-pinned.** The LLM may read numeric IDs from diagnostics but never writes them into source. Rationale: avoids numeric ID collisions, gaps, and off-by-one errors; numeric IDs survive optimization; author-pinned IDs break multi-editor consistency.
 
 ## 3. AST node model (`src/knot/ast.py`)
 
-Every expression is a node. The AST is a directed acyclic graph (DAG) with numeric IDs.
+Every expression is a node. Nodes have a numeric ID, a structural path, and optional labels.
 
 ```
 Node (abstract)
-├─ Expr (abstract)
-│  ├─ Lit (value: Value, type: Type)
-│  ├─ TypedLit (value: Value, type: Type)
-│  ├─ Ident (name: str, type: Type)
-│  ├─ FieldAccess (obj: Expr, field: str)
-│  ├─ Hole (expected: Type | None)
-│  ├─ Op (op: str, args: tuple[Expr,...])
-│  ├─ If (cond: Expr, then: Expr, else: Expr)
-│  ├─ Match (discrim: Expr, arms: dict[str, Expr])
-│  ├─ Let (name: str, val: Expr, body: Expr)
-│  ├─ With (name: str, val: Expr, body: Expr)
-│  ├─ Fn (name: str, params: tuple[Param], body: Expr)
-│  ├─ Call (func: Expr, args: tuple[Expr])
-│  ├─ Get (obj: Expr, field: str)
-│  ├─ Set (obj: Expr, field: str, val: Expr)
-│  ├─ Field (obj: Expr, field: str)
-│  ├─ Map (key: Expr, val: Expr)
-│  ├─ Filter (pred: Expr, coll: Expr)
-│  ├─ Reduce (init: Expr, func: Expr, coll: Expr)
-│  ├─ Fold (init: Expr, func: Expr, coll: Expr)
-│  ├─ Len (expr: Expr)
-│  ├─ At (index: Expr, coll: Expr)
-│  ├─ Append (left: Expr, right: Expr)
-│  ├─ Concat (left: Expr, right: Expr)
-│  └─ HOLE (expected: Type | None)
-└─ Param (name: str, type: Type, default: Expr | None)
+├─ ExprNode       (id: int, path: str, label: str | None)
+│   ├─ LitExpr     (value: Value, type: Type | None)
+│   ├─ TypedLit    (value: Value, type: Type)
+│   ├─ IdentExpr   (name: str)
+│   ├─ FieldAccess (obj: Expr, field: str)
+│   ├─ GetExpr     (obj: Expr, field: str)
+│   ├─ SetExpr     (obj: Expr, field: str, val: Expr)
+│   ├─ OpExpr      (op: str, args: tuple[Expr,...])
+│   ├─ IfExpr      (cond: Expr, then: Expr, else: Expr)
+│   ├─ CondExpr    (cond: Expr, cases: tuple[Expr,...])
+│   ├─ MatchExpr   (pattern: Expr, arms: tuple[Arm,...])
+│   ├─ LetExpr     (name: str, val: Expr, body: Expr)
+│   ├─ WithExpr    (name: str, val: Expr, body: Expr)
+│   ├─ HoleExpr    (expected: Type | None)        # D3
+│   ├─ FnExpr      (name: str, params: tuple[Param,...], body: Expr)
+│   ├─ CallExpr    (func: Expr, args: tuple[Expr,...])
+│   └─ UnitExpr
+├─ TypeNode       (id: int, path: str, label: str | None)
+│   ├─ BaseType
+│   ├─ NominalType
+│   ├─ OptionType
+│   ├─ ListType
+│   ├─ SetType
+│   ├─ MapType
+│   ├─ TupleType
+│   ├─ SumType
+│   ├─ CapIntersect
+│   ├─ UnitType
+│   └─ RegionType
+├─ DefNode         (id: int, path: str, label: str | None)
+│   └─ DefBody      (name: str, expr: Expr)
+└─ TypeDefNode     (id: int, path: str, label: str | None)
+    └─ TypeDefBody  (name: str, type: Type)
 ```
 
-Each node has:
-- `node_id` (int) — unique, stable within a session
-- `parent_id` (int | None) — points to parent in DAG
-- `label` (str | None) — symbolic label (D4)
-- `path` (str | None) — structural path (e.g., `eligible.body.args[1]`)
+Notes:
+- Each node has a unique `id` (int), `path` (str), and optional `label` (str).
+- `ExprNode` and `TypeNode` are the only nodes that can have `label`; `DefNode` and `TypeDefNode` inherit label from their path.
+- `HoleExpr` is an expression node with optional expected type; it is not a separate AST flag but a value embedded in the AST.
+- The AST is frozen after parse; edits produce new nodes.
 
-## 4. Parser (`src/knot/parser.py`)
+## 4. Canonical text parser (`src/knot/parser.py`)
 
-Parses bracket-form expressions into AST nodes.
+Parses input into AST nodes. Input is bracket notation: `OP[arg1, arg2, ...]`.
 
-**Input:** Bracket-form text (e.g., `ADD[2, 3]`, `FN[x:i32] MUL[x, x]`)
-
-**Output:** AST nodes with `node_id` and `label`
-
-**Rules:**
-- All expressions are bracketed: `OP[arg1, arg2, ...]`
-- No `F(...)` shorthand — only bracket form
-- No numeric IDs in input
-- GBNF grammar enforces bracket form and valid syntax
-
-**Phase 1 delivers:**
-- A parser that accepts bracket-form text and produces AST nodes
-- The parser is **not** the LLM; it is a deterministic, non-LLM parser
-- The parser is the **only** source of truth for canonical text
-
-## 5. GBNF grammar (`src/knot/grammar/gbnf.py`)
-
-Constrained-decoding grammar for the LLM to emit valid syntax.
-
-**Rules:**
-- All expressions must be bracketed: `OP[arg1, arg2, ...]`
-- No numeric IDs
-- No arbitrary integers
-- No malformed syntax
-- Only bracket-form expressions are valid
-
-**Example:**
+### Grammar (BNF)
 ```
-Expr ::= Lit | TypedLit | Ident | FieldAccess | HOLE
-       | Op | If | Match | Let | With | Fn | Call
-       | Get | Set | Field | Map | Filter | Reduce
-       | Fold | Len | At | Append | Concat
-       | HOLE
-
-Lit ::= Int | Float | Bool | String | Bytes | Unit | Nil
-
-TypedLit ::= Int | Float | Bool | String | Bytes | Unit | Nil
-           (type: Type)
-
-Ident ::= [a-z_][a-z0-9_]*
-
-FieldAccess ::= Ident "." Ident
-
-Op ::= ADD | SUB | MUL | DIV | MOD | NEG
-      | EQ | NE | LT | LE | GT | GE
-      | AND | OR | NOT
-      | IF | COND | MATCH
-      | GET | SET | FIELD
-      | MAP | FILTER | REDUCE | FOLD | LEN | AT | APPEND | CONCAT
-      | FN | CALL
-
-Param ::= Ident (":" Type) (":" Type)? (":" Type)? (":" Type)?
-
-HOLE ::= "?" | "?:Type"
-
-ExprList ::= Expr ("," Expr)*
-
-Fn ::= "FN" [Ident] "(" ParamList ")" Body
-
-ParamList ::= Param ("," Param)*
-
-Body ::= Expr
-
-Call ::= Ident "(" ExprList ")"
+Program     = Def* EOF
+Def         = Name "=" Expr
+Expr        = Lit | Ident | FieldAccess | Get | Set | Op | If | Cond | Match | Let | With | Hole | Fn | Call | Unit
+Lit         = Number | String | Bool | Nil | TypedLit
+Ident       = Identifier
+FieldAccess = Ident "." Ident
+Get         = "GET[" Ident "," Ident "]"
+Set         = "SET[" Ident "," Ident "," Expr "]"
+Op          = "ADD" | "SUB" | "MUL" | "DIV" | "MOD" | "NEG"
+Comparison  = "EQ" | "NE" | "LT" | "LE" | "GT" | "GE"
+Logic       = "AND" | "OR" | "NOT"
+Control     = "IF" | "COND" | "MATCH"
+Access      = "GET" | "SET" | "FIELD"
+Collection  = "MAP" | "FILTER" | "REDUCE" | "FOLD" | "LEN" | "AT" | "APPEND" | "CONCAT"
+Binding     = "LET" | "WITH"
+Hole        = "?" | "?:Type"
+Function    = "FN" "(" ParamList ")" Body
+ParamList   = Param ("," Param)*
+Param       = Ident ":" Type
+Body        = Expr
+Unit        = "UNIT"
 ```
 
-**Constraints:**
-- No numeric IDs
-- No arbitrary integers
-- No malformed syntax
-- Only bracket-form expressions
+### Features
+- Bracket notation is the only canonical form; `F(...)` is not canonical.
+- Handles type annotations on literals: `2:i32`, `10:meters`.
+- Handles field access sugar: `user.name` → `GET[user, name]`.
+- Handles holes: `?` or `?:i32`.
+- Handles function definitions: `def square = FN[x:i32] MUL[x, x]`.
+- Returns AST with numeric IDs and structural paths.
 
-## 6. Pretty printer (`src/knot/pretty.py`)
+## 5. Pretty printer (`src/knot/printer.py`)
 
-Generates human-readable source from AST.
+Generates human-readable code from AST. Output is not the source of truth.
 
-**Input:** AST node with `node_id`, `label`, `path`
+### Output format
+```
+fn square(x: i32) -> i32 { x * x }
+```
 
-**Output:** Human-readable source (e.g., `fn square(x: i32) -> i32 { x * x }`)
+### Rules
+- Function definitions: `fn name(params) -> ret { body }`
+- Parameters: `x: i32`
+- Body: `{ ... }`
+- Expressions: no parentheses unless needed for grouping
+- Type annotations: only on parameters and return
+- No bracket notation; only `F(...)` shorthand is used in pretty printing
 
-**Rules:**
-- Uses `fn`, `let`, `with`, `match`, `if`, `while`, `for` keywords
-- Type annotations: `x: i32`
-- Returns: `-> i32`
-- Blocks: `{ ... }`
-- No bracket form — only pretty form
+### Notes
+- Pretty printing is a view; the canonical form is bracket notation.
+- The printer does not emit holes; holes are represented as `?` in the AST.
 
-**Note:** The pretty printer is **not** the source of truth; it is a view.
+## 6. Binary serializer (`src/knot/bin.py`)
 
-## 7. Binary serializer (`src/knot/bin.py`)
+Serializes AST to a binary format with node IDs. Used for storage and tool IPC.
 
-Serializes AST to binary format for storage and IPC.
+### Format
+- Header: version (4 bytes), node count (4 bytes)
+- Nodes: node ID, type, path, label, payload (varies by node type)
+- Index: map from ID to offset
 
-**Input:** AST node with `node_id`, `label`, `path`
+### Features
+- Supports round-trip: parse → binary → parse
+- Node IDs are stable within a session
+- Supports multi-editor scenarios
 
-**Output:** Binary graph with node IDs
+## 7. GBNF grammar (`src/knot/grammar/gbnf.py`)
 
-**Format:**
-- Graph format: `node_id`, `parent_id`, `label`, `path`, `type`, `value`
-- Round-trips to the same graph
+Enforces constrained decoding: only valid syntax can be emitted by the LLM.
 
-**Phase 1 delivers:**
-- A binary serializer that round-trips to the AST
-- The binary format is separate from the AST but round-trips to the same graph
+### Grammar
+```
+Program     = Def* EOF
+Def         = Name "=" Expr
+Expr        = Lit | Ident | FieldAccess | Get | Set | Op | If | Cond | Match | Let | With | Hole | Fn | Call | Unit
+Lit         = Number | String | Bool | Nil | TypedLit
+Ident       = Identifier
+FieldAccess = Ident "." Ident
+Get         = "GET[" Ident "," Ident "]"
+Set         = "SET[" Ident "," Ident "," Expr "]"
+Op          = "ADD" | "SUB" | "MUL" | "DIV" | "MOD" | "NEG"
+Comparison  = "EQ" | "NE" | "LT" | "LE" | "GT" | "GE"
+Logic       = "AND" | "OR" | "NOT"
+Control     = "IF" | "COND" | "MATCH"
+Access      = "GET" | "SET" | "FIELD"
+Collection  = "MAP" | "FILTER" | "REDUCE" | "FOLD" | "LEN" | "AT" | "APPEND" | "CONCAT"
+Binding     = "LET" | "WITH"
+Hole        = "?" | "?:Type"
+Function    = "FN" "(" ParamList ")" Body
+ParamList   = Param ("," Param)*
+Param       = Ident ":" Type
+Body        = Expr
+Unit        = "UNIT"
+```
 
-## 8. File layout (Phase 1)
+### Constraints
+- Every node ID must be unique and must not be an arbitrary integer
+- Bracket notation is the only canonical form
+- `F(...)` shorthand is not allowed in GBNF
+- All expressions must be bracketed
+
+## 8. File layout
 
 ```
 src/knot/
-  __init__.py
-  ast.py          # §3
-  parser.py       # §4
-  grammar/
-    gbnf.py       # §5
-  pretty.py       # §6
-  bin.py          # §7
-tests/
-  test_ast.py
-  test_parser.py
-  test_grammar.py
-  test_pretty.py
-  test_bin.py
+├── ast.py           # AST node model
+├── bin.py           # Binary serializer
+├── grammar/
+│   └── gbnf.py      # GBNF grammar for constrained decoding
+├── parser.py        # Canonical text parser
+├── printer.py       # Pretty printer
+└── addressing.py    # Node addressing: paths, labels, IDs
 ```
 
-`src/knot/ai/` stays empty in Phase 1 (R3's domain, Phase 10+).
+## 9. Definition of done
 
-## 9. Definition of done (Phase 1)
+- [ ] AST node model with numeric IDs and structural paths
+- [ ] Canonical text parser (bracket notation)
+- [ ] Pretty printer (human-readable view)
+- [ ] Binary serializer (round-trip to AST)
+- [ ] GBNF grammar with constraints (bracket notation; no numeric IDs — D5)
+- [ ] All property tests pass
+- [ ] All tests pass on Python 3.10+
 
-- All four modules import with no side effects.
-- Parser accepts bracket-form text and produces AST nodes with `node_id` and `label`.
-- GBNF grammar rejects any output that contains numeric IDs or arbitrary integers.
-- Pretty printer generates human-readable source from AST.
-- Binary serializer round-trips to the same graph.
-- No LLM, no type checking, no effects, no holes, no errors anywhere in `src/knot/`.
-- R4's harness is green; R1 signs off (R1 decides D1–D8 autonomously).
+## 10. Resolved sub-questions (DECIDED by R1)
 
-## 10. Open sub-questions (R1 → human)
-
-- **Q1.** Should `i32`/`i64` be distinct types or a single `int` with width? Distinct types catch more bugs but bloat the type lattice. R1 recommends **distinct types**.  
-- **Q2.** Should `string` be UTF-8 bytes or code points? Affects `len`/`AT` semantics. R1 recommends **code points** (matches §22.5 string-stdlib note); defer bytes to `bytes`.  
-- **Q3.** Is `RegionType` (lifetimes/regions) worth defining the shape of in Phase 1? R1 recommends **skip** — define only in Phase 2 when needed.  
-- **Q4.** Should the pretty printer support `F(...)` shorthand? R1 recommends **no** — only bracket form is canonical.  
-- **Q5.** Should the binary format include `path` and `label`? R1 recommends **yes** — for tool IPC and diagnostics.  
-- **Q6.** Should the GBNF grammar allow comments? R1 recommends **no** — only bracket-form expressions are valid.
+- **Q1 — Structural path syntax:** Dot/bracket (`eligible.body.args[1]`) — familiar to LLMs from JSON/JS. Rationale: consistent with JSON/JS path syntax; supports nested structures; enables structural pattern matching.
+- **Q2 — Multiple matches:** When a structural path matches several nodes after a refactor, the compiler returns all matches and requires the LLM to disambiguate. Rationale: prevents incorrect edits; enables multi-editor consistency; requires unique matches for edits.
+- **Q3 — Label scoping:** Module-local; `Module.label` to cross modules. Rationale: avoids global label conflicts; enables cross-module editing; supports module-level labels.
+- **Q4 — Auto-labeling:** Whether the compiler suggests labels for nodes the LLM edits frequently. Later. Rationale: not needed in Phase 1; auto-labeling is a feature for Phase 6+.
+- **Q5 — Node ID uniqueness:** GBNF grammar enforces unique numeric IDs. Rationale: prevents collisions, gaps, off-by-one errors; enables constrained decoding; ensures valid syntax only.

@@ -3,7 +3,7 @@
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel
 > Engineer. Verification: R4 Verifier. Human observes via the dashboard
 > (non-blocking); R1 makes all decisions.
-> Status: DRAFT for human review — no implementation code yet.
+> Status: DECIDED by R1 (autonomous) — implemented; tests green.
 
 Phase 0 builds the **deterministic kernel's data model** in Python: the
 value representation, the type algebra, and the units/dimensions system.
@@ -12,9 +12,9 @@ foundation every later phase (parser, type checker, effects, lowering,
 VM) is built on, so it must be small, total, and unambiguous.
 
 Per the resolved decisions (`knot_agents.md` §5): host language is
-**Python**; R1 is a **peer** that drafts; shell is **gated**; repo layout
-is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`,
-`grammar/`, `vm/`, `docs/`.
+**Python**; R1 decides autonomously; shell is autonomous (whitelisted
+build/test); repo layout is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`,
+`lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
 
 ## 1. Scope
 
@@ -34,10 +34,10 @@ is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`,
   and *values*; checking them against each other is Phase 2.
 - Edit operations, modules, concurrency, lowering, VM, AI front-end.
 
-## 2. Design decisions to confirm (human)
+## 2. Design decisions (DECIDED by R1)
 
-These are the choices R1 is putting forward. Each is reversible but
-locking them now keeps Phase 1+ stable. **Please confirm or amend.**
+These are the choices R1 has made. Each is reversible but locking them
+now keeps Phase 1+ stable. Each decision is FINAL, recorded by R1.
 
 - **D1 — Immutability.** Values and types are **frozen dataclasses**
   (hashable, equality by value). The graph is immutable; edits produce
@@ -194,16 +194,15 @@ tests/
 - No LLM, no parser, no I/O anywhere in `src/knot/`.
 - R4's harness is green; R1 signs off (R1 decides D1–D6 autonomously).
 
-## 9. Open sub-questions (R1 → human)
+## 9. Resolved sub-questions (DECIDED by R1)
 
 - **Q1.** Do we want `i32`/`i64` to be distinct *types* (current plan)
   or a single `int` with a width attribute? Distinct types catch more
-  bugs but bloat the type lattice. R1 recommends **distinct types**.
+  bugs but bloat the type lattice. **DECISION: distinct types.**
 - **Q2.** Should `string` be UTF-8 bytes or a first-class sequence of
-  code points? Affects `len`/`AT` semantics. R1 recommends **code
-  points** (matches the §22.5 string-stdlib note); defer bytes to
-  `bytes`.
+  code points? Affects `len`/`AT` semantics. **DECISION: code points**
+  (matches the §22.5 string-stdlib note); defer bytes to `bytes`.
 - **Q3.** Is `RegionType` (lifetimes/regions) worth defining the
-  *shape* of in Phase 0, or skip entirely until a phase needs it? R1
-  recommends **shape only** (no checking), so later phases don't
+  *shape* of in Phase 0, or skip entirely until a phase needs it?
+  **DECISION: shape only** (no checking), so later phases don't
   restructure the type algebra.
