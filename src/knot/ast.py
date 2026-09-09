@@ -40,20 +40,25 @@ class ExprNode:
         self.label = label
 
     def __repr__(self):
-        return f"ExprNode({self.id})"
+        return f'{self.__class__.__name__}({self.id})'
 
     def __eq__(self, other):
-        return isinstance(other, ExprNode) and self.id == other.id
+        if isinstance(other, ExprNode):
+            return self.id == other.id
+        return False
 
     def __hash__(self):
         return hash(self.id)
 
-    def __lt__(self, other):
-        return self.id < other.id
-
     @property
     def children(self):
         return ()
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def __str__(self):
+        return str(self.id)
 
 class TypeNode(Value):
     """A type node in the AST."""
@@ -410,3 +415,45 @@ class HoleExpr(ExprNode):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+
+class LitExpr(ExprNode):
+    def __init__(self, value):
+        self.value = value
+
+    @property
+    def id(self):
+        return self.value
+
+    @property
+    def path(self):
+        return []
+
+    @property
+    def label(self):
+        return None
+
+    @property
+    def children(self):
+        return (self.value,)
+
+    def __repr__(self):
+        return f'LitExpr({self.value})'
+
+    def __eq__(self, other):
+        if not isinstance(other, LitExpr):
+            return False
+        return self.value == other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+    def __lt__(self, other):
+        if not isinstance(other, LitExpr):
+            return False
+        return self.value < other.value
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return f'LitExpr({self.value})'
