@@ -8,10 +8,10 @@ from __future__ import annotations
 import re
 
 from knot.addressing import generate_id
-from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr
+from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, FieldAccess
 
-_NUM = re.compile(r"^-?\d+(?:\.\d+)?$")
-_IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_NUM = re.compile(r"-?\d+(?:\.\d+)?")
+_IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
 class ParseError(ValueError):
@@ -80,7 +80,41 @@ def _parse_atom(s: str, i: int):
         return LitExpr(tok == "true"), i
     if tok == "nil":
         return LitExpr(None), i
-    return IdentExpr(id=tok), i
+    # identifier, possibly with .field sugar (user.name -> FieldAccess)
+    node: object = IdentExpr(id=tok)
+    while True:
+        i2 = _skip_ws(s, i)
+        if i2 < len(s) and s[i2] == ".":
+            i2 += 1
+            m2 = _IDENT.match(s, i2)
+            if not m2:
+                raise ParseError("expected field name after '.'")
+            field = m2.group(0)
+            i2 = m2.end()
+            node = FieldAccess(id=node, field_name=field, path=[])
+            i = i2
+            continue
+        break
+    return node, i
+
+
+def parse_field_access(text: str):
+    """Parse field-access sugar: `obj.field` (-> FieldAccess).
+
+    Also accepts already-desugared `GET[obj, field]` via parse_expr.
+    """
+    if text is None or not str(text).strip():
+        raise ParseError("empty field access")
+    s = str(text).strip()
+    if "." not in s:
+        raise ParseError("field access requires obj.field")
+    node, i = _parse_atom(s, 0)
+    i = _skip_ws(s, i)
+    if i < len(s):
+        raise ParseError(f"trailing input: {s[i:]!r}")
+    if not isinstance(node, FieldAccess):
+        raise ParseError("not a field access expression")
+    return node
 
 
 def _parse_arglist(s: str, i: int):
@@ -143,113 +177,3 @@ def parse_program(text: str) -> list:
         if i < len(s) and s[i] in ";\n":
             i += 1
     return nodes
-
-from knot.parser import parse_field_access
-from knot.parser import ParseError
-
-# Tests
-
-def test_parse_field_access_valid():
-    result = parse_field_access("x", 0)
-    assert result[0].id == 0
-    assert result[1] == 1
-
-def test_parse_field_access_with_brackets():
-    result = parse_field_access("x[1]", 0)
-    assert result[0].id == 0
-    assert result[1] == 2
-
-def test_parse_field_access_missing_bracket():
-    try:
-        parse_field_access("x", 0)
-        assert False
-    except ParseError:
-        pass
-
-def test_parse_field_access_invalid_identifier():
-    try:
-        parse_field_access("\n", 0)
-        assert False
-    except ParseError:
-        pass
-
-def test_parse_field_access_empty_string():
-    try:
-        parse_field_access("", 0)
-        assert False, "Should raise ParseError"
-    except ParseError:
-        pass
-
-def test_parse_field_access_empty():
-    try:
-        parse_field_access("", 0)
-        assert False, "Should raise ParseError"
-    except ParseError:
-        pass
-
-def test_parse_field_access_with_whitespace():
-    try:
-        parse_field_access("Ident [ ", 0)
-        assert False
-    except ParseError:
-        pass
-
-def test_parse_field_access_with_content():
-    try:
-        parse_field_access("Ident [ 123 ]", 0)
-        assert False
-    except ParseError:
-        pass
-
-def test_parse_field_access_unexpected_end():
-    try:
-        parse_field_access("x[", 0)
-        assert False
-    except ParseError:
-        pass
-
-def parse_field_access(s: str, i: int) -> tuple[IdentExpr, int]:
-    """Parse field access: Ident[...] -> IdentExpr"""
-    i = _skip_ws(s, i)
-    if i >= len(s):
-        raise ParseError("unexpected end of input")
-
-    # Parse identifier
-    m = _IDENT.match(s, i)
-    if not m:
-        raise ParseError(f"expected identifier at position {i}")
-    ident = IdentExpr(m.group())
-    i = m.end()
-
-    # Skip whitespace
-    i = _skip_ws(s, i)
-
-    # Expect [
-    if s[i] != '[':
-        raise ParseError(f"expected '[' at position {i}")
-    i += 1
-
-    # Parse content (anything between brackets)
-    content = []
-    while i < len(s) and s[i] != ']':
-        content.append(parse_field_access_content(s, i))
-        i = content[-1][1]
-
-    # Expect ]
-    if i >= len(s) or s[i] != ']':
-        raise ParseError(f"expected ']' at position {i}")
-    i += 1
-
-    # Reconstruct: Ident[...] -> IdentExpr
-    return ident, i
-
-
-def parse_field_access_content(s: str, i: int) -> tuple[str, int]:
-    """Parse content between brackets: e.g., "123" or "x" or "x[...]"""
-    i = _skip_ws(s, i)
-    if i >= len(s):
-        raise ParseError("unexpected end of input")
-
-    # Parse atom
-    atom = _parse_atom(s, i)
-    return atom[0], atom[1]
