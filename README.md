@@ -2,7 +2,7 @@
 
 > **Don't generate code. Generate computation.**
 
-**Knot is an AI-native programming language designed for LLMs to generate, edit, verify, and reason about programs. It is Knot for humans**
+**Knot is an AI-native programming language designed for LLMs to generate, edit, verify, and reason about programs. It is Knot for humans.**
 
 Knot does not treat source code as a pile of text that an AI must repeatedly rewrite.
 
