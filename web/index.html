@@ -75,9 +75,9 @@ const STATUS = {
   meta: {
     workingName: "Knot",
     publicCandidate: "Nodigma",
-    overallPhase: "Phase 1 - AST + parser + GBNF grammar (drift-check gate added)",
+    overallPhase: "Phase 1 - AST + parser + GBNF grammar (autonomous draft + 30 tasks; spec-consistency gate added)",
     overallStatus: "in-progress",
-    lastUpdated: "2026-09-09 00:03 UTC-4",
+    lastUpdated: "2026-09-09 00:20 UTC-4",
     updatedBy: "R6 Scribe"
   },
   phases: [
@@ -126,6 +126,18 @@ const STATUS = {
       {m:"M3 edit round-trip",    status:"pending", better:"higher", prereq:"Phase 1 (pretty+parser)"},
       {m:"M4 partial-compile",   status:"pending", better:"higher", prereq:"Phase 4"},
       {m:"M5 compile latency",    status:"pending", better:"lower",  prereq:"Phase 9 (VM)"}
+    ]
+  },
+  specLint: {
+    phase: 1,
+    gate: "pass",
+    note: "tools/spec_lint.py - deterministic, no LLM. Runs FIRST at every phase gate (before drift metrics). Catches spec-level contradictions the drift metrics cannot.",
+    rules: [
+      {r:"R1 status",      desc:"autonomous, not stale / 'for human review' / 'implemented' with unchecked DoD"},
+      {r:"R2 numbering",   desc:"## N. headings strictly increasing from 1 (no 0-restart)"},
+      {r:"R3 dod boxes",   desc:"DoD checkboxes unchecked while the spec is a draft"},
+      {r:"R4 invariants",  desc:"no D contradicts 21 (numeric IDs compiler-internal; canon = bracket notation)"},
+      {r:"R5 sections",    desc:"Scope, Design decisions, File layout, Definition of done, Resolved sub-questions"}
     ]
   }
 };
@@ -176,6 +188,17 @@ function render(){
     (q.dec?"<br><span class='dec'>"+esc(q.dec)+"</span>":"")+"</li>";
   });
   app+="</ul></div>";
+
+  app+="<div class='card'><h2>Spec-consistency gate (agents 8 step 1)</h2>"+
+    "<div style='margin-bottom:8px'>Phase "+esc(STATUS.specLint.phase)+": "+
+    pill(STATUS.specLint.gate)+"<br><span style='color:var(--dim)'>"+
+    esc(STATUS.specLint.note)+"</span></div>"+
+    "<table><tr><th>Rule</th><th>Checks</th></tr>";
+  STATUS.specLint.rules.forEach(s=>{
+    app+="<tr class='row'><td class='mono'>"+esc(s.r)+"</td><td style='color:var(--dim)'>"+
+      esc(s.desc)+"</td></tr>";
+  });
+  app+="</table></div>";
 
   app+="<div class='card'><h2>Drift-check gate (agents 8)</h2>"+
     "<div style='margin-bottom:8px'>Phase "+esc(STATUS.drift.phase)+": "+
