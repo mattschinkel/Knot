@@ -121,7 +121,32 @@ def subtype(s: Type, t: Type) -> bool:
 
 
 def unify(a: Type, b: Type) -> Type | None:
-    """Stub: reflexive only. Full unification arrives in Phase 2."""
+    """Full unification for the Knot deterministic kernel (Phase 0).
+
+    Rules:
+      - reflexive: a == b -> a
+      - Option: a? == b? -> a?
+      - List: a[] == b[] -> a[] if a == b else None
+      - Tuple: a,b == c,d -> a==c and b==d -> a,b
+      - Map: k->v == k->w -> k->v if v == w else None
+      - Nominal: a == b -> a == b (aliases are equal)
+      - BaseType: i32 == i32, f32 == f32, etc.
+      - Never: never == never -> never
+    """
     if a == b:
         return a
+    if isinstance(a, OptionType) and isinstance(b, OptionType):
+        return OptionType(unify(a.inner, b.inner))
+    if isinstance(a, ListType) and isinstance(b, ListType):
+        return ListType(unify(a.elem, b.elem))
+    if isinstance(a, TupleType) and isinstance(b, TupleType):
+        if len(a.types) == len(b.types):
+            return TupleType([unify(a.types[i], b.types[i]) for i in range(len(a.types))])
+    if isinstance(a, MapType) and isinstance(b, MapType):
+        if len(a.keys) == len(b.keys):
+            return MapType([unify(a.keys[i], b.keys[i]) for i in range(len(a.keys))], [unify(a.vals[i], b.vals[i]) for i in range(len(a.vals))])
+    if isinstance(a, NominalType) and isinstance(b, NominalType):
+        return unify(a.defn, b.defn)
+    if isinstance(a, BaseType) and isinstance(b, BaseType):
+        return a if a.name == b.name else None
     return None

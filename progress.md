@@ -62,6 +62,7 @@
 - T24 GBNF — crew wrote a Value-based `Program` AST stub (import broken) instead of grammar rules; replaced with production-string GBNF module + tests (no numeric IDs, bracket-only).
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
+- Phase 2 false close — R1 task list was prose not a table → 0 tasks parsed → autobuild declared DONE and pushed; fixed tasks table + restored `values.py`; re-running.
 
 ## Scripts
 - `web/index.html` — one-page Knot build dashboard (R6 Scribe owns it). Open directly in a browser, or serve plain HTTP from the `web/` folder: `.\.venv\Scripts\python.exe -m http.server 8000` (then http://localhost:8000). No HTTPS.
