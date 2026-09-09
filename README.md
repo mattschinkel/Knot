@@ -1,6 +1,6 @@
 # Knot
 
-**An AI-native programming language — designed for LLMs to generate, edit, and reason about, not for humans to read.**
+**An AI-native programming language — designed for LLMs to generate, edit, and reason about, Knot for humans to read.**
 
 ## What it is
 
