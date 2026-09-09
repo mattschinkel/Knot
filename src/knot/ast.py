@@ -174,3 +174,37 @@ class CondExpr(ExprNode):
 
     def __lt__(self, other):
         return self.cond < other.cond
+
+class MatchExpr(ExprNode):
+    __slots__ = ('pattern', 'body')
+
+    def __init__(self, pattern=None, body=None):
+        self.pattern = pattern
+        self.body = body
+
+    def __repr__(self):
+        return f'MatchExpr(pattern={self.pattern!r}, body={self.body!r})'
+
+    def __eq__(self, other):
+        if not isinstance(other, MatchExpr):
+            return False
+        return (self.pattern == other.pattern and
+                self.body == other.body)
+
+    def __hash__(self):
+        return hash((self.pattern, self.body))
+
+    def __lt__(self, other):
+        if not isinstance(other, MatchExpr):
+            return False
+        if self.pattern is None and other.pattern is None:
+            return self.body is not None and other.body is not None
+        if self.pattern is None:
+            return True
+        if other.pattern is None:
+            return False
+        return self.pattern < other.pattern
+
+    @property
+    def children(self):
+        return (self.pattern, self.body)
