@@ -288,3 +288,60 @@ class FieldAccess(ExprNode):
     @property
     def children(self):
         return ()
+
+class FnExpr:
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+        self.id = 0
+        self.path = []
+        self.label = None
+
+    def __repr__(self):
+        return f"FnExpr({self.name!r}, {self.args!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, FnExpr):
+            return False
+        return self.name == other.name and self.args == other.args
+
+    def __hash__(self):
+        return hash((self.name, tuple(self.args)))
+
+    def __lt__(self, other):
+        if not isinstance(other, FnExpr):
+            return False
+        return (self.name, self.args) < (other.name, tuple(other.args))
+
+    @property
+    def children(self):
+        return self.args
+
+    id: int
+    path: list[int]
+    label: str | None
+
+class CallExpr(ExprNode):
+    def __init__(self, fn, args=None):
+        self.fn = fn
+        self.args = args or []
+        super().__init__(id=1)
+
+    def __repr__(self):
+        return f"CallExpr(fn={self.fn!r}, args={self.args!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, CallExpr):
+            return False
+        return (self.fn == other.fn and
+                self.args == other.args)
+
+    def __hash__(self):
+        return hash((self.fn, tuple(self.args)))
+
+    def __lt__(self, other):
+        return self.fn < other.fn
+
+    @property
+    def children(self):
+        return (self.fn, tuple(self.args))
