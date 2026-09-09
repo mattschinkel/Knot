@@ -1,4 +1,4 @@
-"""Canonical bracket-notation parser for Knot (phase1_spec ┬º4).
+"""Canonical bracket-notation parser for Knot (phase1_spec Γö¼┬║4).
 
 Input form: OP[arg1, arg2, ...]  (the only canonical form; F(...) is not).
 Also parses bare literals, identifiers, UNIT, and holes (? / ?:Type).
@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 
 from knot.addressing import generate_id
-from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, FieldAccess, TypedLit
+from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, FieldAccess, TypedLit, DefNode, FnExpr
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -214,6 +214,92 @@ def parse_hole(text: str) -> HoleExpr:
         raise ParseError("not a hole expression")
     return node
 
-def parse_def(s: str, i: int) -> tuple[DefExpr, int]:
-    """Parse a function definition: def name(arg...) = body"""
-    return _parse_def(s, i)
+
+def _parse_param(s: str, i: int):
+    """Parse one FN param: name or name:Type. Returns ((name, type|None), new_i)."""
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("expected param name")
+    name = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    typ = None
+    if i < len(s) and s[i] == ":":
+        i += 1
+        m2 = _IDENT.match(s, i)
+        if not m2:
+            raise ParseError("expected type after ':' in param")
+        typ = m2.group(0)
+        i = m2.end()
+    return (name, typ), i
+
+
+def parse_fn(text: str) -> FnExpr:
+    """Parse FN[params...] body  e.g. FN[x:i32] MUL[x, x]."""
+    if text is None or not str(text).strip():
+        raise ParseError("empty fn")
+    s = str(text).strip()
+    i = 0
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("FN"):
+        raise ParseError("expected FN")
+    i += 2
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("FN requires [params]")
+    i += 1
+    params = []
+    i = _skip_ws(s, i)
+    if i < len(s) and s[i] == "]":
+        i += 1
+    else:
+        while True:
+            param, i = _parse_param(s, i)
+            params.append(param)
+            i = _skip_ws(s, i)
+            if i >= len(s):
+                raise ParseError("unclosed FN params")
+            if s[i] == "]":
+                i += 1
+                break
+            if s[i] in ",;":
+                i += 1
+                continue
+            raise ParseError("expected ',' or ']' in FN params")
+    body, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i < len(s):
+        raise ParseError(f"trailing input: {s[i:]!r}")
+    return FnExpr(params=params, body=body, id=generate_id())
+
+
+def parse_def(text: str) -> DefNode:
+    """Parse a definition: `name = expr` or `def name = expr`."""
+    if text is None or not str(text).strip():
+        raise ParseError("empty def")
+    s = str(text).strip()
+    i = 0
+    i = _skip_ws(s, i)
+    if s[i:].lower().startswith("def") and (len(s) == i + 3 or not s[i + 3].isalnum()):
+        i += 3
+        i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("expected name in def")
+    name = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "=":
+        raise ParseError("expected '=' in def")
+    i += 1
+    i = _skip_ws(s, i)
+    # Body may be an FN[...] expr — use parse_fn when it starts with FN
+    if s[i:].upper().startswith("FN"):
+        body = parse_fn(s[i:])
+        return DefNode(name=name, body=body, id=generate_id())
+    body, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i < len(s):
+        raise ParseError(f"trailing input: {s[i:]!r}")
+    return DefNode(name=name, body=body, id=generate_id())

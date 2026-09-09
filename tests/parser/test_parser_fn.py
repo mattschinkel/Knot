@@ -1,107 +1,35 @@
-from knot.parser import parse_def
-def test_parse_def_simple():
-    result = parse_def("def f() = 1")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1]
+from knot.parser import parse_def, parse_fn, ParseError
+from knot.ast import DefNode, FnExpr, OpExpr
+import pytest
 
 
-def test_parse_def_with_args():
-    result = parse_def("def f(x, y) = 1")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == ['x', 'y']
-    assert result[0].body == [1]
+def test_parse_fn_simple():
+    n = parse_fn("FN[x:i32] MUL[x, x]")
+    assert isinstance(n, FnExpr)
+    assert n.params == [("x", "i32")]
+    assert isinstance(n.body, OpExpr)
+    assert n.body.op == "MUL"
 
 
-def test_parse_def_with_multiple_body():
-    result = parse_def("def f() = 1, 2")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1, 2]
+def test_parse_fn_multi_params():
+    n = parse_fn("FN[a:i32, b:i32] ADD[a, b]")
+    assert n.params == [("a", "i32"), ("b", "i32")]
+    assert n.body.op == "ADD"
 
-
-def test_parse_def_with_whitespace():
-    result = parse_def("def f() = 1\n    ")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1]
-
-
-def test_parse_def_with_error():
-    try:
-        parse_def("def f() = 1, 2, 3")
-        assert False, "Should have raised ParseError"
-    except ParseError:
-        pass
-    else:
-        assert False, "Should have raised ParseError"
-
-
-def test_parse_def_with_nested_parens():
-    result = parse_def("def f(x, y) = 1, 2")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == ['x', 'y']
-    assert result[0].body == [1, 2]
-
-
-def test_parse_def_with_empty_body():
-    result = parse_def("def f() = ")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == []
-
-
-def test_parse_def_with_return_type():
-    result = parse_def("def f() = 1")
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1]
-
-
-from knot.parser import ParseError
 
 def test_parse_def_simple():
-    result = parse_def("def f() = 1", 0)
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1]
+    n = parse_def("square = FN[x:i32] MUL[x, x]")
+    assert isinstance(n, DefNode)
+    assert n.name == "square"
+    assert isinstance(n.body, FnExpr)
 
 
-def test_parse_def_with_args():
-    result = parse_def("def f(x, y) = 1", 0)
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == ['x', 'y']
-    assert result[0].body == [1]
+def test_parse_def_with_def_kw():
+    n = parse_def("def square = FN[x] x")
+    assert n.name == "square"
+    assert isinstance(n.body, FnExpr)
 
 
-def test_parse_def_with_multiple_body():
-    result = parse_def("def f() = 1, 2", 0)
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1, 2]
-
-
-def test_parse_def_with_whitespace():
-    result = parse_def("def f() = 1\n    ", 0)
-    assert result[0].id == 1
-    assert result[0].name == 'f'
-    assert result[0].args == []
-    assert result[0].body == [1]
-
-
-def test_parse_def_with_args():
-    result = parse_def("def f(x, y) = 1")
-    assert result[0].name == 'f'
-    assert result[0].args == ('x', 'y')
-    assert result[0].body == (1,)
-0].body == (1,)
+def test_parse_fn_requires_fn():
+    with pytest.raises(ParseError):
+        parse_fn("ADD[1, 2]")

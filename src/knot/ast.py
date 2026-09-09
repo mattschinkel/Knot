@@ -94,26 +94,30 @@ class TypeNode(Value):
         return f"Type({self.label})"
 
 class DefNode(ExprNode):
-    def __init__(self, children):
-        self.children = children
-        self.id = None
-        self.path = None
-        self.label = None
+    """A binding: name = expr (phase1_spec Def)."""
+
+    def __init__(self, name, body, id=None, path=None, label=None):
+        self.name = name
+        self.body = body
+        self.id = id
+        self.path = path or []
+        self.label = label
+
+    @property
+    def children(self):
+        return (self.body,)
 
     def __repr__(self):
-        return f"DefNode(id={self.id}, path={self.path}, label={self.label}, children={self.children})"
+        return "DefNode(" + repr(self.name) + ", " + repr(self.body) + ")"
 
     def __eq__(self, other):
-        if not isinstance(other, DefNode):
-            return False
-        return (self.id == other.id and self.path == other.path and 
-                self.label == other.label and self.children == other.children)
+        return (isinstance(other, DefNode)
+                and self.name == other.name
+                and self.body == other.body)
 
     def __hash__(self):
-        return hash((self.id, self.path, self.label, tuple(self.children)))
+        return hash((self.name, self.body))
 
-    def __lt__(self, other):
-        return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
 
 class OpExpr(ExprNode):
     def __init__(self, op, children=None, id=None, path=None, label=None):
@@ -295,69 +299,31 @@ class FieldAccess(ExprNode):
     def children(self):
         return ()
 
-class FnExpr:
-    def __init__(self, id, path, label=None, children=()):
+class FnExpr(ExprNode):
+    """Function value: FN[params...] body."""
+
+    def __init__(self, params, body, id=None, path=None, label=None):
+        self.params = list(params or [])
+        self.body = body
         self.id = id
-        self.path = path
+        self.path = path or []
         self.label = label
-        self._children = children
-
-    def __repr__(self):
-        return "FnExpr(id=" + str(self.id) + ", path=" + str(self.path) + ", label=" + str(self.label) + ", children=" + str(len(self.children)) + ")"
-
-    def __eq__(self, other):
-        if not isinstance(other, FnExpr):
-            return False
-        return (self.id == other.id and self.path == other.path and
-                self.label == other.label and tuple(self.children) == tuple(other.children))
-
-    def __hash__(self):
-        return hash((self.id, self.path, self.label, tuple(self.children)))
-
-    def __lt__(self, other):
-        if not isinstance(other, FnExpr):
-            return False
-        return (self.id, self.path, self.label, tuple(self.children)) < (other.id, other.path, other.label, tuple(other.children))
 
     @property
     def children(self):
-        return self._children
-
-    def __init__(self, id, path, label=None, children=()):
-        self.id = id
-        self.path = path
-        self.label = label
-        self._children = children
+        return (self.body,)
 
     def __repr__(self):
-        return "FnExpr(id=" + str(self.id) + ", path=" + str(self.path) + ", label=" + str(self.label) + ", children=" + str(len(self.children)) + ")"
+        return "FnExpr(" + repr(self.params) + ", " + repr(self.body) + ")"
 
     def __eq__(self, other):
-        if not isinstance(other, FnExpr):
-            return False
-        return (self.id == other.id and self.path == other.path and
-                self.label == other.label and tuple(self.children) == tuple(other.children))
+        return (isinstance(other, FnExpr)
+                and self.params == other.params
+                and self.body == other.body)
 
     def __hash__(self):
-        return hash((self.id, self.path, self.label, tuple(self.children)))
+        return hash((tuple(self.params), self.body))
 
-    def __lt__(self, other):
-        if not isinstance(other, FnExpr):
-            return False
-        return (self.id, self.path, self.label, tuple(self.children)) < (other.id, other.path, other.label, tuple(other.children))
-
-    @property
-    def children(self):
-        return self._children
-
-    def __init__(self, id, path, label=None, children=()):
-        self.id = id
-        self.path = path
-        self.label = label
-        self._children = children
-
-    def __repr__(self):
-        return "FnExpr(id=" + str(self.id) + ", path=" + str(self.path) + ", label=" + str(self.label) + ", children=" + str(len(self.children)) + ")"
 
 class CallExpr(ExprNode):
     def __init__(self, fn, args=None):
