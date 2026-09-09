@@ -143,3 +143,113 @@ def parse_program(text: str) -> list:
         if i < len(s) and s[i] in ";\n":
             i += 1
     return nodes
+
+from knot.parser import parse_field_access
+from knot.parser import ParseError
+
+# Tests
+
+def test_parse_field_access_valid():
+    result = parse_field_access("x", 0)
+    assert result[0].id == 0
+    assert result[1] == 1
+
+def test_parse_field_access_with_brackets():
+    result = parse_field_access("x[1]", 0)
+    assert result[0].id == 0
+    assert result[1] == 2
+
+def test_parse_field_access_missing_bracket():
+    try:
+        parse_field_access("x", 0)
+        assert False
+    except ParseError:
+        pass
+
+def test_parse_field_access_invalid_identifier():
+    try:
+        parse_field_access("\n", 0)
+        assert False
+    except ParseError:
+        pass
+
+def test_parse_field_access_empty_string():
+    try:
+        parse_field_access("", 0)
+        assert False, "Should raise ParseError"
+    except ParseError:
+        pass
+
+def test_parse_field_access_empty():
+    try:
+        parse_field_access("", 0)
+        assert False, "Should raise ParseError"
+    except ParseError:
+        pass
+
+def test_parse_field_access_with_whitespace():
+    try:
+        parse_field_access("Ident [ ", 0)
+        assert False
+    except ParseError:
+        pass
+
+def test_parse_field_access_with_content():
+    try:
+        parse_field_access("Ident [ 123 ]", 0)
+        assert False
+    except ParseError:
+        pass
+
+def test_parse_field_access_unexpected_end():
+    try:
+        parse_field_access("x[", 0)
+        assert False
+    except ParseError:
+        pass
+
+def parse_field_access(s: str, i: int) -> tuple[IdentExpr, int]:
+    """Parse field access: Ident[...] -> IdentExpr"""
+    i = _skip_ws(s, i)
+    if i >= len(s):
+        raise ParseError("unexpected end of input")
+
+    # Parse identifier
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError(f"expected identifier at position {i}")
+    ident = IdentExpr(m.group())
+    i = m.end()
+
+    # Skip whitespace
+    i = _skip_ws(s, i)
+
+    # Expect [
+    if s[i] != '[':
+        raise ParseError(f"expected '[' at position {i}")
+    i += 1
+
+    # Parse content (anything between brackets)
+    content = []
+    while i < len(s) and s[i] != ']':
+        content.append(parse_field_access_content(s, i))
+        i = content[-1][1]
+
+    # Expect ]
+    if i >= len(s) or s[i] != ']':
+        raise ParseError(f"expected ']' at position {i}")
+    i += 1
+
+    # Reconstruct: Ident[...] -> IdentExpr
+    return ident, i
+
+
+def parse_field_access_content(s: str, i: int) -> tuple[str, int]:
+    """Parse content between brackets: e.g., "123" or "x" or "x[...]"""
+    i = _skip_ws(s, i)
+    if i >= len(s):
+        raise ParseError("unexpected end of input")
+
+    # Parse atom
+    atom = _parse_atom(s, i)
+    return atom[0], atom[1]
