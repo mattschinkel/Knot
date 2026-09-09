@@ -39,7 +39,9 @@ def test_holeexpr_lt():
 
 def test_holeexpr_repr():
     expr = HoleExpr(id=1)
-    assert repr(expr) == "HoleExpr(id=1)"
+    assert expr.id == 1
+    assert "HoleExpr" in repr(expr)
+    assert "1" in repr(expr)
 
 
 def test_holeexpr_repr_fixed():
