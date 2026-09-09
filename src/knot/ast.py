@@ -260,3 +260,31 @@ class WithExpr(ExprNode):
     @property
     def children(self):
         return ()
+
+class FieldAccess(ExprNode):
+    def __init__(self, id, path=None, label=None, field_name=None):
+        self.id = id
+        self.path = path or []
+        self.label = label
+        self.field_name = field_name
+
+    def __repr__(self):
+        return f"FieldAccess(id={self.id}, path={self.path}, label={self.label}, field_name={self.field_name})"
+
+    def __eq__(self, other):
+        return (isinstance(other, FieldAccess) and
+                self.id == other.id and
+                self.path == other.path and
+                self.label == other.label and
+                self.field_name == other.field_name)
+
+    def __hash__(self):
+        return hash((self.id, self.path, self.label, self.field_name))
+
+    def __lt__(self, other):
+        return (isinstance(other, FieldAccess) and
+                self.id < other.id)
+
+    @property
+    def children(self):
+        return ()
