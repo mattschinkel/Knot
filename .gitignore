@@ -33,4 +33,7 @@ requirements.txt
 data/
 fixes/fix_crewai_*
 
+# ask_architect.py also carries the llama-server endpoint + bearer token.
+ask_architect.py
+
 # Keep: source, docs, web, Knot fixes, progress, instructions
