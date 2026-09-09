@@ -75,14 +75,14 @@ const STATUS = {
   meta: {
     workingName: "Knot",
     publicCandidate: "Nodigma",
-    overallPhase: "Phase 1 - AST + parser + GBNF grammar (autonomous draft + 30 tasks; spec-consistency gate added)",
+    overallPhase: "Phase 1 DONE - AST + parser + GBNF + printer + bin; Phase 2 next",
     overallStatus: "in-progress",
-    lastUpdated: "2026-09-09 00:20 UTC-4",
+    lastUpdated: "2026-09-09 10:55 UTC-4",
     updatedBy: "R6 Scribe"
   },
   phases: [
     {n:0, name:"Core data model", status:"done", owner:"R2", notes:"value/type repr, units/dimensions, errors-as-values; 38 tests green"},
-    {n:1, name:"AST + parser + GBNF grammar", status:"in-progress", owner:"R2/R3", notes:"node IDs, canonical text, binary, constrained-decoding grammar"},
+    {n:1, name:"AST + parser + GBNF grammar", status:"done", owner:"R2/R3", notes:"AST, addressing, bracket parser, printer, bin, GBNF; property tests; gates PASS"},
     {n:2, name:"Type checker", status:"pending", owner:"R2", notes:"kernel op rules, inference, partial typing with holes"},
     {n:3, name:"Effects / capabilities / contracts", status:"pending", owner:"R2", notes:"prohibitions become structural constraints"},
     {n:4, name:"Holes + partial compile", status:"pending", owner:"R2", notes:"VALID / PARTIAL / INVALID + candidates"},
@@ -110,20 +110,21 @@ const STATUS = {
     {q:"Repo layout: src/knot/, src/knot/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; add vm/ (bytecode target) and docs/ (extracted spec tables)"}
   ],
   recentFixes: [
-    {file:"fix_crewai_windows_console_encoding.md", problem:"CrewAI emoji logs + Windows cp1252 = charmap encode errors", fix:"force UTF-8 on stdout/stderr via PYTHONUTF8 + reconfigure()"}
+    {file:"fix_crewai_windows_console_encoding.md", problem:"CrewAI emoji logs + Windows cp1252 = charmap encode errors", fix:"force UTF-8 on stdout/stderr via PYTHONUTF8 + reconfigure()"},
+    {file:"(T23-T30 manual)", problem:"4B WriteModule clobber + WriteModule-on-tests + huge AppendTests JSON 500s", fix:"Cursor restore + land modules/property tests; close Phase 1 gates manually"}
   ],
   designOpen: [
     {q:"Node ID scheme", status:"decided", dec:"structural path + optional @label; numeric IDs compiler-internal (design 21)"},
     {q:"Public name", status:"open", dec:"working name Knot (collides); Nodigma verified clean, not yet registered"}
   ],
   drift: {
-    phase: 0,
+    phase: 1,
     gate: "pass",
-    note: "All metrics PENDING (prereqs land Phase 1+). Gate passes; no regression.",
+    note: "M1=38 chars proxy, M2=1.0 (GBNF constraints), M3=1.0 (print no-bracket + bin roundtrip). M4/M5 PENDING. Baseline saved docs/drift_baseline.json.",
     metrics: [
-      {m:"M1 token count",       status:"pending", better:"lower",  prereq:"Phase 1 (parser)"},
-      {m:"M2 generation accuracy",status:"pending", better:"higher", prereq:"Phase 1 (GBNF)"},
-      {m:"M3 edit round-trip",    status:"pending", better:"higher", prereq:"Phase 1 (pretty+parser)"},
+      {m:"M1 token count",       status:"pass", better:"lower",  prereq:"Phase 1 (parser)"},
+      {m:"M2 generation accuracy",status:"pass", better:"higher", prereq:"Phase 1 (GBNF)"},
+      {m:"M3 edit round-trip",    status:"pass", better:"higher", prereq:"Phase 1 (pretty+parser)"},
       {m:"M4 partial-compile",   status:"pending", better:"higher", prereq:"Phase 4"},
       {m:"M5 compile latency",    status:"pending", better:"lower",  prereq:"Phase 9 (VM)"}
     ]

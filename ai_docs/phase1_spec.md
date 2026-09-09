@@ -1,7 +1,7 @@
 # Phase 1 Spec — AST + Parser + GBNF Grammar (Knot kernel, Python host)
 
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
-> Status: DECIDED by R1 (autonomous) — DRAFT for crew implementation; no code yet.
+> Status: DECIDED by R1 (autonomous) — implemented; tests green (Phase 1 closed 2026-09-09).
 
 Phase 1 builds the **AST model** and the **canonical text parser**. It introduces **node IDs**, **structural paths**, and **symbolic labels** as the LLM's addressing scheme. The phase delivers a constrained-decoding GBNF grammar that ensures only valid syntax can be emitted by the LLM. This is the foundation for Phase 2's type checker and beyond.
 
@@ -212,13 +212,13 @@ src/knot/
 
 ## 9. Definition of done
 
-- [ ] AST node model with numeric IDs and structural paths
-- [ ] Canonical text parser (bracket notation)
-- [ ] Pretty printer (human-readable view)
-- [ ] Binary serializer (round-trip to AST)
-- [ ] GBNF grammar with constraints (bracket notation; no numeric IDs — D5)
-- [ ] All property tests pass
-- [ ] All tests pass on Python 3.10+
+- [x] AST node model with numeric IDs and structural paths
+- [x] Canonical text parser (bracket notation)
+- [x] Pretty printer (human-readable view)
+- [x] Binary serializer (round-trip to AST)
+- [x] GBNF grammar with constraints (bracket notation; no numeric IDs — D5)
+- [x] All property tests pass
+- [x] All tests pass on Python 3.10+
 
 ## 10. Resolved sub-questions (DECIDED by R1)
 

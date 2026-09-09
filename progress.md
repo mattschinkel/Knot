@@ -27,11 +27,11 @@
 - Created a local git repo for the agents to use: `git init` in the project root, `.gitignore` (ignores `.venv/`, `__pycache__`, OS/editor junk), initial commit `4571436` on `master` with all design/crew/dashboard/wiring/progress/instructions files. Per the rule above, agents must get R1's OK before any `git checkout HEAD`/reset.
 - Added GitHub remote `origin` -> `https://github.com/mattschinkel/Knot.git` and pushed `master` (tracks `origin/master`). Agents push normal commits to `origin`; no force-push/reset without R1's OK + backup. Repo: https://github.com/mattschinkel/Knot
 - Name search (2026-09-08): checked ~30 candidates; the obvious-root space (node/graph/knot/syntax) AND construction-craft real words (cairn/ashlar/quoin) AND short coined names (zynta/korvex/vyntra/kynex) ALL collide. Cairn & Ashlar are near-identical competitor languages. Cleanest verified candidate = **Nodigma** (nodigma.com NXDOMAIN, no collisions). Added "second-round findings" cluster (Cairn, Ashlar, AILANG, Causari, Grafema, Nodus, Knot) to `ai_docs/axiom_design.md` §20 — sharpens our novelty claim: content-addressed graph + blast-radius + AI-native + MCP is now table stakes, not a differentiator.
-- **Phase 1 in progress (through T29 property tests).** Parser, addressing, bin, printer, GBNF, and property tests are green (manual Cursor landings). Remaining: T30 drift/spec gate.
+- **Phase 1 DONE (2026-09-09).** AST, addressing, bracket parser, pretty printer, bin serialize/deserialize, GBNF, property tests (T25–T29), and gates (spec_lint + drift M1–M3) are green. Much of T14+ was Cursor manual-fix + `--from=TN` after 4B crew hard-stops. Baseline: `docs/drift_baseline.json`. Dashboard Phase 1 marked done.
 
 ## TODOs
-- Resume Phase 1 autobuild from T30 after each hard stop; keep fixing crew failures (4B oversized AppendTests / WriteModule clobber / WriteModule-on-tests) until the phase gate lands.
-- Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs (T23/T25 wiped `ast.py`); for test-only tasks use AppendTests only (T25 kept calling WriteModule on `tests/`).
+- Draft/run Phase 2 (type checker) via `architect_phase.py --draft 2` / `autobuild.py --phase 2` when ready; expect continued manual landings for the 4B.
+- Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs (T23/T25/T30 wiped or mangled sources); for test-only tasks use AppendTests only.
 - Confirm whether the server already serves the OpenHands UI (full Canvas) or backend-only.
 - If building the LLM-native language: specify the core value model, type system, and expression/AST (with stable node IDs) before inventing syntax. Do not start with agent/knowledge/uncertainty features.
 - Start Phase 0 of Axiom: define value representation, type representation, and units/dimensions (see `ai_docs/axiom_design.md`).
@@ -59,6 +59,7 @@
 - T23 print_ast — crew HTTP 500 on huge AppendTests JSON; FAILED commit also replaced `ast.py` with a 20-line stub. Restored `ast.py` from T22, implemented `printer.py` + tests, resumed T24.
 - T24 GBNF — crew wrote a Value-based `Program` AST stub (import broken) instead of grammar rules; replaced with production-string GBNF module + tests (no numeric IDs, bracket-only).
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
+- T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
 
 ## Scripts
 - `web/index.html` — one-page Knot build dashboard (R6 Scribe owns it). Open directly in a browser, or serve plain HTTP from the `web/` folder: `.\.venv\Scripts\python.exe -m http.server 8000` (then http://localhost:8000). No HTTPS.
