@@ -1,74 +1,64 @@
-from knot.parser import parse_program
-def test_parse_program_empty():
-    assert parse_program("") is None
+from knot.parser import parse_expr, parse_program, ParseError
+from knot.ast import LitExpr, IdentExpr, OpExpr, HoleExpr, UnitExpr
+from knot.addressing import reset_ids
+import pytest
 
-def test_parse_program_simple():
-    result = parse_program("[1, 2, 3]")
-    assert result is not None
-    assert len(result) == 3
-    assert result[0].id == 1
-    assert result[1].id == 2
-    assert result[2].id == 3
 
-def test_parse_program_nested():
-    result = parse_program("[[1, 2], [3, 4]]")
-    assert result is not None
-    assert len(result) == 2
-    assert result[0][0].id == 1
-    assert result[0][1].id == 2
-    assert result[1][0].id == 3
-    assert result[1][1].id == 4
-
-def test_parse_program_mixed():
-    result = parse_program("[1, [2, 3], 4]")
-    assert result is not None
-    assert len(result) == 3
-    assert result[0].id == 1
-    assert result[1][0].id == 2
-    assert result[1][1].id == 3
-    assert result[2].id == 4
-
-def test_parse_program_with_commas():
-    result = parse_program("[1, 2, 3, 4]")
-    assert result is not None
-    assert len(result) == 4
-    assert result[0].id == 1
-    assert result[1].id == 2
-    assert result[2].id == 3
-    assert result[3].id == 4
-
-def test_parse_program_with_semicolons():
-    result = parse_program("[1; 2; 3]")
-    assert result is not None
-    assert len(result) == 3
-    assert result[0].id == 1
-    assert result[1].id == 2
-    assert result[2].id == 3
-
-def test_parse_program_with_both():
-    result = parse_program("[1, 2; 3, 4]")
-    assert result is not None
-    assert len(result) == 4
-    assert result[0].id == 1
-    assert result[1].id == 2
-    assert result[2].id == 3
-    assert result[3].id == 4
+def setup_function():
+    reset_ids()
 
 
 def test_parse_program_empty():
-    assert parse_program("") is None
+    assert parse_program("") == []
+    assert parse_program("   ") == []
 
-def test_parse_program_simple():
-    result = parse_program("a, b; c")
-    assert result is not None
-    assert len(result) == 3
-    assert result[0].label == 'a'
-    assert result[1].label == 'b'
-    assert result[2].label == 'c'
 
-def test_parse_program_nested():
-    result = parse_program("[a, b; c], d")
-    assert result is not None
-    assert len(result) == 2
-    assert result[0].label == 'a'
-    assert result[0].children == [result[0].children[0], result[0].children[1]]
+def test_parse_lit_int():
+    n = parse_expr("42")
+    assert isinstance(n, LitExpr)
+    assert n.value == 42
+
+
+def test_parse_ident():
+    n = parse_expr("foo")
+    assert isinstance(n, IdentExpr)
+    assert n.id == "foo"
+
+
+def test_parse_op():
+    n = parse_expr("ADD[1, 2]")
+    assert isinstance(n, OpExpr)
+    assert n.op == "ADD"
+    assert len(n.children) == 2
+    assert n.children[0].value == 1
+    assert n.children[1].value == 2
+
+
+def test_parse_nested_op():
+    n = parse_expr("MUL[ADD[1, 2], 3]")
+    assert isinstance(n, OpExpr)
+    assert n.op == "MUL"
+    assert n.children[0].op == "ADD"
+    assert n.children[1].value == 3
+
+
+def test_parse_hole():
+    n = parse_expr("?")
+    assert isinstance(n, HoleExpr)
+
+
+def test_parse_unit():
+    n = parse_expr("UNIT")
+    assert isinstance(n, UnitExpr)
+
+
+def test_parse_program_two_exprs():
+    nodes = parse_program("ADD[1, 2]\nMUL[3, 4]")
+    assert len(nodes) == 2
+    assert nodes[0].op == "ADD"
+    assert nodes[1].op == "MUL"
+
+
+def test_parse_trailing_junk_raises():
+    with pytest.raises(ParseError):
+        parse_expr("ADD[1, 2] junk")

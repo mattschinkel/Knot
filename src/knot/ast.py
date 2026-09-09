@@ -116,24 +116,25 @@ class DefNode(ExprNode):
         return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
 
 class OpExpr(ExprNode):
-    def __init__(self, op, children=None):
+    def __init__(self, op, children=None, id=None, path=None, label=None):
         self.op = op
-        super().__init__(children or [])
+        self._kids = list(children or [])
+        super().__init__(id if id is not None else 0, path, label)
+
+    @property
+    def children(self):
+        return self._kids
 
     def __repr__(self):
-        return f"OpExpr(op={self.op!r}, children={self.children!r})"
+        return "OpExpr(op=" + repr(self.op) + ", children=" + repr(self.children) + ")"
 
     def __eq__(self, other):
         if not isinstance(other, OpExpr):
             return False
-        return (self.op == other.op and
-                self.children == other.children)
+        return self.op == other.op and list(self.children) == list(other.children)
 
     def __hash__(self):
         return hash((self.op, tuple(self.children)))
-
-    def __lt__(self, other):
-        return (self.op, self.children) < (other.op, other.children)
 
 class IfExpr(ExprNode):
     def __init__(self, cond, then_branch, else_branch):
@@ -494,7 +495,3 @@ class UnitExpr(ExprNode):
 
     def __str__(self):
         return str(self.id)
-
-@dataclass
-class Program:
-    values: list[Value]
