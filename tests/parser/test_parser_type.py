@@ -1,56 +1,29 @@
-from knot.parser import parse_typed_lit
+from knot.parser import parse_typed_lit, parse_expr, ParseError
+from knot.ast import TypedLit
+import pytest
+
+
 def test_parse_typed_lit_int():
-    result = parse_typed_lit("IntLit 42", 0)
-    assert result[0].__class__.__name__ == "IntLit"
-    assert result[0].value == 42
-    assert result[1] == 2
-
-def test_parse_typed_lit_bool_true():
-    result = parse_typed_lit("BoolLit True", 0)
-    assert result[0].__class__.__name__ == "BoolLit"
-    assert result[0].value is True
-    assert result[1] == 7
-
-def test_parse_typed_lit_bool_false():
-    result = parse_typed_lit("BoolLit False", 0)
-    assert result[0].__class__.__name__ == "BoolLit"
-    assert result[0].value is False
-    assert result[1] == 7
+    n = parse_typed_lit("2:i32")
+    assert isinstance(n, TypedLit)
+    assert n.value == 2
+    assert n.type_name == "i32"
 
 
-def test_parse_typed_lit_int_whitespace():
-    result = parse_typed_lit("IntLit 42", 0)
-    assert result[0].__class__.__name__ == "IntLit"
-    assert result[0].value == 42
-    assert result[1] == 2
-
-def test_parse_typed_lit_bool_true_whitespace():
-    result = parse_typed_lit("BoolLit True", 0)
-    assert result[0].__class__.__name__ == "BoolLit"
-    assert result[0].value is True
-    assert result[1] == 7
-
-def test_parse_typed_lit_bool_false_whitespace():
-    result = parse_typed_lit("BoolLit False", 0)
-    assert result[0].__class__.__name__ == "BoolLit"
-    assert result[0].value is False
-    assert result[1] == 7
+def test_parse_typed_lit_float_unit():
+    n = parse_typed_lit("10:meters")
+    assert isinstance(n, TypedLit)
+    assert n.value == 10
+    assert n.type_name == "meters"
 
 
-def test_parse_typed_lit_int_whitespace():
-    result = parse_typed_lit("IntLit 42  ", 0)
-    assert result[0].__class__.__name__ == "IntLit"
-    assert result[0].value == 42
-    assert result[1] == 2
+def test_parse_typed_lit_via_expr():
+    n = parse_expr("42:i64")
+    assert isinstance(n, TypedLit)
+    assert n.value == 42
+    assert n.type_name == "i64"
 
-def test_parse_typed_lit_bool_true_whitespace():
-    result = parse_typed_lit("BoolLit True  ", 0)
-    assert result[0].__class__.__name__ == "BoolLit"
-    assert result[0].value is True
-    assert result[1] == 7
 
-def test_parse_typed_lit_bool_false_whitespace():
-    result = parse_typed_lit("BoolLit False  ", 0)
-    assert result[0].__class__.__name__ == "BoolLit"
-    assert result[0].value is False
-    assert result[1] == 7
+def test_parse_typed_lit_requires_type():
+    with pytest.raises(ParseError):
+        parse_typed_lit("42")

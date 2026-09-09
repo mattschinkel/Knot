@@ -459,6 +459,32 @@ class LitExpr(ExprNode):
     def __repr__(self):
         return f'LitExpr({self.value})'
 
+class TypedLit(ExprNode):
+    """Literal with an explicit type annotation: 2:i32, 10:meters (phase1_spec)."""
+
+    def __init__(self, value, type_name, id=None, path=None, label=None):
+        self.value = value
+        self.type_name = type_name
+        self.id = id
+        self.path = path or []
+        self.label = label
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return "TypedLit(" + repr(self.value) + ", " + repr(self.type_name) + ")"
+
+    def __eq__(self, other):
+        return (isinstance(other, TypedLit)
+                and self.value == other.value
+                and self.type_name == other.type_name)
+
+    def __hash__(self):
+        return hash((self.value, self.type_name))
+
+
 class IdentExpr(ExprNode):
     def __init__(self, id, path=None):
         self.id = id

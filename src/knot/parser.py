@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 
 from knot.addressing import generate_id
-from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, FieldAccess
+from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, FieldAccess, TypedLit
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -56,7 +56,15 @@ def _parse_atom(s: str, i: int):
         if j >= len(s):
             raise ParseError("unterminated string")
         node = LitExpr(s[i + 1:j])
-        return node, j + 1
+        j += 1
+        j2 = _skip_ws(s, j)
+        if j2 < len(s) and s[j2] == ":":
+            j2 += 1
+            m2 = _IDENT.match(s, j2)
+            if not m2:
+                raise ParseError("expected type name after ':'")
+            return TypedLit(node.value, m2.group(0), id=generate_id()), m2.end()
+        return node, j
 
     # Number or Ident or OP[...] or UNIT
     m = re.match(r"[A-Za-z_][A-Za-z0-9_]*|-?\d+(?:\.\d+)?", s[i:])
@@ -75,11 +83,20 @@ def _parse_atom(s: str, i: int):
         return UnitExpr(id=generate_id()), i
     if _NUM.match(tok):
         val: int | float = float(tok) if "." in tok else int(tok)
+        # typed lit sugar: 2:i32
+        i2 = _skip_ws(s, i)
+        if i2 < len(s) and s[i2] == ":":
+            i2 += 1
+            m2 = _IDENT.match(s, i2)
+            if not m2:
+                raise ParseError("expected type name after ':'")
+            return TypedLit(val, m2.group(0), id=generate_id()), m2.end()
         return LitExpr(val), i
     if tok in ("true", "false"):
         return LitExpr(tok == "true"), i
     if tok == "nil":
         return LitExpr(None), i
+    # string already handled above; typed string would be 'x':Type after quote parse
     # identifier, possibly with .field sugar (user.name -> FieldAccess)
     node: object = IdentExpr(id=tok)
     while True:
@@ -178,41 +195,12 @@ def parse_program(text: str) -> list:
             i += 1
     return nodes
 
-def parse_typed_lit(s: str, i: int) -> tuple[LitExpr, int]:
-    """Parse a typed literal expression: IntLit n, BoolLit b, or StrLit s.
 
-    Args:
-        s: The input string
-        i: The starting index
-
-    Returns:
-        A tuple of (LitExpr, new_index) where new_index is the position after parsing.
-
-    Raises:
-        ParseError: If the literal is malformed.
-    """
-    # Skip whitespace
-    i = _skip_ws(s, i)
-    if i >= len(s):
-        raise ParseError("unexpected end of input")
-
-    # Parse the type prefix
-    if s[i:i+8] == "IntLit ":
-        i += 8
-    elif s[i:i+8] == "BoolLit ":
-        i += 8
-    elif s[i:i+8] == "StrLit ":
-        i += 8
-    else:
-        raise ParseError(f"expected IntLit, BoolLit, or StrLit, got {repr(s[i:i+8])}")
-
-    # Parse the integer value
-    m = _NUM.match(s, i)
-    if not m:
-        raise ParseError(f"expected integer literal, got {repr(s[i])}")
-
-    # Parse the integer value
-    result = IntLit(int(m.group()))
-    i = m.end()
-
-    return (result, i)
+def parse_typed_lit(text: str) -> TypedLit:
+    """Parse a typed literal in canonical form: `2:i32`, `'hi':str`, `10:meters`."""
+    if text is None or not str(text).strip():
+        raise ParseError("empty typed lit")
+    node = parse_expr(str(text).strip())
+    if not isinstance(node, TypedLit):
+        raise ParseError("not a typed literal (expected value:Type)")
+    return node
