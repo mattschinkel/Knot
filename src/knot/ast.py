@@ -110,3 +110,23 @@ class DefNode(ExprNode):
 
     def __lt__(self, other):
         return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
+
+class OpExpr(ExprNode):
+    def __init__(self, op, children=None):
+        self.op = op
+        super().__init__(children or [])
+
+    def __repr__(self):
+        return f"OpExpr(op={self.op!r}, children={self.children!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, OpExpr):
+            return False
+        return (self.op == other.op and
+                self.children == other.children)
+
+    def __hash__(self):
+        return hash((self.op, tuple(self.children)))
+
+    def __lt__(self, other):
+        return (self.op, self.children) < (other.op, other.children)
