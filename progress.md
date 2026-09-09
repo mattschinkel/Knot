@@ -32,9 +32,10 @@
 - **Linux port (2026-09-09).** Project runs on Linux: `.venv` recreated (Python 3.10), deps installed, CRLF→LF + `.gitattributes`, `python3-tk` installed, Phase 0 `subtype` restored, WIP `test_subtype.py` quarantined, mangled AST unit tests rewritten. **272 tests pass.** LAN LLM reachable (`LocoOperator-4B` @ `192.168.0.50:8081`).
 - **Phase 2 T2 landed manually (2026-09-09).** Crew failed on Linux (context 10k>8k + invented `IntType` tests). Manual: structural List/Set/Map/Tuple subtype keeping Phase 0 bool lattice; harness trim tightened; autobuild git uses per-call `safe.directory`. Resuming `--from=T3`.
 - **Phase 2 T3 landed + harness anti-bloat (2026-09-09).** Crew blew JSON with recursive `type_path_*` / dunder Env bloat. Root-cause gates in `phase_crew.py` (size, recursive names, filler dunders, overwrite refuse, unknown test imports). Manual Env per spec (`enter_scope`/`leave_scope`/`bind`/`lookup` over `Type`). Resuming `--from=T4`.
+- **Phase 2 T4 landed (2026-09-09).** Crew imported nonexistent `TypeErrorVal` from `values`. Manual `type_error`/`TypeErrorVal` in `checker.py` (errors-as-values). Harness now rejects `from knot.<mod> import Missing`. Resuming `--from=T5`.
 
 ## TODOs
-- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T4`.
+- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T5`.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).

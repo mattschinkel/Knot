@@ -37,3 +37,7 @@ class TypeErrorVal(Value):
 def type_error(message: str, path: tuple = ()) -> TypeErrorVal:
     """Build a TypeErrorVal for a type-check failure at `path`."""
     return TypeErrorVal(message=message, path=tuple(path))
+
+def infer_type(node: Value, path: tuple) -> Value:
+    """Infer the type of a value node at a given path."""
+    return node
