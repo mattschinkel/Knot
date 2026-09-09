@@ -1,39 +1,58 @@
 from knot.values import Value
 
-class Node(Value):
-    """Base AST node class."""
+from knot.values import Value
 
-    def __init__(self, id=None, path=None, label=None):
+class Node(Value):
+    def __init__(self, id=None, path=None, label=None, children=()):
         self.id = id
-        self.path = path or []
+        self.path = path
         self.label = label
+        self.children = children
 
     def __repr__(self):
-        return f"Node(id={self.id!r}, path={self.path!r}, label={self.label!r})"
+        return f"Node(id={self.id!r}, path={self.path!r}, label={self.label!r}, children={self.children!r})"
 
     def __eq__(self, other):
         if not isinstance(other, Node):
             return False
         return (self.id == other.id and
                 self.path == other.path and
-                self.label == other.label)
+                self.label == other.label and
+                self.children == other.children)
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __hash__(self):
+        return hash((self.id, self.path, self.label, self.children))
 
-class ExprNode(Node):
-    """AST node for expressions."""
+    def __iter__(self):
+        return iter(self.children)
 
-    def __init__(self, id=None, path=None, label=None, children=None):
-        super().__init__(id, path, label)
-        self.children = children or []
+    def __len__(self):
+        return len(self.children)
+
+from knot.values import Value
+
+from knot.values import Value
+
+class ExprNode(Value):
+    def __init__(self, children=()):
+        self.id = None
+        self.path = None
+        self.label = None
+        self.children = children
 
     def __repr__(self):
-        return (f"ExprNode(id={self.id!r}, path={self.path!r}, label={self.label!
-        }!r}, children={self.children})")
+        return f"ExprNode({self.children!r})"
 
     def __eq__(self, other):
         if not isinstance(other, ExprNode):
             return False
-        return (super().__eq__(other) and
-                self.children == other.children)
+        return self.children == other.children
+
+    def __hash__(self):
+        return hash(self.children)
+
+    def __iter__(self):
+        return iter(self.children)
+
+    def __len__(self):
+        return len(self.children)
