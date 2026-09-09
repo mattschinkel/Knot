@@ -213,3 +213,7 @@ def parse_hole(text: str) -> HoleExpr:
     if not isinstance(node, HoleExpr):
         raise ParseError("not a hole expression")
     return node
+
+def parse_def(s: str, i: int) -> tuple[DefExpr, int]:
+    """Parse a function definition: def name(arg...) = body"""
+    return _parse_def(s, i)
