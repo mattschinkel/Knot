@@ -34,27 +34,26 @@ from knot.values import Value
 from knot.values import Value
 
 class ExprNode:
-    def __init__(self, children=None):
-        self.children = children or []
-        self.id = None
-        self.path = None
-        self.label = None
+    def __init__(self, id, path=None, label=None):
+        self.id = id
+        self.path = path or []
+        self.label = label
 
     def __repr__(self):
-        return f"ExprNode(id={self.id}, path={self.path}, label={self.label}, children={self.children})"
+        return f"ExprNode({self.id})"
 
     def __eq__(self, other):
-        return (isinstance(other, ExprNode) and
-                self.id == other.id and
-                self.path == other.path and
-                self.label == other.label and
-                self.children == other.children)
+        return isinstance(other, ExprNode) and self.id == other.id
 
     def __hash__(self):
-        return hash((self.id, self.path, self.label, tuple(self.children)))
+        return hash(self.id)
 
     def __lt__(self, other):
-        return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
+        return self.id < other.id
+
+    @property
+    def children(self):
+        return ()
 
 class TypeNode(Value):
     """A type node in the AST."""
@@ -133,27 +132,30 @@ class OpExpr(ExprNode):
 
 class IfExpr(ExprNode):
     def __init__(self, cond, then_branch, else_branch):
-        super().__init__()
+        super().__init__(id=1)
         self.cond = cond
         self.then_branch = then_branch
         self.else_branch = else_branch
-        self.children = (then_branch, else_branch)
 
     def __repr__(self):
-        return f"IfExpr(id={self.id}, cond={self.cond}, then_branch={self.then_branch}, else_branch={self.else_branch})"
+        return f"IfExpr(cond={self.cond}, then_branch={self.then_branch}, else_branch={self.else_branch})"
 
     def __eq__(self, other):
-        return (isinstance(other, IfExpr) and
-                self.id == other.id and
-                self.cond == other.cond and
+        if not isinstance(other, IfExpr):
+            return False
+        return (self.cond == other.cond and
                 self.then_branch == other.then_branch and
                 self.else_branch == other.else_branch)
 
     def __hash__(self):
-        return hash((self.id, self.cond, self.then_branch, self.else_branch))
+        return hash((self.cond, self.then_branch, self.else_branch))
 
     def __lt__(self, other):
-        return (self.id, self.cond, self.then_branch, self.else_branch) < (other.id, other.cond, other.then_branch, other.else_branch)
+        return self.cond < other.cond
+
+    @property
+    def children(self):
+        return (self.then_branch, self.else_branch)
 
 class CondExpr(ExprNode):
     def __init__(self, cond):
