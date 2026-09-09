@@ -75,9 +75,9 @@ const STATUS = {
   meta: {
     workingName: "Knot",
     publicCandidate: "Nodigma",
-    overallPhase: "Phase 1 - AST + parser + GBNF grammar (R1 autonomous; human observes)",
+    overallPhase: "Phase 1 - AST + parser + GBNF grammar (drift-check gate added)",
     overallStatus: "in-progress",
-    lastUpdated: "2026-09-08 23:53 UTC-4",
+    lastUpdated: "2026-09-09 00:03 UTC-4",
     updatedBy: "R6 Scribe"
   },
   phases: [
@@ -115,7 +115,19 @@ const STATUS = {
   designOpen: [
     {q:"Node ID scheme", status:"decided", dec:"structural path + optional @label; numeric IDs compiler-internal (design 21)"},
     {q:"Public name", status:"open", dec:"working name Knot (collides); Nodigma verified clean, not yet registered"}
-  ]
+  ],
+  drift: {
+    phase: 0,
+    gate: "pass",
+    note: "All metrics PENDING (prereqs land Phase 1+). Gate passes; no regression.",
+    metrics: [
+      {m:"M1 token count",       status:"pending", better:"lower",  prereq:"Phase 1 (parser)"},
+      {m:"M2 generation accuracy",status:"pending", better:"higher", prereq:"Phase 1 (GBNF)"},
+      {m:"M3 edit round-trip",    status:"pending", better:"higher", prereq:"Phase 1 (pretty+parser)"},
+      {m:"M4 partial-compile",   status:"pending", better:"higher", prereq:"Phase 4"},
+      {m:"M5 compile latency",    status:"pending", better:"lower",  prereq:"Phase 9 (VM)"}
+    ]
+  }
 };
 
 function pill(s){return '<span class="pill '+s+'">'+s+'</span>'}
@@ -164,6 +176,18 @@ function render(){
     (q.dec?"<br><span class='dec'>"+esc(q.dec)+"</span>":"")+"</li>";
   });
   app+="</ul></div>";
+
+  app+="<div class='card'><h2>Drift-check gate (agents 8)</h2>"+
+    "<div style='margin-bottom:8px'>Phase "+esc(STATUS.drift.phase)+": "+
+    pill(STATUS.drift.gate)+"<br><span style='color:var(--dim)'>"+
+    esc(STATUS.drift.note)+"</span></div>"+
+    "<table><tr><th>Metric</th><th>Better</th><th>Status</th><th>Prereq</th></tr>";
+  STATUS.drift.metrics.forEach(d=>{
+    app+="<tr class='row'><td>"+esc(d.m)+"</td><td style='color:var(--dim)'>"+
+      esc(d.better)+"</td><td>"+pill(d.status)+"</td><td style='color:var(--dim)'>"+
+      esc(d.prereq)+"</td></tr>";
+  });
+  app+="</table></div>";
 
   app+="<div class='card full'><h2>Recent fixes</h2><ul class='fixes'>";
   STATUS.recentFixes.forEach(f=>{

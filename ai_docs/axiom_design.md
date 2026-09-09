@@ -64,6 +64,12 @@ compilation, knowledge graphs, uncertainty in the kernel, native agents.
   LLMs cannot generate reliably must not exist.") The bar is 10/10, not
   "good enough" — the language's reason to exist is to be the best surface
   for an LLM, not merely a usable one.
+- **The 10/10 bar is measurable, not a vibe.** Taste drift is caught by a
+  drift-check phase gate (see `ai_docs/knot_agents.md` §8) with concrete
+  metrics: M1 token count of canonical AIR, M2 generation accuracy under the
+  GBNF grammar, M3 edit round-trip, M4 partial-compile coherence, M5
+  compile latency. Each is tracked per-phase vs a baseline; a regression is a
+  measurable signal a 4B can catch and report — not a judgment call.
 - Everything is a typed expression node.
 - Every node has a stable ID.
 - Canonical text is a serialization of the semantic graph, not the source of
