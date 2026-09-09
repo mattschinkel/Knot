@@ -34,10 +34,10 @@
 - **Phase 2 T3 landed + harness anti-bloat (2026-09-09).** Crew blew JSON with recursive `type_path_*` / dunder Env bloat. Root-cause gates in `phase_crew.py` (size, recursive names, filler dunders, overwrite refuse, unknown test imports). Manual Env per spec (`enter_scope`/`leave_scope`/`bind`/`lookup` over `Type`). Resuming `--from=T4`.
 - **Phase 2 T4 landed (2026-09-09).** Crew imported nonexistent `TypeErrorVal` from `values`. Manual `type_error`/`TypeErrorVal` in `checker.py` (errors-as-values). Harness now rejects `from knot.<mod> import Missing`. Resuming `--from=T5`.
 - **Phase 2 T5 landed (2026-09-09).** Crew left truncated `l(True)` + duplicate tests; stub `infer_type` echoed values. Manual infer for LitExpr/TypedLit/IdentExpr/UnitExpr; AppendTests rejects stray module-level stmts and duplicate test names. Resuming `--from=T6`.
-- **Phase 2 T6 landed (2026-09-09).** Crew tested Values with wrong `IntVal(10)` arity and wrong API. Manual `check_binary_op(op, t1, t2)` per spec (same numeric T, no casts); harness rejects under-arity IntVal/FloatVal in tests. Resuming `--from=T7`.
+- **Phase 2 T6 landed (2026-09-09).** Crew tested Values with wrong `IntVal(10)` arity and wrong API. Manual `check_binary_op(op, t1, t2)` per spec (same numeric T, no casts); harness rejects under-arity IntVal/FloatVal in tests. Resuming `--from=T8`.
 
 ## TODOs
-- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T7`.
+- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T8`.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).
@@ -50,6 +50,8 @@
 - Finish wish-list review (see `ai_docs/axiom_design.md` §19): DONE — must-have features from competitive scan folded into Tier 1 (#11-14) and Tier 2 (#22-29). Build phases updated (§16) to include GBNF grammar (Phase 1), errors-as-values + two-half compiler (Phase 5/9), compiler-as-MCP + kb + --llm mode (Phase 12).
 - Decide which Tier 3 items make v1, and which rejected items stay rejected.
 - Answer the 4 open questions in `ai_docs/knot_agents.md` §5 — RESOLVED 2026-09-08: (1) Phase 0 host language = **Python** (Rust deferred to Phase 9 if sub-200ms forces it); (2) R1 Architect = **peer** drafting tasks out-of-band (not a hierarchical manager — 4B model loses coherence managing live); (3) shell tool = **gated behind human approval** in Phase 0 (agents propose, human runs); (4) repo layout = **confirmed** + add `vm/` (bytecode target) and `docs/` (extracted spec tables).
+- **Phase 2 T7 landed (2026-09-09).** Crew tests imported TypeErrorVal from errors + wrong call shape. Kept check_unary_op; fixed tests; import gate is now module-qualified for tests. Resuming `--from=T8`.
+
 - **Phase 0 spec drafted** (`ai_docs/phase0_spec.md`) — R1's deliverable: value repr (`values.py`), type algebra (`types.py`), units/dimensions (`units.py`), structured errors (`errors.py`), with 6 design decisions (D1–D6) and 3 open sub-questions (Q1–Q3) for the human. Repo skeleton created (`src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`). **Awaiting human review of D1–D6 + Q1–Q3 before R2 writes implementation code.**
 - Build the Phase 0 crew (R1 Architect + R2 Kernel Engineer + R4 Verifier) as a CrewAI `Crew` against the LAN llama-server, extending `two_agent_crew.py`.
 - Specify the Knot string stdlib (slice/index/length/char<->int) — flagged "NOT yet specified" in `ai_docs/axiom_design.md` §22.5; add to Phase 0/stdlib.
