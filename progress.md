@@ -28,11 +28,16 @@
 - Added GitHub remote `origin` -> `https://github.com/mattschinkel/Knot.git` and pushed `master` (tracks `origin/master`). Agents push normal commits to `origin`; no force-push/reset without R1's OK + backup. Repo: https://github.com/mattschinkel/Knot
 - Name search (2026-09-08): checked ~30 candidates; the obvious-root space (node/graph/knot/syntax) AND construction-craft real words (cairn/ashlar/quoin) AND short coined names (zynta/korvex/vyntra/kynex) ALL collide. Cairn & Ashlar are near-identical competitor languages. Cleanest verified candidate = **Nodigma** (nodigma.com NXDOMAIN, no collisions). Added "second-round findings" cluster (Cairn, Ashlar, AILANG, Causari, Grafema, Nodus, Knot) to `ai_docs/axiom_design.md` §20 — sharpens our novelty claim: content-addressed graph + blast-radius + AI-native + MCP is now table stakes, not a differentiator.
 - **Phase 1 DONE (2026-09-09).** AST, addressing, bracket parser, pretty printer, bin serialize/deserialize, GBNF, property tests (T25–T29), and gates (spec_lint + drift M1–M3) are green. Much of T14+ was Cursor manual-fix + `--from=TN` after 4B crew hard-stops. Baseline: `docs/drift_baseline.json`. Dashboard Phase 1 marked done.
-- **Phase 2 in progress (2026-09-09).** Spec drafted (lint PASS). First autobuild falsely closed Phase 2 because R1 tasks were not a markdown table (`0 tasks parsed`). Restored corrupted `values.py` from Phase 0; rewrote `phase2_tasks.md` as an 18-row table (builds on Phase 0 types). Re-running crew.
+- **Phase 2 paused (2026-09-09).** T1 (`unify`) landed green; stopped mid-T2 (`subtype`). Resume with `autobuild.py --phase 2 --from=T2`.
+- **Linux port (2026-09-09).** Project runs on Linux: `.venv` recreated (Python 3.10), deps installed, CRLF→LF + `.gitattributes`, `python3-tk` installed, Phase 0 `subtype` restored, WIP `test_subtype.py` quarantined, mangled AST unit tests rewritten. **272 tests pass.** LAN LLM reachable (`LocoOperator-4B` @ `192.168.0.50:8081`).
+- **Phase 2 T2 landed manually (2026-09-09).** Crew failed on Linux (context 10k>8k + invented `IntType` tests). Manual: structural List/Set/Map/Tuple subtype keeping Phase 0 bool lattice; harness trim tightened; autobuild git uses per-call `safe.directory`. Resuming `--from=T3`.
+- **Phase 2 T3 landed + harness anti-bloat (2026-09-09).** Crew blew JSON with recursive `type_path_*` / dunder Env bloat. Root-cause gates in `phase_crew.py` (size, recursive names, filler dunders, overwrite refuse, unknown test imports). Manual Env per spec (`enter_scope`/`leave_scope`/`bind`/`lookup` over `Type`). Resuming `--from=T4`.
 
 ## TODOs
+- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T4`.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
-- Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass).
+- If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
+- Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).
 - Teach `architect_phase.py --tasks` to emit the markdown table format `parse_tasks` requires (prevent false phase close on 0 tasks).
 - Confirm whether the server already serves the OpenHands UI (full Canvas) or backend-only.
 - If building the LLM-native language: specify the core value model, type system, and expression/AST (with stable node IDs) before inventing syntax. Do not start with agent/knowledge/uncertainty features.
@@ -56,6 +61,9 @@
 - **Generalize `phase_crew.py` to run an arbitrary task from `phaseN_tasks.md`** (it is currently hardcoded to the `Dimension.pow` pilot with `SetDimensionMethod`/`AppendTestUnitsPy`). Phase 1 tasks target new files (`ast.py`, `parser.py`, `printer.py`, `bin.py`, `grammar/gbnf.py`, `addressing.py`), so the harness needs task-driven pinned-path write tools (e.g. `WriteModule(file, content)` + `AppendTests(file, content)`) and a task selector (`--phase 1 --task T1`).
 
 ## Previous issues
+- `fix_linux_port.md` — Windows→Linux move: no venv, CRLF sources, missing tkinter, broken mid-T2 subtype WIP + mangled AST unit tests; fixed env/line endings/tests so 272 pytest green on Linux.
+- `fix_crew_bloat_gates.md` — 4B recursive/dunder WriteModule bloat + invented IntType imports caused HTTP 500 and wrong Env; harness now rejects bloat/overwrite/unknown imports at the tool boundary.
+- Phase 2 T2 crew hard-stop (Linux) — llama-server context overflow (10076>8192) + tests importing nonexistent `IntType`; landed structural subtype manually; tightened `_file_ref` / failure feedback; autobuild git `safe.directory` per-call.
 - `fix_crewai_windows_console_encoding.md` — CrewAI event-bus logs use emoji; Windows cp1252 raised `charmap` encode errors. `two_agent_crew.py` now reconfigures stdout/stderr to UTF-8.
 - T22 bin clash — crew created both `src/knot/bin.py` and `src/knot/bin/`; fixed to module + AST JSON round-trip tests.
 - T23 print_ast — crew HTTP 500 on huge AppendTests JSON; FAILED commit also replaced `ast.py` with a 20-line stub. Restored `ast.py` from T22, implemented `printer.py` + tests, resumed T24.
@@ -65,19 +73,20 @@
 - Phase 2 false close — R1 task list was prose not a table → 0 tasks parsed → autobuild declared DONE and pushed; fixed tasks table + restored `values.py`; re-running.
 
 ## Scripts
-- `web/index.html` — one-page Knot build dashboard (R6 Scribe owns it). Open directly in a browser, or serve plain HTTP from the `web/` folder: `.\.venv\Scripts\python.exe -m http.server 8000` (then http://localhost:8000). No HTTPS.
-- `two_agent_crew.py` — 2-agent CrewAI example against the LAN llama-server. **LOCAL-ONLY** (gitignored, not in the public repo; contains the LAN endpoint/key). Run from the project directory in PowerShell: `.\.venv\Scripts\Activate.ps1` then `python two_agent_crew.py`, or `.\.venv\Scripts\python.exe two_agent_crew.py`.
-- `requirements.txt` — `crewai==1.15.20` and `crewai-tools==1.15.20`. **LOCAL-ONLY** (gitignored).
-- `ask_architect.py` — query the R1 Architect against the LAN llama-server. **LOCAL-ONLY** (gitignored; carries the LAN endpoint/key). Interactive REPL: `python ask_architect.py`; one-shot: `python ask_architect.py "your question"` or `python ask_architect.py --once "q"`. Env overrides: `KNOT_LLM_MODEL`, `KNOT_LLM_BASE_URL`, `KNOT_LLM_API_KEY`, `KNOT_LLM_TEMPERATURE`.
-- `architect_phase.py` — R1 drafts/manages phases. **LOCAL-ONLY** (gitignored). `python architect_phase.py --draft N` → R1 drafts `ai_docs/phaseN_spec.md`; `python architect_phase.py --tasks N` → R1 breaks it into fragment-sized crew tasks (`ai_docs/phaseN_tasks.md`). Same env overrides.
-- `phase_crew.py` — CrewAI runner for one crew task (fragment-insertion harness). **LOCAL-ONLY** (gitignored). `python phase_crew.py` runs the pilot; generalizes to per-task crew runs. Same env overrides.
-- `two_agent_crew.py` — 2-agent CrewAI example against the LAN llama-server. From the project directory in PowerShell:
-  `.\.venv\Scripts\Activate.ps1` then `python two_agent_crew.py`
-  or `.\.venv\Scripts\python.exe two_agent_crew.py`
-- `requirements.txt` — `crewai==1.15.20` and `crewai-tools==1.15.20`
-- Recreate the venv if needed:
-  `python -m venv .venv`
-  `.\.venv\Scripts\python.exe -m pip install --upgrade pip`
-  `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`
-- Check which model llama-server currently has loaded:
-  `Invoke-RestMethod -Uri http://192.168.0.50:8081/v1/models -Headers @{Authorization='Bearer <key-from-two_agent_crew.py>'}`
+- **Linux (current host):** activate with `source .venv/bin/activate`, or prefix commands with `.venv/bin/python`.
+- `web/index.html` — Knot build dashboard. Serve: `.venv/bin/python -m http.server 8000 --directory web` → http://localhost:8000 (no HTTPS).
+- `two_agent_crew.py` — 2-agent CrewAI demo vs LAN llama-server. **LOCAL-ONLY.** `.venv/bin/python two_agent_crew.py`
+- `ask_architect.py` — R1 Q&A. **LOCAL-ONLY.** `.venv/bin/python ask_architect.py` or `--once "q"`. Env: `KNOT_LLM_MODEL`, `KNOT_LLM_BASE_URL`, `KNOT_LLM_API_KEY`, `KNOT_LLM_TEMPERATURE`.
+- `architect_phase.py` — R1 drafts phases. **LOCAL-ONLY.** `.venv/bin/python architect_phase.py --draft N` / `--tasks N`.
+- `phase_crew.py` — one-task CrewAI runner. **LOCAL-ONLY.**
+- `autobuild.py` — autonomous phase driver. **LOCAL-ONLY.** Resume Phase 2: `.venv/bin/python autobuild.py --phase 2 --from=T2`
+- `crew_chats_viewer.py` — tkinter chat GUI (needs `python3-tk`). **LOCAL-ONLY.** `.venv/bin/python crew_chats_viewer.py`
+- `requirements.txt` — `crewai==1.15.20`, `crewai-tools==1.15.20`, `pytest>=8`. **LOCAL-ONLY.**
+- Recreate venv (Linux):
+  `python3 -m venv .venv`
+  `.venv/bin/pip install --upgrade pip`
+  `.venv/bin/pip install -r requirements.txt`
+- Run tests: `.venv/bin/python -m pytest -q`
+- Check llama-server models:
+  `curl -s http://192.168.0.50:8081/v1/models -H "Authorization: Bearer <key>"`
+- Windows (legacy): `.\.venv\Scripts\python.exe …` / `.\.venv\Scripts\Activate.ps1`

@@ -1,47 +1,25 @@
-from knot.ast import DefNode
-def test_defnode_id():
-    node = DefNode(id=1)
-    assert node.id == 1
+from knot.ast import DefNode, LitExpr
 
 
-def test_defnode_path():
-    node = DefNode(path=[1, 2, 3])
-    assert node.path == [1, 2, 3]
+def test_defnode_name_and_body():
+    body = LitExpr(1)
+    node = DefNode("x", body)
+    assert node.name == "x"
+    assert node.body is body
+    assert node.children == (body,)
 
 
-def test_defnode_label():
-    node = DefNode(label="test_label")
-    assert node.label == "test_label"
+def test_defnode_optional_meta():
+    body = LitExpr(1)
+    node = DefNode("x", body, id=7, path=["a"], label="L")
+    assert node.id == 7
+    assert node.path == ["a"]
+    assert node.label == "L"
 
 
-def test_defnode_children():
-    node = DefNode(children=[1, 2, 3])
-    assert node.children == [1, 2, 3]
-
-
-def test_defnode_children_only():
-    node = DefNode(children=[1, 2, 3])
-    assert node.children == [1, 2, 3]
-
-
-def test_defnode_id():
-    node = DefNode(children=[1])
-    node.id = 1
-    assert node.id == 1
-
-
-def test_defnode_path():
-    node = DefNode(children=[1])
-    node.path = [1, 2, 3]
-    assert node.path == [1, 2, 3]
-
-
-def test_defnode_label():
-    node = DefNode(children=[1])
-    node.label = "test_label"
-    assert node.label == "test_label"
-
-
-def test_defnode_children():
-    node = DefNode(children=[1, 2, 3])
-    assert node.children == [1, 2, 3]
+def test_defnode_eq():
+    a = DefNode("x", LitExpr(1))
+    b = DefNode("x", LitExpr(1))
+    c = DefNode("y", LitExpr(1))
+    assert a == b
+    assert a != c

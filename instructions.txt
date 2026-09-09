@@ -4,5 +4,11 @@ Available project instructions
 - progress.md — highlights, TODOs, previous issues, and important scripts
 - name_changes.md — rename log for variables, functions, and procedures (create when first rename happens)
 - fixes/ — one fix_*.md per issue (problem + fix)
+- fixes/fix_linux_port.md — Windows→Linux port (venv, LF line endings, tkinter, test quarantine)
+
+Linux quick start:
+  python3 -m venv .venv
+  .venv/bin/pip install -r requirements.txt
+  .venv/bin/python -m pytest -q
 
 If new instruction files are added, list them here.

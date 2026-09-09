@@ -1,4 +1,6 @@
 from knot.ast import OpExpr
+
+
 def test_opexpr_init():
     expr = OpExpr("+", [1, 2])
     assert expr.op == "+"
@@ -7,7 +9,7 @@ def test_opexpr_init():
 
 def test_opexpr_repr():
     expr = OpExpr("+", [1, 2])
-    assert repr(expr) == "OpExpr(+, [1, 2])"
+    assert repr(expr) == "OpExpr(op='+', children=[1, 2])"
 
 
 def test_opexpr_eq():
@@ -25,11 +27,11 @@ def test_opexpr_ne():
     assert expr1 != expr3
 
 
-def test_opexpr_lt():
-    expr1 = OpExpr("+", [1, 2])
-    expr2 = OpExpr("+", [1, 3])
+def test_opexpr_lt_by_id():
+    # OpExpr defaults id=0; ordering uses ExprNode.__lt__ (by id).
+    expr1 = OpExpr("+", [1, 2], id=1)
+    expr2 = OpExpr("+", [1, 3], id=2)
     assert expr1 < expr2
-    assert expr2 > expr1
 
 
 def test_opexpr_children():
@@ -48,16 +50,3 @@ def test_opexpr_op_type():
     expr = OpExpr("+", [1, 2])
     assert isinstance(expr.op, str)
     assert expr.op == "+"
-
-
-def test_opexpr_repr():
-    expr = OpExpr("+", [1, 2])
-    repr_str = repr(expr)
-    assert repr_str.startswith("OpExpr(op='+)")
-    assert repr_str.endswith(", children=[1, 2])")
-
-
-def test_opexpr_repr():
-    expr = OpExpr("+", [1, 2])
-    repr_str = repr(expr)
-    assert repr_str == "OpExpr(op='+', children=[1, 2])"
