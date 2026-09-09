@@ -55,3 +55,36 @@ class ExprNode:
 
     def __lt__(self, other):
         return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
+
+class TypeNode(Value):
+    """A type node in the AST."""
+    def __init__(self, id=None, path=None, label=None, children=None):
+        self.id = id
+        self.path = path
+        self.label = label
+        self.children = children
+
+    def __repr__(self):
+        return f"TypeNode(id={self.id!r}, path={self.path!r}, label={self.label!r}, children={self.children!r})"
+
+    def __eq__(self, other):
+        if not isinstance(other, TypeNode):
+            return False
+        return (self.id == other.id and
+                self.path == other.path and
+                self.label == other.label and
+                self.children == other.children)
+
+    def __hash__(self):
+        return hash((self.id, tuple(self.path), self.label, tuple(self.children)))
+
+    def __lt__(self, other):
+        if not isinstance(other, TypeNode):
+            return False
+        return (self.id < other.id or
+                (self.id == other.id and self.path < other.path) or
+                (self.id == other.id and self.path == other.path and self.label < other.label) or
+                (self.id == other.id and self.path == other.path and self.label == other.label and self.children < other.children))
+
+    def __str__(self):
+        return f"Type({self.label})"
