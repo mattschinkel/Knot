@@ -38,5 +38,7 @@ ask_architect.py
 # phase_crew.py likewise carries the LAN endpoint/key and is the local
 # CrewAI runner for the agent crew. LOCAL-ONLY.
 phase_crew.py
+# architect_phase.py lets R1 draft/manage phase specs; carries the LAN key.
+architect_phase.py
 
 # Keep: source, docs, web, Knot fixes, progress, instructions
