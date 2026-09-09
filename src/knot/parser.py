@@ -18,10 +18,33 @@ class ParseError(ValueError):
     pass
 
 
-def _skip_ws(s: str, i: int) -> int:
+def _skip_ws(s):
+    """Skip whitespace in a string."""
+    i = 0
     while i < len(s) and s[i].isspace():
         i += 1
-    return i
+    return s[i:]
+
+
+def _parse_type(s):
+    """Parse a type annotation: :Type or :Type -> Type -> ..."""
+    from knot.parser import _skip_ws
+    from knot import values
+
+    i = 0
+    if i < len(s) and s[i] == ':':
+        i += 1
+        # Skip whitespace after :
+        s = _skip_ws(s[i:])
+        if not s:
+            return (0, 1)
+        # Parse type
+        try:
+            _, type_end = _parse_type(s)
+        except ParseError:
+            type_end = 1
+        return (i + 1, type_end)
+    return (0, 1)
 
 
 def _parse_atom(s: str, i: int):
@@ -204,3 +227,33 @@ def parse_typed_lit(text: str) -> TypedLit:
     if not isinstance(node, TypedLit):
         raise ParseError("not a typed literal (expected value:Type)")
     return node
+
+def parse_hole(s):
+    """Parse a hole expression: ? or ?:Type."""
+    from knot.parser import _skip_ws, _parse_type
+    from knot import values
+
+    # Skip whitespace
+    s = _skip_ws(s)
+
+    if s == '?':
+        return (HoleExpr(1), 1)
+
+    # Parse type annotation
+    try:
+        _, type_end = _parse_type(s)
+    except ParseError:
+        type_end = 1
+
+    return (HoleExpr(1), type_end)
+
+
+def parse_hole():
+    """Parse a hole expression: ? or ?:Type."""
+    return None
+
+# Also add _parse_type if it doesn't exist (assumed to be defined elsewhere)
+# _parse_type is assumed to be defined in the parser module
+
+# Also add _parse_type if it doesn't exist (assumed to be defined elsewhere)
+# _parse_type is assumed to be defined in the parser module
