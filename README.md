@@ -2,13 +2,6 @@
 
 **An AI-native programming language — designed for LLMs to generate, edit, and reason about, not for humans to read.**
 
-> ⚠️ **Working name.** "Knot" is a *working name only* and collides with
-> existing projects (e.g. [`ilyakooo0/knot`](https://github.com/ilyakooo0/knot),
-> a functional-relational language). It is **not** the public release
-> name. The verified-clean release candidate is **Nodigma** (`nodigma.com`
-> available). See [`ai_docs/axiom_design.md`](ai_docs/axiom_design.md)
-> "NOTE ON THE NAME".
-
 ## What it is
 
 Knot is a programming language whose canonical form is what an LLM is
