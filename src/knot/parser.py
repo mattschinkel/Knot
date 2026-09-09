@@ -1,4 +1,4 @@
-"""Canonical bracket-notation parser for Knot (phase1_spec §4).
+"""Canonical bracket-notation parser for Knot (phase1_spec ┬º4).
 
 Input form: OP[arg1, arg2, ...]  (the only canonical form; F(...) is not).
 Also parses bare literals, identifiers, UNIT, and holes (? / ?:Type).
@@ -18,33 +18,10 @@ class ParseError(ValueError):
     pass
 
 
-def _skip_ws(s):
-    """Skip whitespace in a string."""
-    i = 0
+def _skip_ws(s: str, i: int) -> int:
     while i < len(s) and s[i].isspace():
         i += 1
-    return s[i:]
-
-
-def _parse_type(s):
-    """Parse a type annotation: :Type or :Type -> Type -> ..."""
-    from knot.parser import _skip_ws
-    from knot import values
-
-    i = 0
-    if i < len(s) and s[i] == ':':
-        i += 1
-        # Skip whitespace after :
-        s = _skip_ws(s[i:])
-        if not s:
-            return (0, 1)
-        # Parse type
-        try:
-            _, type_end = _parse_type(s)
-        except ParseError:
-            type_end = 1
-        return (i + 1, type_end)
-    return (0, 1)
+    return i
 
 
 def _parse_atom(s: str, i: int):
@@ -228,32 +205,11 @@ def parse_typed_lit(text: str) -> TypedLit:
         raise ParseError("not a typed literal (expected value:Type)")
     return node
 
-def parse_hole(s):
-    """Parse a hole expression: ? or ?:Type."""
-    from knot.parser import _skip_ws, _parse_type
-    from knot import values
-
-    # Skip whitespace
-    s = _skip_ws(s)
-
-    if s == '?':
-        return (HoleExpr(1), 1)
-
-    # Parse type annotation
-    try:
-        _, type_end = _parse_type(s)
-    except ParseError:
-        type_end = 1
-
-    return (HoleExpr(1), type_end)
-
-
-def parse_hole():
-    """Parse a hole expression: ? or ?:Type."""
-    return None
-
-# Also add _parse_type if it doesn't exist (assumed to be defined elsewhere)
-# _parse_type is assumed to be defined in the parser module
-
-# Also add _parse_type if it doesn't exist (assumed to be defined elsewhere)
-# _parse_type is assumed to be defined in the parser module
+def parse_hole(text: str) -> HoleExpr:
+    """Parse a hole: `?` or `?:Type`. Returns a HoleExpr."""
+    if text is None or not str(text).strip():
+        raise ParseError("empty hole")
+    node = parse_expr(str(text).strip())
+    if not isinstance(node, HoleExpr):
+        raise ParseError("not a hole expression")
+    return node
