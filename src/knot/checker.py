@@ -84,3 +84,17 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
             return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
         return found
     return type_error("cannot infer type of " + type(expr).__name__, ())
+
+def check_binary_op(env, op, left_type, right_type):
+    if op == "ADD":
+        return I64
+    elif op == "SUB":
+        return I64
+    elif op == "MUL":
+        return I64
+    elif op == "DIV":
+        return F64
+    elif op == "MOD":
+        return I64
+    else:
+        return type_error(f"unknown binary op {op}", ())
