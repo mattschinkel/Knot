@@ -20,3 +20,20 @@ class Node(Value):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+class ExprNode(Node):
+    """AST node for expressions."""
+
+    def __init__(self, id=None, path=None, label=None, children=None):
+        super().__init__(id, path, label)
+        self.children = children or []
+
+    def __repr__(self):
+        return (f"ExprNode(id={self.id!r}, path={self.path!r}, label={self.label!
+        }!r}, children={self.children})")
+
+    def __eq__(self, other):
+        if not isinstance(other, ExprNode):
+            return False
+        return (super().__eq__(other) and
+                self.children == other.children)
