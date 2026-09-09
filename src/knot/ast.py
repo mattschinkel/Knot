@@ -457,3 +457,40 @@ class LitExpr(ExprNode):
 
     def __repr__(self):
         return f'LitExpr({self.value})'
+
+class IdentExpr(ExprNode):
+    def __init__(self, id, path=None):
+        self.id = id
+        self.path = path or []
+        self.label = None
+
+    @property
+    def children(self):
+        return ()
+
+class UnitExpr(ExprNode):
+    def __init__(self, id, path=None, label=None):
+        super().__init__(id, path, label)
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return f'UnitExpr({self.id})'
+
+    def __eq__(self, other):
+        if not isinstance(other, UnitExpr):
+            return False
+        return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
+
+    def __lt__(self, other):
+        if not isinstance(other, UnitExpr):
+            return False
+        return self.id < other.id
+
+    def __str__(self):
+        return str(self.id)
