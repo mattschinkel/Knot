@@ -98,13 +98,17 @@ NEVER = BaseType("never")
 
 
 def subtype(s: Type, t: Type) -> bool:
-    """Base subtyping lattice for the kernel (Phase 0).
+    """Structural subtyping lattice for the kernel (Phase 0 + Phase 2 T2).
 
     Rules:
       - reflexive: s <: s
       - never <: everything
       - T <: T?            (any value can be lifted to an option)
       - nominal <: its def (a named type is a subtype of its definition)
+      - List[A] <: List[B] iff A <: B (covariant elem)
+      - Set[A]  <: Set[B]  iff A <: B
+      - Map[K1,V1] <: Map[K2,V2] iff K1 <: K2 and V1 <: V2
+      - Tuple[A...] <: Tuple[B...] iff same arity and Ai <: Bi pairwise
     Note: 'everything <: unit' is intentionally NOT included; discarding
     a value into unit is a coercion, not subtyping, and would be unsound.
     """
@@ -117,6 +121,16 @@ def subtype(s: Type, t: Type) -> bool:
     if isinstance(s, NominalType):
         if subtype(s.defn, t):
             return True
+    if isinstance(s, ListType) and isinstance(t, ListType):
+        return subtype(s.elem, t.elem)
+    if isinstance(s, SetType) and isinstance(t, SetType):
+        return subtype(s.elem, t.elem)
+    if isinstance(s, MapType) and isinstance(t, MapType):
+        return subtype(s.key, t.key) and subtype(s.val, t.val)
+    if isinstance(s, TupleType) and isinstance(t, TupleType):
+        if len(s.elems) != len(t.elems):
+            return False
+        return all(subtype(a, b) for a, b in zip(s.elems, t.elems))
     return False
 
 
