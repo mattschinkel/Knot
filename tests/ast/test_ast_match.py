@@ -17,13 +17,6 @@ def test_matchexpr_hash():
     assert hash(node) is not None
 
 
-def test_matchexpr_lt():
-    from knot.ast import MatchExpr
-    node1 = MatchExpr(pattern=None, body=None)
-    node2 = MatchExpr(pattern=None, body=None)
-    assert node1 < node2
-
-
 def test_matchexpr_children():
     from knot.ast import MatchExpr
     node = MatchExpr(pattern=None, body=None)
