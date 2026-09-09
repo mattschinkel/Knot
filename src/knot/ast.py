@@ -494,3 +494,7 @@ class UnitExpr(ExprNode):
 
     def __str__(self):
         return str(self.id)
+
+@dataclass
+class Program:
+    values: list[Value]
