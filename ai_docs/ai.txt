@@ -14,7 +14,7 @@ This project explores using a local LLM with free/open-source agent tooling to h
 - Review files in ai_docs/ at the start of work.
 - When working with .css files, bump the version after edits.
 - Do not restore from backup without asking.
-- Never `git checkout HEAD` / reset to the most recent commit without the Architect's (R1) OK; take a backup first. A local git repo is maintained for the agents to use.
+- Never `git checkout HEAD` / reset / force-push without the Architect's (R1) OK; take a backup first. R1 is autonomous and approves these itself (no human gate); R6 logs the operation to the dashboard. A local git repo is maintained for the agents to use.
 - When using Windows PowerShell, do not use `&&` with commands.
 
 ## Local LLM assumption

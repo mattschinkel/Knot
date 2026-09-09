@@ -1,7 +1,8 @@
 # Phase 0 Spec — Core Data Model (Knot kernel, Python host)
 
-> Owner: R1 Architect (drafts) → human decides. Implementation: R2 Kernel
-> Engineer. Verification: R4 Verifier.
+> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel
+> Engineer. Verification: R4 Verifier. Human observes via the dashboard
+> (non-blocking); R1 makes all decisions.
 > Status: DRAFT for human review — no implementation code yet.
 
 Phase 0 builds the **deterministic kernel's data model** in Python: the
@@ -191,7 +192,7 @@ tests/
 - Unit mismatch (`meters + seconds`) returns an `ErrorVal`, not an
   exception.
 - No LLM, no parser, no I/O anywhere in `src/knot/`.
-- R4's harness is green; R1 signs off; human confirms D1–D6.
+- R4's harness is green; R1 signs off (R1 decides D1–D6 autonomously).
 
 ## 9. Open sub-questions (R1 → human)
 

@@ -1,6 +1,8 @@
 # Phase 1 Spec — AST + Parser + GBNF Grammar (Knot kernel, Python host)
 
-> Owner: R1 Architect (drafts) → human decides. Implementation: R2 Kernel. Verification: R4 Verifier.  
+> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel
+> Engineer. Verification: R4 Verifier. Human observes via the dashboard
+> (non-blocking); R1 makes all decisions.
 > Status: DRAFT for human review — no implementation code yet.
 
 Phase 1 builds the **AST + parser + GBNF grammar** for the Knot kernel. It defines the node model with IDs, the canonical text parser, pretty printer, and binary serializer. The GBNF grammar is constrained to enforce valid syntax for the LLM to emit. This is the first phase where the LLM directly writes source text.
@@ -219,7 +221,7 @@ tests/
 - Pretty printer generates human-readable source from AST.
 - Binary serializer round-trips to the same graph.
 - No LLM, no type checking, no effects, no holes, no errors anywhere in `src/knot/`.
-- R4's harness is green; R1 signs off; human confirms D1–D8.
+- R4's harness is green; R1 signs off (R1 decides D1–D8 autonomously).
 
 ## 10. Open sub-questions (R1 → human)
 

@@ -75,9 +75,9 @@ const STATUS = {
   meta: {
     workingName: "Knot",
     publicCandidate: "Nodigma",
-    overallPhase: "Phase 1 - AST + parser + GBNF grammar (crew-driven loop proven)",
+    overallPhase: "Phase 1 - AST + parser + GBNF grammar (R1 autonomous; human observes)",
     overallStatus: "in-progress",
-    lastUpdated: "2026-09-08 23:42 UTC-4",
+    lastUpdated: "2026-09-08 23:53 UTC-4",
     updatedBy: "R6 Scribe"
   },
   phases: [
@@ -106,7 +106,7 @@ const STATUS = {
   openQuestions: [
     {q:"Phase 0 host language: Python or Rust?", status:"decided", dec:"Python (Rust deferred to Phase 9 if sub-200ms forces it)"},
     {q:"Architect (R1) as a hierarchical Crew manager, or a peer that drafts tasks out-of-band?", status:"decided", dec:"Peer drafting out-of-band (4B loses coherence managing live)"},
-    {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"decided", dec:"Gated behind human approval in Phase 0 (agents propose, human runs)"},
+    {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"decided", dec:"Autonomous (2026-09-09): agents run whitelisted build/test commands directly; R1 approves, no human gate. Supersedes the earlier human-gate stance."},
     {q:"Repo layout: src/knot/, src/knot/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; add vm/ (bytecode target) and docs/ (extracted spec tables)"}
   ],
   recentFixes: [

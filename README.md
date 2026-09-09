@@ -99,7 +99,9 @@ Knot is built by a 6-role LLM agent crew (detailed in
 | **R5 DX Engineer** | formatter, LSP, CLI, sub-200ms loop |
 | **R6 Scribe** | docs, examples, the dashboard, `name_changes`/`fixes` |
 
-The human is the architect; agents are scoped implementers/reviewers.
+R1 (Architect) decides autonomously — it makes all design decisions and
+records them; the human observes via the [build dashboard](web/index.html)
+(non-blocking). Agents are scoped implementers/reviewers.
 Progress is visible on the [build dashboard](web/index.html) (open
 `web/index.html` in a browser, or serve plain HTTP: `python -m
 http.server 8000` from `web/`).
