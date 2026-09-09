@@ -63,6 +63,13 @@ class Dimension:
 
     def __str__(self) -> str:
         return self.to_string()
+    def pow(self, n: int) -> "Dimension":
+        if n == 0:
+            return DIMENSIONLESS
+        acc: dict[str, int] = dict(self.items)
+        for k, v in acc.items():
+            acc[k] *= n
+        return Dimension.from_map(acc)
 
 
 DIMENSIONLESS = Dimension(())
