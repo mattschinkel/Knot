@@ -55,3 +55,38 @@ def assign_label(label: str, node: object = None) -> str:
 def lookup_label(label: str) -> object:
     """Return the node registered under `label`, or None."""
     return _LABELS.get(label)
+
+def generate_id():
+    """Generate a unique node ID as a string in the format "node_N" where N is a sequential integer.
+
+    Returns:
+        str: A unique node ID string (e.g., "node_0", "node_1", etc.)
+    """
+    return f"node_{_next_label() }"
+
+__all__ = ["generate_id"]
+
+__all__ = ["generate_id"]
+
+__all__ = ["generate_id"]
+
+__all__ = ["generate_id"]
+
+__all__ = ["generate_id"]
+
+# Internal implementation details
+_label_registry = {}
+_next_label = 1
+
+# Exported API
+__all__ = ["generate_id"]
+
+# For testing purposes only
+__test__ = {"clears_on_reset": "node_1"}
+
+# Internal implementation details
+_label_registry = {}
+_next_label = 1
+
+# Exported API
+__all__ = ["generate_id"]
