@@ -88,3 +88,25 @@ class TypeNode(Value):
 
     def __str__(self):
         return f"Type({self.label})"
+
+class DefNode(ExprNode):
+    def __init__(self, children):
+        self.children = children
+        self.id = None
+        self.path = None
+        self.label = None
+
+    def __repr__(self):
+        return f"DefNode(id={self.id}, path={self.path}, label={self.label}, children={self.children})"
+
+    def __eq__(self, other):
+        if not isinstance(other, DefNode):
+            return False
+        return (self.id == other.id and self.path == other.path and 
+                self.label == other.label and self.children == other.children)
+
+    def __hash__(self):
+        return hash((self.id, self.path, self.label, tuple(self.children)))
+
+    def __lt__(self, other):
+        return (self.id, self.path, self.label, self.children) < (other.id, other.path, other.label, other.children)
