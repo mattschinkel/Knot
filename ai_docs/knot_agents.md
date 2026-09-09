@@ -393,15 +393,24 @@ autonomously; R6 logs the score + any regression to the dashboard.
   = better. Prereq: VM (Phase 9).
 
 ### Gate procedure (every phase boundary)
-1. R3 + R4 run `src/knot/drift.py:check(baseline, current)` over the
+1. **Spec-consistency gate (deterministic, runs FIRST):** R3 + R4 run
+   `tools/spec_lint.py` on `ai_docs/phaseN_spec.md`. This catches spec-level
+   contradictions the drift metrics cannot — a non-autonomous/stale status
+   line, broken `## N.` section numbering, pre-checked DoD boxes in a draft,
+   a `D` decision that contradicts a §21 invariant (e.g. asserting numeric
+   IDs appear in the GBNF grammar/source), or a missing required section. If
+   it fails, R1 re-drafts to fix it; the phase does NOT proceed to the drift
+   metrics until `spec_lint` passes (no errors). `architect_phase.py --draft N`
+   runs this automatically and gives R1 one repair pass.
+2. R3 + R4 run `src/knot/drift.py:check(baseline, current)` over the
    benchmark suite. Metrics whose prerequisites aren't built yet return
    `Status.PENDING` with the phase that will enable them (not a failure).
-2. Compare each metric to the baseline (`docs/drift_baseline.json`,
+3. Compare each metric to the baseline (`docs/drift_baseline.json`,
    created on first passing gate). A **regression** is a metric moving the
    wrong way beyond its threshold.
-3. If any metric regresses: R3/R4 flag it to R1 with the data; R1 decides
+4. If any metric regresses: R3/R4 flag it to R1 with the data; R1 decides
    the fix autonomously and the phase does NOT close until the gate passes.
-4. If the gate passes: R6 updates the baseline + logs the score to the
+5. If the gate passes: R6 updates the baseline + logs the score to the
    dashboard; the phase closes.
 
 ### Why this is proper, not a hack
