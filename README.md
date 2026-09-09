@@ -1,6 +1,6 @@
 # Knot
 
-**An AI-native programming language — designed for LLMs to generate, edit, and reason about, Knot made for humans.**
+**An AI-native programming language — designed for LLMs to generate, edit, and reason about. Knot is made for humans.**
 
 ## What it is
 
