@@ -34,9 +34,10 @@
 - **Phase 2 T3 landed + harness anti-bloat (2026-09-09).** Crew blew JSON with recursive `type_path_*` / dunder Env bloat. Root-cause gates in `phase_crew.py` (size, recursive names, filler dunders, overwrite refuse, unknown test imports). Manual Env per spec (`enter_scope`/`leave_scope`/`bind`/`lookup` over `Type`). Resuming `--from=T4`.
 - **Phase 2 T4 landed (2026-09-09).** Crew imported nonexistent `TypeErrorVal` from `values`. Manual `type_error`/`TypeErrorVal` in `checker.py` (errors-as-values). Harness now rejects `from knot.<mod> import Missing`. Resuming `--from=T5`.
 - **Phase 2 T5 landed (2026-09-09).** Crew left truncated `l(True)` + duplicate tests; stub `infer_type` echoed values. Manual infer for LitExpr/TypedLit/IdentExpr/UnitExpr; AppendTests rejects stray module-level stmts and duplicate test names. Resuming `--from=T6`.
+- **Phase 2 T6 landed (2026-09-09).** Crew tested Values with wrong `IntVal(10)` arity and wrong API. Manual `check_binary_op(op, t1, t2)` per spec (same numeric T, no casts); harness rejects under-arity IntVal/FloatVal in tests. Resuming `--from=T7`.
 
 ## TODOs
-- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T6`.
+- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T7`.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).

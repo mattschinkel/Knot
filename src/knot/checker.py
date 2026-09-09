@@ -102,3 +102,20 @@ def check_binary_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
     if t1 != t2:
         return type_error("binary " + op + " operand type mismatch", ())
     return t1
+
+def check_unary_op(op: str, t: Type) -> Type | TypeErrorVal:
+    """Type rule for unary ops: NEG, NOT.
+
+    NEG:  I32 | I64 | F32 | F64 -> I32 | I64
+    NOT:  BOOL -> BOOL
+    """
+    if op == "NEG":
+        if t not in {I32, I64, F32, F64}:
+            return type_error("NEG requires numeric type", ())
+        return t
+    elif op == "NOT":
+        if t != BOOL:
+            return type_error("NOT requires BOOL type", ())
+        return t
+    else:
+        return type_error(f"unknown unary op {op}", ())
