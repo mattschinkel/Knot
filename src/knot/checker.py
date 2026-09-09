@@ -85,16 +85,20 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         return found
     return type_error("cannot infer type of " + type(expr).__name__, ())
 
-def check_binary_op(env, op, left_type, right_type):
-    if op == "ADD":
-        return I64
-    elif op == "SUB":
-        return I64
-    elif op == "MUL":
-        return I64
-    elif op == "DIV":
-        return F64
-    elif op == "MOD":
-        return I64
-    else:
-        return type_error(f"unknown binary op {op}", ())
+
+_NUMERIC = frozenset({I32, I64, F32, F64})
+_ARITH_OPS = frozenset({"ADD", "SUB", "MUL", "DIV", "MOD"})
+
+
+def check_binary_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
+    """Type rule for binary kernel ops (Phase 2 T6).
+
+    Spec: ADD/SUB/MUL/DIV/MOD are (T, T) -> T for numeric T; no implicit casts.
+    """
+    if op not in _ARITH_OPS:
+        return type_error("unknown binary op " + repr(op), ())
+    if t1 not in _NUMERIC or t2 not in _NUMERIC:
+        return type_error("binary " + op + " requires numeric types", ())
+    if t1 != t2:
+        return type_error("binary " + op + " operand type mismatch", ())
+    return t1
