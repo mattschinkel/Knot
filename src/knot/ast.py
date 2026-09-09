@@ -379,47 +379,34 @@ class CallExpr(ExprNode):
         return (self.fn, tuple(self.args))
 
 class HoleExpr(ExprNode):
-    def __init__(self, id, path, label=None, children=None):
-        super().__init__(id=id, path=path, label=label)
-        self._children = children
+    def __init__(self, id, path=None, label=None):
+        self.id = id
+        self.path = path or []
+        self.label = label
+        self._children = tuple()
 
     def __repr__(self):
-        label_repr = f'label={self.label}' if self.label is not None else ''
-        children_repr = f', children={self._children}' if self._children is not None else ''
-        return f'HoleExpr(id={self.id}, path={self.path}{label_repr}{children_repr})'
+        return f"HoleExpr(id={self.id!r}, path={self.path!r}, label={self.label!r}, children={self._children!r})"
 
     def __eq__(self, other):
         if not isinstance(other, HoleExpr):
             return False
-        return (self.id == other.id and self.path == other.path and 
-                self.label == other.label and self._children == other._children)
+        return (self.id == other.id and self.path == other.path and self.label == other.label)
 
     def __hash__(self):
-        return hash((self.id, self.path, self.label, self._children))
+        return hash((self.id, tuple(self.path), self.label))
 
     def __lt__(self, other):
         if not isinstance(other, HoleExpr):
             return False
-        if self.id != other.id:
-            return self.id < other.id
-        if self.path != other.path:
-            return self.path < other.path
-        if self.label != other.label:
-            return self.label < other.label
-        return self._children < other._children
+        return (self.id < other.id or (self.id == other.id and self.path < other.path))
+
+    def __str__(self):
+        return f"HoleExpr(id={self.id}, path={self.path}, label={self.label}, children={self._children})"
 
     @property
     def children(self):
         return self._children
 
-    @children.setter
-    def children(self, value):
-        self._children = value
-
-    @property
-    def _children(self):
-        return self._children
-
-    @_children.setter
-    def _children(self, value):
-        self._children = value
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
