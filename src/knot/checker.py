@@ -14,7 +14,8 @@ from .ast import (
 from .env import Env
 from .errors import StructuredError
 from .types import (
-    Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, FnType, unify,
+    Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, FnType,
+    RecordType, TupleType, MapType, unify,
 )
 from .values import ErrorVal, Value
 
@@ -153,6 +154,8 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         kids = list(expr.children or [])
         if expr.op in ("IF", "COND"):
             return infer_if(expr, env)
+        if expr.op in ("GET", "SET", "FIELD"):
+            return _infer_access_op(expr, env)
         if expr.op in _UNARY_OPS:
             if len(kids) != 1:
                 return type_error("unary " + expr.op + " arity", ())
@@ -273,18 +276,101 @@ def infer_def(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
     ctx.bind(str(expr.name), body_t)
     return body_t
 
-from knot.types import I32
-from knot.values import TypeErrorVal
 
-def check_access(operation, types, path):
-    """Type-check GET FIELD SET access ops."""
-    if operation == "GET":
-        if len(types) != 1:
-            return TypeErrorVal(f"GET FIELD requires exactly 1 type, got {len(types)}")
-        return I32()
-    elif operation == "SET":
-        if len(types) != 2:
-            return TypeErrorVal(f"SET FIELD requires exactly 2 types, got {len(types)}")
-        return I32()
-    else:
-        return TypeErrorVal(f"Invalid operation: {operation}")
+def _field_key(key: object) -> str | int | TypeErrorVal:
+    """Resolve GET/SET/FIELD key from AST atom or bare str/int."""
+    if isinstance(key, IdentExpr):
+        return str(key.id)
+    if isinstance(key, LitExpr) and isinstance(key.value, int) and not isinstance(key.value, bool):
+        return int(key.value)
+    if isinstance(key, str):
+        return key
+    if isinstance(key, int) and not isinstance(key, bool):
+        return key
+    return type_error("access key must be field name or tuple index", ())
+
+
+def _lookup_record_field(rec: RecordType, name: str) -> Type | TypeErrorVal:
+    for fname, fty in rec.fields:
+        if fname == name:
+            return fty
+    return type_error("unknown field " + repr(name), ())
+
+
+def check_access(
+    op: str,
+    base: Type,
+    key: object,
+    val: Type | None = None,
+) -> Type | TypeErrorVal:
+    """Type-check GET / FIELD / SET on records, tuples, and maps."""
+    op = str(op).upper()
+    if op not in ("GET", "FIELD", "SET"):
+        return type_error("unknown access op " + repr(op), ())
+
+    k = _field_key(key)
+    if isinstance(k, TypeErrorVal):
+        return k
+
+    if op in ("GET", "FIELD"):
+        if isinstance(base, RecordType):
+            if not isinstance(k, str):
+                return type_error("record access needs field name", ())
+            return _lookup_record_field(base, k)
+        if isinstance(base, TupleType):
+            if not isinstance(k, int):
+                return type_error("tuple access needs index", ())
+            if k < 0 or k >= len(base.elems):
+                return type_error("tuple index out of range", ())
+            return base.elems[k]
+        if isinstance(base, MapType):
+            return base.val
+        return type_error(op + " requires record, tuple, or map", ())
+
+    # SET
+    if val is None:
+        return type_error("SET requires value type", ())
+    if isinstance(base, RecordType):
+        if not isinstance(k, str):
+            return type_error("record SET needs field name", ())
+        cur = _lookup_record_field(base, k)
+        if isinstance(cur, TypeErrorVal):
+            return cur
+        if unify(val, cur) is None:
+            return type_error("SET field type mismatch", ())
+        return base
+    if isinstance(base, TupleType):
+        if not isinstance(k, int):
+            return type_error("tuple SET needs index", ())
+        if k < 0 or k >= len(base.elems):
+            return type_error("tuple index out of range", ())
+        if unify(val, base.elems[k]) is None:
+            return type_error("SET tuple elem type mismatch", ())
+        return base
+    if isinstance(base, MapType):
+        if unify(val, base.val) is None:
+            return type_error("SET map value type mismatch", ())
+        return base
+    return type_error("SET requires record, tuple, or map", ())
+
+
+def _infer_access_op(expr: OpExpr, env: Env | None) -> Type | TypeErrorVal:
+    kids = list(expr.children or [])
+    if expr.op in ("GET", "FIELD"):
+        if len(kids) != 2:
+            return type_error(expr.op + " arity", ())
+        base_t = infer_type(kids[0], env)
+        if isinstance(base_t, TypeErrorVal):
+            return base_t
+        return check_access(expr.op, base_t, kids[1])
+    if expr.op == "SET":
+        if len(kids) != 3:
+            return type_error("SET arity", ())
+        base_t = infer_type(kids[0], env)
+        if isinstance(base_t, TypeErrorVal):
+            return base_t
+        val_t = infer_type(kids[2], env)
+        if isinstance(val_t, TypeErrorVal):
+            return val_t
+        return check_access("SET", base_t, kids[1], val_t)
+    return type_error("unknown access op", ())
