@@ -374,3 +374,19 @@ def _infer_access_op(expr: OpExpr, env: Env | None) -> Type | TypeErrorVal:
             return val_t
         return check_access("SET", base_t, kids[1], val_t)
     return type_error("unknown access op", ())
+
+def check_collection(env: Env, expr: CallExpr, base_t: Type) -> Type:
+    op = expr.op
+    if op == "LEN":
+        return I32
+    elif op == "AT":
+        return check_index(env, base_t, expr)
+    elif op == "APPEND":
+        return check_append(env, base_t, expr)
+    elif op == "CONCAT":
+        return check_concat(env, base_t, expr)
+    elif op == "MAP":
+        return check_map(env, base_t, expr)
+    elif op == "FILTER":
+        return check_filter(env, base_t, expr)
+    return type_error(f"unknown collection op: {op}", ())
