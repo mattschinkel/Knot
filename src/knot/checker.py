@@ -459,3 +459,16 @@ def _infer_collection_op(expr: OpExpr, env: Env | None) -> Type | TypeErrorVal:
             return t
         types.append(t)
     return check_collection(expr.op, *types)
+
+def check_expr(expr, env):
+    match expr:
+        case LitExpr(): return check_lit_expr(expr, env)
+        case IdentExpr(): return check_ident_expr(expr, env)
+        case IfExpr(): return check_if_expr(expr, env)
+        case CallExpr(): return check_call_expr(expr, env)
+        case DefNode(): return check_def_node(expr, env)
+        case FnExpr(): return check_fn_expr(expr, env)
+        case HoleExpr(): return check_hole_expr(expr, env)
+        case OpExpr(): return check_op_expr(expr, env)
+        case _:
+            return type_error(f"unknown expr type {type(expr)}", ())
