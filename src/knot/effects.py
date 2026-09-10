@@ -67,3 +67,50 @@ class EffectSet:
 
 
 PURE = EffectSet()
+
+
+class Capability(Enum):
+    """Runtime-grantable permissions (phase3_spec D2)."""
+
+    FS_READ = "fs.read"
+    FS_WRITE = "fs.write"
+    FS_DELETE = "fs.delete"
+    NET_REQUEST = "net.request"
+    DB_READ = "db.read"
+    DB_WRITE = "db.write"
+    IO_STDOUT = "io.stdout"
+    IO_STDERR = "io.stderr"
+    TIME_NOW = "time.now"
+    RANDOM = "random"
+    AI = "ai"
+
+
+@dataclass(frozen=True)
+class CapabilitySet:
+    """Immutable set of Capability values."""
+
+    caps: frozenset[Capability]
+
+    def __init__(self, caps: Iterable[Capability] | None = None) -> None:
+        object.__setattr__(self, "caps", frozenset(caps or ()))
+
+    def __contains__(self, item: object) -> bool:
+        return item in self.caps
+
+    def __iter__(self):
+        return iter(self.caps)
+
+    def __len__(self) -> int:
+        return len(self.caps)
+
+    def __bool__(self) -> bool:
+        return bool(self.caps)
+
+    def union(self, other: CapabilitySet) -> CapabilitySet:
+        return CapabilitySet(self.caps | other.caps)
+
+    def intersection(self, other: CapabilitySet) -> CapabilitySet:
+        return CapabilitySet(self.caps & other.caps)
+
+    def issubset(self, other: CapabilitySet) -> bool:
+        return self.caps <= other.caps

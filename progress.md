@@ -51,9 +51,10 @@
 - **Phase 2 DONE (2026-09-10).** T17 property tests (`test_no_raise`, `test_hole_ok`); removed bogus `src/knot/checker` file from crew; T18 drift gate PASS vs updated `docs/drift_baseline.json` (M1=21). **367 tests.**
 - **Autobuild auto-restart (2026-09-10).** Failed tasks retry (`KNOT_TASK_RETRIES`) and outer-loop restart (`KNOT_AUTO_RESTART=1`); `--watch` re-execs on process exit. See `fixes/fix_autobuild_auto_restart.md`. Continuing Phase 3.
 - **Phase 3 T1 landed manually (2026-09-10).** Watch spun overnight on mangled `effects.py` / bad tests. Manual `EffectCategory` + `EffectSet`. Resuming `--from=T2`.
+- **Crew v6 (2026-09-10).** Restore-on-retry, one-shot WriteModule/AddClass/AddFunction, sequential R2→R4 (R4 tests-only). See `fixes/fix_crew_v6_restore_oneshot_sequential.md`.
 
 ## TODOs
-- Phase 3 autobuild: `.venv/bin/python autobuild.py --watch --phase 3 --from=T2`.
+- Phase 3 autobuild: `.venv/bin/python autobuild.py --watch --phase 3 --from=T2` (crew v6).
 - D-FB11: add normalize step so canonical print has no spaces; update parser/tests if needed.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
@@ -95,6 +96,7 @@
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
 - Phase 2 T17 crew fail — wrote bogus `src/knot/checker` (not .py) and never created prop tests; landed T17+T18 manually and closed Phase 2.
+- `fix_crew_v6_restore_oneshot_sequential.md` — restore-on-retry + one-shot writes + R2→R4 sequential (R4 no rewrite).
 - `fix_autobuild_auto_restart.md` — autobuild stopped the phase on first crew fail; now retries + auto-restarts tasks and supports `--watch`.
 - Phase 2 T16 crew fail — invented IntLit / missing check_* helpers; landed `check_expr` as infer_type dispatcher.
 - Phase 2 T15 crew fail — circular import in types.py + Value-based tests; landed `check_collection` manually.
