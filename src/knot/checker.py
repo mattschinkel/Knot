@@ -65,25 +65,40 @@ def _lit_type(value: object) -> Type | TypeErrorVal:
     return type_error("unsupported literal", ())
 
 
-def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
-    """Infer the type of a kernel AST expression (Phase 2 T5: literals/idents)."""
-    if isinstance(expr, LitExpr):
-        return _lit_type(expr.value)
-    if isinstance(expr, TypedLit):
-        t = _BASE_BY_NAME.get(expr.type_name)
-        if t is None:
-            return type_error("unknown type " + repr(expr.type_name), tuple(expr.path or ()))
-        return t
-    if isinstance(expr, UnitExpr):
-        return UNIT
-    if isinstance(expr, IdentExpr):
-        ctx = env if env is not None else Env()
-        name = expr.id if isinstance(expr.id, str) else str(expr.id)
-        found = ctx.lookup(name)
-        if found is None:
-            return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
-        return found
-    return type_error("cannot infer type of " + type(expr).__name__, ())
+def infer_type(expr, env):
+    match expr:
+        case IdentExpr(id):
+            return env.lookup(id)
+        case LitExpr(value):
+            return infer_literal_type(value)
+        case UnitExpr():
+            return UNIT
+        case _:
+            return type_error("unknown expression type", ())
+
+
+def infer_literal_type(value):
+    if isinstance(value, bool):
+        return BOOL
+    if isinstance(value, int):
+        return I32
+    if isinstance(value, float):
+        return F64
+    if isinstance(value, str):
+        return STRING
+    return type_error("unknown literal type", ())
+
+
+def infer_literal_type(value):
+    if isinstance(value, bool):
+        return BOOL
+    if isinstance(value, int):
+        return I32
+    if isinstance(value, float):
+        return F64
+    if isinstance(value, str):
+        return STRING
+    return type_error("unknown literal type", ())
 
 
 _NUMERIC = frozenset({I32, I64, F32, F64})
