@@ -84,10 +84,19 @@ compilation, knowledge graphs, uncertainty in the kernel, native agents.
   reading. Human-facing sugar (`.`, `=`, infix) belongs ONLY in the pretty
   printer. Do not raise the 10/10 bar by adding human convenience to
   canonical; raise it by removing ambiguity and dual forms.
-- **Locked toward 10/10 (R1, 2026-09-09 — see `ai_docs/r1_decisions_feedback_syntax_10of10.md`):**
-  D-FB1 one shape + `FN[[params], body]`; D-FB2 `DEF[name, expr]` only;
+- **Locked toward 10/10 (R1 — see `ai_docs/r1_decisions_feedback_syntax_10of10.md`
+  and `ai_docs/r1_decisions_feedback_uniformity_err_holes.md`):**
+  D-FB1 one shape + named `FN[[x:i32], body]`; D-FB2 `DEF[name, expr]` only;
   D-FB3 `T@dim` in typed lits (`10:f64@meters`); D-FB4 holes first-class;
-  D-FB5 structured `ERR[...]` for repair loops.
+  D-FB5 structured `ERR[...]` for repair loops; D-FB6 graph truth / pretty humans;
+  **D-FB7** every non-atom is `OP[...]` (incl. COND/MATCH/LET/WITH);
+  **D-FB8** named params required; type surface uniform (`42:i32`, `?:T@dim`);
+  **D-FB9** ERR first-class in PROGRAM→…→RESULT/ERR→LLM (fixes are `OP[...]`;
+  apply via Phase 6 edits);
+  **D-FB10** hole constraint propagation in Phase 2 direction;
+  **D-FB11** `parse→normalize→print` unique; canonical has **no spaces**
+  (`ADD[1,2]`); pretty may space/infix;
+  **D-FB12** bare idents as atoms — no `VAR[x]`.
 
 ### 2.1 Does Knot require an LLM? No.
 
@@ -161,22 +170,27 @@ Invalid unless `meters` is a declared nominal type: `10:meters`.
 ## 4. AST / expression model
 
 Every expression is a node. Canonical form is bracket notation — one shape
-only (D-FB1):
+only (D-FB1 / D-FB7 invariant: every non-atomic construct is `OP[...]`):
 
-    OP[arg1, arg2, ...]
+    OP[arg1,arg2,...]
+
+Canonical serialization is unique (D-FB11): `parse → normalize → print`
+must round-trip to one string. **No whitespace** in canonical AIR
+(`ADD[1,2]` only). Pretty view may insert spaces or infix.
 
 Atoms (canonical):
 - literals: 2, 3.14, true, "hi", nil
 - typed literals: 2:i32, 10:f64@meters  (not bare `10:meters`)
-- identifiers: x, user
-- holes: ?  or  ?:i32  or  ?:f64@meters  (first-class; D-FB4)
+- identifiers: x, user  (bare atoms — no VAR[x]; D-FB12)
+- holes: ?  or  ?:i32  or  ?:f64@meters  (first-class; D-FB4 / D-FB10)
 - bindings: DEF[name, expr] only (D-FB2) — no `=`, no `def name =` in canonical
-- functions: FN[[params], body]  e.g. FN[[x:i32], MUL[x, x]]
+- functions: FN[[x:i32], body] with named `ident:type` params (D-FB1 / D-FB8)
 - field access: GET[user, name] only — `user.name` is pretty-view sugar only
-- errors (as values): ERR[code, path, expected, actual, fixes...] (D-FB5)
+- control/bindings as ops: IF[...] COND[...] MATCH[...] LET[...] WITH[...]
+- errors (first-class values): ERR[code, path, expected, actual, fixes...] (D-FB5 / D-FB9)
 
-Pretty view may show `user.name`, `square = ...`, etc.; the LLM/parser never
-writes those forms into canonical AIR.
+Pretty view may show `user.name`, `square = ...`, spaced `ADD[1, 2]`, etc.;
+the LLM/parser never writes those forms into canonical AIR.
 
 Node addressing (see §21 for the full scheme): the LLM
 addresses nodes by structural path and optional symbolic labels,

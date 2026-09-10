@@ -257,3 +257,12 @@ def infer_fn(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         return ft.ret
 
     return type_error("infer_fn expects FnExpr or CallExpr", ())
+
+def infer_def(def_node: DefNode, env: Env) -> Type:
+    if isinstance(def_node, DefNode):
+        expr_type = infer_type(def_node.expr, env)
+        if isinstance(expr_type, TypeErrorVal):
+            return expr_type
+        env.extend(def_node.id, exprs_type)
+        return expr_type
+    raise ValueError(f"Unexpected node type: {type(def_node)}")
