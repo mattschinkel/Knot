@@ -39,9 +39,10 @@
 - **Phase 2 T8 landed (2026-09-09).** Crew tests imported TypeErrorVal wrong. Manual check_compare_op; 89 checker tests green.
 - **Syntax feedback → R1 (2026-09-09).** Human review scored LLM-goal fit 8.5/10; asked for 10/10 via more rigidity. Full text: `ai_docs/feedback_syntax_10of10.md`. R1 decided D-FB1–D-FB6 (ACCEPT/AMEND) in `ai_docs/r1_decisions_feedback_syntax_10of10.md`; design doc §2/§3.5/§4/§5.1 updated. **Phase 2 PAUSED** until GBNF/parser reflect FN[[params],body], DEF-only, T@dim lits, holes, ERR[...].
 - **D-FB syntax land (2026-09-10).** GBNF + parser + printer tests updated for canonical `DEF[...]`, `FN[[params], body]`, `GET` only (`.` rejected), typed `f64@meters`, holes `?:T@dim`. Restored/extended `infer_type` for OpExpr (T9). **321 tests pass.** Phase 2 unblocked → resume `--from=T10`.
+- **Phase 2 T10 landed manually (2026-09-10).** Crew invented `knot.expr` / wrong CondExpr. Manual `infer_if` for IfExpr + IF/COND OpExpr (BOOL cond, unify branches). Resuming `--from=T11`.
 
 ## TODOs
-- Phase 2 autobuild running `--from=T10` (started 2026-09-10).
+- Phase 2 autobuild running `--from=T11` (after T10 manual land).
 - Apply remaining example rewrites in `axiom_design.md` (still has legacy `def`/`.` in later sections) to match D-FB1/D-FB2.
 - Bump drift baseline after D-FB grammar change; re-run Phase 1 gates.
 - Wire `ERR[...]` parse/print nodes (GBNF has Err production; AST/parser stub still TODO).

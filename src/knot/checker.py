@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ast import IdentExpr, LitExpr, OpExpr, TypedLit, UnitExpr
+from .ast import IdentExpr, IfExpr, LitExpr, OpExpr, TypedLit, UnitExpr
 from .env import Env
 from .errors import StructuredError
 from .types import (
-    Type, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER,
+    Type, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, unify,
 )
 from .values import ErrorVal, Value
 
@@ -137,8 +137,12 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         if found is None:
             return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
         return found
+    if isinstance(expr, IfExpr):
+        return infer_if(expr, env)
     if isinstance(expr, OpExpr):
         kids = list(expr.children or [])
+        if expr.op in ("IF", "COND"):
+            return infer_if(expr, env)
         if expr.op in _UNARY_OPS:
             if len(kids) != 1:
                 return type_error("unary " + expr.op + " arity", ())
@@ -161,8 +165,33 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         return type_error("unknown op " + repr(expr.op), ())
     return type_error("cannot infer type of " + type(expr).__name__, ())
 
-def infer_if(expr, env):
-    cond_type = infer_type(expr.cond, env)
-    then_type = infer_type(expr.then_branch, env)
-    else_type = infer_type(expr.else_branch, env)
-    return unify(then_type, else_type)
+
+def infer_if(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
+    """IF/COND: (Bool, T, T) -> T via unify of then/else branches."""
+    if isinstance(expr, IfExpr):
+        cond, then_b, else_b = expr.cond, expr.then_branch, expr.else_branch
+    elif isinstance(expr, OpExpr) and expr.op in ("IF", "COND"):
+        kids = list(expr.children or [])
+        if len(kids) != 3:
+            return type_error(expr.op + " arity", ())
+        cond, then_b, else_b = kids[0], kids[1], kids[2]
+    else:
+        return type_error("infer_if expects IfExpr or IF/COND OpExpr", ())
+
+    ct = infer_type(cond, env)
+    if isinstance(ct, TypeErrorVal):
+        return ct
+    if ct != BOOL:
+        return type_error("IF condition must be BOOL", ())
+
+    tt = infer_type(then_b, env)
+    if isinstance(tt, TypeErrorVal):
+        return tt
+    et = infer_type(else_b, env)
+    if isinstance(et, TypeErrorVal):
+        return et
+
+    unified = unify(tt, et)
+    if unified is None:
+        return type_error("IF branch type mismatch", ())
+    return unified
