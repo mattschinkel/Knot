@@ -42,3 +42,27 @@ def test_summarize_mentions_phase():
     text = summarize(report)
     assert "Phase 1" in text
     assert "PASS" in text
+
+
+def test_phase2_gate_vs_baseline():
+    """T18: Phase 2 drift gate vs docs/drift_baseline.json."""
+    import json
+    from pathlib import Path
+
+    raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
+    assert raw["phase"] == 2
+    base = {
+        Metric.M1_TOKEN_COUNT: raw["metrics"]["M1_token_count"],
+        Metric.M2_GEN_ACCURACY: raw["metrics"]["M2_generation_accuracy"],
+        Metric.M3_EDIT_ROUNDTRIP: raw["metrics"]["M3_edit_roundtrip"],
+    }
+    measurements = {
+        Metric.M1_TOKEN_COUNT: 21.0,
+        Metric.M2_GEN_ACCURACY: 1.0,
+        Metric.M3_EDIT_ROUNDTRIP: 1.0,
+        Metric.M4_PARTIAL_COHERENCE: None,
+        Metric.M5_COMPILE_LATENCY: None,
+    }
+    report = check(2, measurements, base)
+    assert report.gate_passed is True
+    assert "Phase 2" in summarize(report)

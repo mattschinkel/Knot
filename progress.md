@@ -48,15 +48,14 @@
 - **Phase 2 T14 landed manually (2026-09-10).** Crew HTTP 500 + broken stub. Manual `check_access` for GET/FIELD/SET on Record/Tuple/Map. Resuming `--from=T15`.
 - **Phase 2 T15 landed manually (2026-09-10).** Crew circular-imported checker into types.py. Restored types; `check_collection` for LEN/AT/APPEND/CONCAT/MAP/FILTER. Resuming `--from=T16`.
 - **Phase 2 T16 landed manually (2026-09-10).** Crew invented IntLit/check_* helpers. `check_expr` = public `infer_type` dispatcher. Resuming `--from=T17`.
+- **Phase 2 DONE (2026-09-10).** T17 property tests (`test_no_raise`, `test_hole_ok`); removed bogus `src/knot/checker` file from crew; T18 drift gate PASS vs updated `docs/drift_baseline.json` (M1=21). **367 tests.**
 
 ## TODOs
-- Phase 2 autobuild running `--from=T17` (after T16 manual land).
-- D-FB11: add normalize step so canonical print has no spaces; update parser/tests/drift baseline.
+- Start Phase 3 (effects/capabilities) when R1 drafts tasks — or land D-FB leftovers first.
+- D-FB11: add normalize step so canonical print has no spaces; update parser/tests if needed.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
-- Apply remaining example rewrites in `axiom_design.md` (still has legacy `def`/`.` in later sections) to match D-FB1/D-FB2. — DONE (2026-09-10).
-- Bump drift baseline after D-FB grammar / normalize change; re-run Phase 1 gates.
-- Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
+- Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops. — DONE 2026-09-10.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).
 - Teach `architect_phase.py --tasks` to emit the markdown table format `parse_tasks` requires (prevent false phase close on 0 tasks).
@@ -93,6 +92,7 @@
 - T24 GBNF — crew wrote a Value-based `Program` AST stub (import broken) instead of grammar rules; replaced with production-string GBNF module + tests (no numeric IDs, bracket-only).
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
+- Phase 2 T17 crew fail — wrote bogus `src/knot/checker` (not .py) and never created prop tests; landed T17+T18 manually and closed Phase 2.
 - Phase 2 T16 crew fail — invented IntLit / missing check_* helpers; landed `check_expr` as infer_type dispatcher.
 - Phase 2 T15 crew fail — circular import in types.py + Value-based tests; landed `check_collection` manually.
 - Phase 2 T14 crew fail — JSON/tool bloat + bad check_access stub; landed GET/FIELD/SET access rules manually.
