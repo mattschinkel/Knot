@@ -196,3 +196,6 @@ class ErrorVal(Value):
     @property
     def type(self) -> Type:
         return NEVER
+
+def TypeVar(name):
+    return type(name, (), {})

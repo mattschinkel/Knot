@@ -207,3 +207,14 @@ def infer_hole(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
     if expr.label is None or expr.label == "":
         return ANY
     return _resolve_type_name(str(expr.label))
+
+def infer_fn(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
+    """FnExpr and CallExpr application inference."""
+    if isinstance(expr, FnExpr):
+        return infer_fn_type(expr, env)
+    elif isinstance(expr, CallExpr):
+        return infer_call(expr, env)
+    else:
+        return type_error("infer_fn: not a function application", ())
+
+__all__ = []
