@@ -173,8 +173,3 @@ def unify(a: Type, b: Type) -> Type | None:
     if isinstance(a, BaseType) and isinstance(b, BaseType):
         return a if a.name == b.name else None
     return None
-
-from . import values
-from . import checker
-
-__all__ = ['Type', 'TypeError', 'IntVal', 'BoolVal', 'StrVal']

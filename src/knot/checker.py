@@ -15,7 +15,7 @@ from .env import Env
 from .errors import StructuredError
 from .types import (
     Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, FnType,
-    RecordType, TupleType, MapType, unify,
+    ListType, SetType, RecordType, TupleType, MapType, unify,
 )
 from .values import ErrorVal, Value
 
@@ -57,6 +57,7 @@ _NUMERIC = frozenset({I32, I64, F32, F64})
 _ARITH_OPS = frozenset({"ADD", "SUB", "MUL", "DIV", "MOD"})
 _UNARY_OPS = frozenset({"NEG", "NOT"})
 _COMPARE_OPS = frozenset({"EQ", "NE", "LT", "LE", "GT", "GE", "AND", "OR"})
+_COLLECTION_OPS = frozenset({"LEN", "AT", "APPEND", "CONCAT", "MAP", "FILTER"})
 
 
 def _lit_type(value: object) -> Type | TypeErrorVal:
@@ -156,6 +157,8 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
             return infer_if(expr, env)
         if expr.op in ("GET", "SET", "FIELD"):
             return _infer_access_op(expr, env)
+        if expr.op in _COLLECTION_OPS:
+            return _infer_collection_op(expr, env)
         if expr.op in _UNARY_OPS:
             if len(kids) != 1:
                 return type_error("unary " + expr.op + " arity", ())
@@ -375,18 +378,84 @@ def _infer_access_op(expr: OpExpr, env: Env | None) -> Type | TypeErrorVal:
         return check_access("SET", base_t, kids[1], val_t)
     return type_error("unknown access op", ())
 
-def check_collection(env: Env, expr: CallExpr, base_t: Type) -> Type:
-    op = expr.op
+
+def check_collection(op: str, *arg_types: Type) -> Type | TypeErrorVal:
+    """Type-check LEN AT APPEND CONCAT MAP FILTER."""
+    op = str(op).upper()
+    args = list(arg_types)
+
     if op == "LEN":
-        return I32
-    elif op == "AT":
-        return check_index(env, base_t, expr)
-    elif op == "APPEND":
-        return check_append(env, base_t, expr)
-    elif op == "CONCAT":
-        return check_concat(env, base_t, expr)
-    elif op == "MAP":
-        return check_map(env, base_t, expr)
-    elif op == "FILTER":
-        return check_filter(env, base_t, expr)
-    return type_error(f"unknown collection op: {op}", ())
+        if len(args) != 1:
+            return type_error("LEN arity", ())
+        if isinstance(args[0], (ListType, SetType, MapType, TupleType)) or args[0] is STRING:
+            return I32
+        return type_error("LEN requires collection or string", ())
+
+    if op == "AT":
+        if len(args) != 2:
+            return type_error("AT arity", ())
+        if args[1] != I32:
+            return type_error("AT index must be i32", ())
+        if isinstance(args[0], ListType):
+            return args[0].elem
+        if isinstance(args[0], TupleType):
+            # index unknown statically → error unless single elem; use elem unify
+            if not args[0].elems:
+                return type_error("AT on empty tuple", ())
+            return args[0].elems[0]
+        return type_error("AT requires list or tuple", ())
+
+    if op == "APPEND":
+        if len(args) != 2:
+            return type_error("APPEND arity", ())
+        if not isinstance(args[0], ListType):
+            return type_error("APPEND requires list", ())
+        if unify(args[1], args[0].elem) is None:
+            return type_error("APPEND elem type mismatch", ())
+        return args[0]
+
+    if op == "CONCAT":
+        if len(args) != 2:
+            return type_error("CONCAT arity", ())
+        if not isinstance(args[0], ListType) or not isinstance(args[1], ListType):
+            return type_error("CONCAT requires lists", ())
+        if unify(args[0].elem, args[1].elem) is None:
+            return type_error("CONCAT elem type mismatch", ())
+        return args[0]
+
+    if op == "MAP":
+        if len(args) != 2:
+            return type_error("MAP arity", ())
+        if not isinstance(args[0], ListType):
+            return type_error("MAP requires list", ())
+        if not isinstance(args[1], FnType) or len(args[1].params) != 1:
+            return type_error("MAP requires FnType(elem)->ret", ())
+        if unify(args[0].elem, args[1].params[0]) is None:
+            return type_error("MAP fn param mismatch", ())
+        return ListType(args[1].ret)
+
+    if op == "FILTER":
+        if len(args) != 2:
+            return type_error("FILTER arity", ())
+        if not isinstance(args[0], ListType):
+            return type_error("FILTER requires list", ())
+        if not isinstance(args[1], FnType) or len(args[1].params) != 1:
+            return type_error("FILTER requires FnType(elem)->bool", ())
+        if unify(args[0].elem, args[1].params[0]) is None:
+            return type_error("FILTER fn param mismatch", ())
+        if args[1].ret != BOOL:
+            return type_error("FILTER fn must return bool", ())
+        return args[0]
+
+    return type_error("unknown collection op " + repr(op), ())
+
+
+def _infer_collection_op(expr: OpExpr, env: Env | None) -> Type | TypeErrorVal:
+    kids = list(expr.children or [])
+    types: list[Type] = []
+    for kid in kids:
+        t = infer_type(kid, env)
+        if isinstance(t, TypeErrorVal):
+            return t
+        types.append(t)
+    return check_collection(expr.op, *types)
