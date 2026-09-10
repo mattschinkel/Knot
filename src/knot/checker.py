@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ast import IdentExpr, IfExpr, LitExpr, OpExpr, TypedLit, UnitExpr
+from .ast import HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr, TypedLit, UnitExpr
 from .env import Env
 from .errors import StructuredError
 from .types import (
-    Type, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, unify,
+    Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, unify,
 )
 from .values import ErrorVal, Value
 
@@ -45,7 +45,8 @@ def type_error(message: str, path: tuple = ()) -> TypeErrorVal:
 
 _BASE_BY_NAME = {
     "i32": I32, "i64": I64, "f32": F32, "f64": F64,
-    "bool": BOOL, "string": STRING, "bytes": BYTES, "unit": UNIT, "never": NEVER,
+    "bool": BOOL, "string": STRING, "bytes": BYTES, "unit": UNIT,
+    "never": NEVER, "any": ANY,
 }
 
 _NUMERIC = frozenset({I32, I64, F32, F64})
@@ -137,6 +138,8 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         if found is None:
             return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
         return found
+    if isinstance(expr, HoleExpr):
+        return infer_hole(expr, env)
     if isinstance(expr, IfExpr):
         return infer_if(expr, env)
     if isinstance(expr, OpExpr):
@@ -195,3 +198,12 @@ def infer_if(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
     if unified is None:
         return type_error("IF branch type mismatch", ())
     return unified
+
+
+def infer_hole(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
+    """HoleExpr: bare `?` is any; `?:T` / `?:T@dim` resolves the label."""
+    if not isinstance(expr, HoleExpr):
+        return type_error("infer_hole expects HoleExpr", ())
+    if expr.label is None or expr.label == "":
+        return ANY
+    return _resolve_type_name(str(expr.label))

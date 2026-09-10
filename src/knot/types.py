@@ -95,6 +95,7 @@ STRING = BaseType("string")
 BYTES = BaseType("bytes")
 UNIT = BaseType("unit")
 NEVER = BaseType("never")
+ANY = BaseType("any")
 
 
 def subtype(s: Type, t: Type) -> bool:
