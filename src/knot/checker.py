@@ -160,3 +160,9 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
             return check_compare_op(expr.op, t1, t2)
         return type_error("unknown op " + repr(expr.op), ())
     return type_error("cannot infer type of " + type(expr).__name__, ())
+
+def infer_if(expr, env):
+    cond_type = infer_type(expr.cond, env)
+    then_type = infer_type(expr.then_branch, env)
+    else_type = infer_type(expr.else_branch, env)
+    return unify(then_type, else_type)

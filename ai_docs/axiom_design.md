@@ -78,6 +78,16 @@ compilation, knowledge graphs, uncertainty in the kernel, native agents.
 - AI calls return { value, confidence, model, version }; only ai-effectful
   nodes produce confidence.
 - Three views of one graph: canonical (AIR), pretty (human), binary (storage/IPC).
+- **Canonical = rigid LLM serialization; pretty = humans only** (D-FB6, 2026-09-09).
+  The program graph is the source of truth. Canonical text is a mechanical
+  `NAME[ARGS]` tree optimized for LLM generate/edit/repair — not for human
+  reading. Human-facing sugar (`.`, `=`, infix) belongs ONLY in the pretty
+  printer. Do not raise the 10/10 bar by adding human convenience to
+  canonical; raise it by removing ambiguity and dual forms.
+- **Locked toward 10/10 (R1, 2026-09-09 — see `ai_docs/r1_decisions_feedback_syntax_10of10.md`):**
+  D-FB1 one shape + `FN[[params], body]`; D-FB2 `DEF[name, expr]` only;
+  D-FB3 `T@dim` in typed lits (`10:f64@meters`); D-FB4 holes first-class;
+  D-FB5 structured `ERR[...]` for repair loops.
 
 ### 2.1 Does Knot require an LLM? No.
 
@@ -136,27 +146,37 @@ Units are a kinded dimension system tracked through arithmetic.
     | Rect  { w:f64, h:f64 }
 
 ### 3.5 Values
-Literals carry their type explicitly when ambiguous:
+Literals carry their type explicitly when ambiguous. Units attach as `T@dim`
+on a base type — never a bare dimension as a type name (D-FB3):
 
     2:i32
-    10:meters
+    10:f64@meters
     true
     "hello"
     nil
     User { name:"Bob", age:25 }
 
+Invalid unless `meters` is a declared nominal type: `10:meters`.
+
 ## 4. AST / expression model
 
-Every expression is a node. Canonical form is bracket notation:
+Every expression is a node. Canonical form is bracket notation — one shape
+only (D-FB1):
 
     OP[arg1, arg2, ...]
 
-Atoms:
+Atoms (canonical):
 - literals: 2, 3.14, true, "hi", nil
-- typed literals: 2:i32, 10:meters
+- typed literals: 2:i32, 10:f64@meters  (not bare `10:meters`)
 - identifiers: x, user
-- field access sugar: user.name  ==  GET[user, name]
-- holes: ?  or  ?:i32
+- holes: ?  or  ?:i32  or  ?:f64@meters  (first-class; D-FB4)
+- bindings: DEF[name, expr] only (D-FB2) — no `=`, no `def name =` in canonical
+- functions: FN[[params], body]  e.g. FN[[x:i32], MUL[x, x]]
+- field access: GET[user, name] only — `user.name` is pretty-view sugar only
+- errors (as values): ERR[code, path, expected, actual, fixes...] (D-FB5)
+
+Pretty view may show `user.name`, `square = ...`, etc.; the LLM/parser never
+writes those forms into canonical AIR.
 
 Node addressing (see §21 for the full scheme): the LLM
 addresses nodes by structural path and optional symbolic labels,
@@ -187,7 +207,9 @@ Every kernel op has a fixed type rule. No overloading, no implicit casts.
 
 ### 5.1 Function
 
-    def square = FN[x:i32] MUL[x, x]
+Canonical (D-FB1 / D-FB2):
+
+    DEF[square, FN[[x:i32], MUL[x, x]]]
 
 ### 5.2 Function with contract
 

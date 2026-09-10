@@ -5,6 +5,8 @@ Available project instructions
 - name_changes.md — rename log for variables, functions, and procedures (create when first rename happens)
 - fixes/ — one fix_*.md per issue (problem + fix)
 - fixes/fix_linux_port.md — Windows→Linux port (venv, LF line endings, tkinter, test quarantine)
+- ai_docs/feedback_syntax_10of10.md — external review pushing canonical syntax to 10/10 for LLMs
+- ai_docs/r1_decisions_feedback_syntax_10of10.md — R1 ACCEPT/AMEND lock for D-FB1–D-FB6; Phase 2 paused
 
 Linux quick start:
   python3 -m venv .venv
