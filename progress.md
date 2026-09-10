@@ -43,6 +43,7 @@
 - **Phase 2 T11 landed manually (2026-09-10).** Crew raised StructuredError + Env.get_type fantasy. Manual `infer_hole`: bare `?` → ANY, `?:T` via `_resolve_type_name`; added `ANY` base type. **331 tests.** Resuming `--from=T12`.
 - **Syntax follow-up → R1 (2026-09-10).** Uniformity/ERR/holes/canonical feedback in `ai_docs/feedback_syntax_uniformity_err_holes.md`. R1 locked D-FB7–D-FB12 in `ai_docs/r1_decisions_feedback_uniformity_err_holes.md`: OP-only non-atoms; named FN params; ERR first-class; hole propagation in Phase 2; normalize to no-space canonical (`ADD[1,2]`); bare idents (no VAR). **Phase 2 continues (no pause).** Design §2/§4 updated.
 - **Phase 2 T12 landed manually (2026-09-10).** Crew invented `knot.expr`. Manual `infer_fn` + `FnType`; CallExpr arity/arg unify. Resuming `--from=T13`.
+- **Design-doc AIR examples rewritten (2026-09-10).** `ai_docs/axiom_design.md` leftover `def` / juxtaposition-`FN` / spaced AIR in §5–§15 and §21 now match D-FB1/D-FB2/D-FB11 (`DEF[...]`, `FN[[params],body]`, no-space canonical). Pretty-view examples stay human sugar. Phase 3 contracts/effects noted as not-yet-locked AIR.
 - **Phase 2 T13 landed manually (2026-09-10).** Crew mangled `__init__.py` + invented `knot.nodes`. Restored package init; `infer_def` binds DefNode name→body type in Env. Resuming `--from=T14`.
 
 ## TODOs
@@ -50,7 +51,7 @@
 - D-FB11: add normalize step so canonical print has no spaces; update parser/tests/drift baseline.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
-- Apply remaining example rewrites in `axiom_design.md` (still has legacy `def`/`.` in later sections) to match D-FB1/D-FB2.
+- Apply remaining example rewrites in `axiom_design.md` (still has legacy `def`/`.` in later sections) to match D-FB1/D-FB2. — DONE (2026-09-10).
 - Bump drift baseline after D-FB grammar / normalize change; re-run Phase 1 gates.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.

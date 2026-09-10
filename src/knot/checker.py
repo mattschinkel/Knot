@@ -272,3 +272,19 @@ def infer_def(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         return body_t
     ctx.bind(str(expr.name), body_t)
     return body_t
+
+from knot.types import I32
+from knot.values import TypeErrorVal
+
+def check_access(operation, types, path):
+    """Type-check GET FIELD SET access ops."""
+    if operation == "GET":
+        if len(types) != 1:
+            return TypeErrorVal(f"GET FIELD requires exactly 1 type, got {len(types)}")
+        return I32()
+    elif operation == "SET":
+        if len(types) != 2:
+            return TypeErrorVal(f"SET FIELD requires exactly 2 types, got {len(types)}")
+        return I32()
+    else:
+        return TypeErrorVal(f"Invalid operation: {operation}")

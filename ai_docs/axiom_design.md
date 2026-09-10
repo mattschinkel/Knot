@@ -186,7 +186,8 @@ Atoms (canonical):
 - bindings: DEF[name, expr] only (D-FB2) — no `=`, no `def name =` in canonical
 - functions: FN[[x:i32], body] with named `ident:type` params (D-FB1 / D-FB8)
 - field access: GET[user, name] only — `user.name` is pretty-view sugar only
-- control/bindings as ops: IF[...] COND[...] MATCH[...] LET[...] WITH[...]
+- control/bindings as ops: IF[...] COND[...] MATCH[...] DEF[...] WITH[...]
+  (LET is legacy; prefer DEF)
 - errors (first-class values): ERR[code, path, expected, actual, fixes...] (D-FB5 / D-FB9)
 
 Pretty view may show `user.name`, `square = ...`, spaced `ADD[1, 2]`, etc.;
@@ -196,7 +197,7 @@ Node addressing (see §21 for the full scheme): the LLM
 addresses nodes by structural path and optional symbolic labels,
 NOT by numeric ID. `@` introduces a symbolic label:
 
-    @guard GE[GET[u, age], 18]
+    @guard GE[GET[u,age],18]
 
 means "label this node `guard` so I can edit it later as
 `MODIFY guard ...`." Labels are symbolic, sparse, and survive
@@ -211,7 +212,7 @@ Logic: AND OR NOT
 Control: IF COND MATCH
 Access: GET SET FIELD
 Collections: MAP FILTER REDUCE FOLD LEN AT APPEND CONCAT
-Binding: LET WITH
+Binding: DEF WITH  (LET is legacy; prefer DEF)
 Holes: HOLE
 Functions: FN CALL (return is implicit = last expression)
 
@@ -223,30 +224,27 @@ Every kernel op has a fixed type rule. No overloading, no implicit casts.
 
 Canonical (D-FB1 / D-FB2):
 
-    DEF[square, FN[[x:i32], MUL[x, x]]]
+    DEF[square,FN[[x:i32],MUL[x,x]]]
 
 ### 5.2 Function with contract
 
-    def sqrt = FN[x:f64@money] -> f64@money
-      requires  x >= 0@money
-      guarantees result >= 0@money
-    {
-      MATH.sqrt[x]
-    }
+Canonical wrapper (D-FB1 / D-FB2). Contract keywords are Phase 3 and
+are not yet a locked AIR form; they will be `OP[...]` when specified.
 
-- requires   = precondition on inputs
-- guarantees = postcondition on result
+    DEF[sqrt,FN[[x:f64@money],sqrt[x]]]
+
+- requires   = precondition on inputs   (e.g. GE[x,0:f64@money])
+- guarantees = postcondition on result  (e.g. GE[result,0:f64@money])
 - ensures    = relation between inputs and result
+- return type is implicit from the body until optional
+  `FN[[params],ret,body]` (D-FB8; not required yet)
 
 ### 5.3 Effects
 
 Every function has an effect set. Default is pure.
 
-    def send_email = FN[to:string, body:string] -> unit
-      effects[network, email]
-    {
-      ...
-    }
+    DEF[send_email,FN[[to:string,body:string],?]]
+    (Phase 3: effects[network,email] — not yet locked AIR)
 
 Effect categories:
 - pure
@@ -267,11 +265,8 @@ Capabilities are permissions granted at call time.
 
 A function's effect set must be a subset of its granted capabilities:
 
-    def get_weather = FN[city:string] -> Weather
-      requires net.request
-    {
-      ...
-    }
+    DEF[get_weather,FN[[city:string],?]]
+    (Phase 3: requires capability net.request — not yet locked AIR)
 
 The runtime decides whether to grant a capability. This is the natural
 sandbox for autonomous AI: an agent can request, but not seize, a capability.
@@ -280,8 +275,7 @@ sandbox for autonomous AI: an agent can request, but not seize, a capability.
 
 ? is a typed hole. ?:T is a hole with expected type.
 
-    def total = FN[items:[Money]] -> Money
-      REDUCE[items, ADD, ?:Money]
+    DEF[total,FN[[items:[Money]],REDUCE[items,ADD,?:Money]]]
 
 Compiler report:
 
@@ -302,7 +296,11 @@ Compile states:
 
 ## 7. Error model
 
-Errors are structured, not strings:
+Errors are first-class AIR values (D-FB5 / D-FB9), not prose:
+
+    ERR[TYPE_MISMATCH,[184],Money,Seconds,REPLACE[185,?:Money]]
+
+Internal structured shape the kernel also carries (same information):
 
     error {
       code: TYPE_MISMATCH
@@ -319,7 +317,7 @@ Errors are structured, not strings:
       ]
     }
 
-The LLM consumes this directly. No regex on human prose.
+The LLM consumes ERR / this record directly. No regex on human prose.
 
 ## 8. Tests and properties
 
@@ -344,7 +342,7 @@ targets.
 The LLM does not rewrite the file. It issues graph ops:
 
     CREATE type User { name:string, age:i32 }
-    CREATE fn User.is_adult = FN[u:User] -> bool { GE[GET[u, age], 18] }
+    CREATE DEF[User.is_adult,FN[[u:User],GE[GET[u,age],18]]]
 
     MODIFY User.is_adult
       REPLACE GE[_, 18] WITH GT[_, 18]
@@ -368,7 +366,7 @@ broke. No unrelated code is touched.
 
     module users {
       type User { name:string, age:i32 }
-      def create = FN[name:string, age:i32] -> User { User{name, age} }
+      DEF[create,FN[[name:string,age:i32],User{name,age}]]
       export User, create
     }
 
@@ -391,11 +389,8 @@ AI calls are effectful capabilities with contracts:
       effects[ai, gpu]
     }
 
-    def classify_doc = FN[doc:Document] -> Classification
-      requires ai.classify
-    {
-      classifier[doc]
-    }
+    DEF[classify_doc,FN[[doc:Document],classifier[doc]]]
+    (Phase 3: requires capability ai.classify — not yet locked AIR)
 
 Returns a value plus metadata: { value, confidence, model, version }.
 The deterministic kernel never produces confidence; only ai-effectful
@@ -426,10 +421,11 @@ Three views of one semantic graph:
 
 1. Canonical (AIR) — compact tree, what the LLM writes:
 
-       def square = FN[x:i32] MUL[x, x]
+       DEF[square,FN[[x:i32],MUL[x,x]]]
 
-   (Bracket form, OP[args]. This is the canonical form used throughout
-   §4 and §15. The shorter `F(...)` shorthand is NOT canonical.)
+   (Bracket form, OP[args], no spaces — D-FB1 / D-FB11. This is the
+   canonical form used throughout §4 and §15. The shorter `F(...)`
+   shorthand is NOT canonical.)
 2. Pretty — human view, generated, never the source of truth:
 
        fn square(x: i32) -> i32 { x * x }
@@ -458,26 +454,23 @@ Canonical (AIR):
 
     type User { name:string, age:i32 }
 
-    def eligible = FN[u:User] -> bool { GE[GET[u, age], 18] }
+    DEF[eligible,FN[[u:User],GE[GET[u,age],18]]]
 
-    def greeting = FN[u:User] -> string {
-      IF[eligible[u],
-         CONCAT["Hello ", GET[u, name]],
-         CONCAT["Sorry ", GET[u, name]]]
-    }
+    DEF[greeting,FN[[u:User],IF[eligible[u],CONCAT['Hello ',GET[u,name]],CONCAT['Sorry ',GET[u,name]]]]]
 
     test greeting {
-      in[User{name:"Bob", age:25}] out["Hello Bob"]
+      in[User{name:"Bob",age:25}] out["Hello Bob"]
     }
 
-Pretty view (generated):
+Pretty view (generated; not AIR):
 
     type User { name: string, age: i32 }
 
-    def eligible(u: User) -> bool = u.age >= 18
+    fn eligible(u: User) -> bool { u.age >= 18 }
 
-    def greeting(u: User) -> string =
+    fn greeting(u: User) -> string {
       if eligible(u) then "Hello " + u.name else "Sorry " + u.name
+    }
 
     test greeting {
       in  User { name = "Bob", age = 25 }
@@ -874,7 +867,7 @@ structural path and optional symbolic labels — NEVER by numeric ID.
    `eligible.body`, `eligible.body.args[1]`,
    `greeting.body.branches[0]`.
 3. Symbolic labels (optional, sparse): the LLM marks nodes it expects to
-   edit with a label: `@guard GE[GET[u, age], 18]`. Labels are symbolic,
+   edit with a label: `@guard GE[GET[u,age],18]`. Labels are symbolic,
    unique within a module, and survive optimization. Edits address by
    label: `MODIFY guard REPLACE ...`.
 4. Query fallback: if a structural path no longer resolves (structure
