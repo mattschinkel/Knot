@@ -8,7 +8,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .ast import (
-    CallExpr, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr, TypedLit, UnitExpr,
+    CallExpr, DefNode, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr,
+    TypedLit, UnitExpr,
 )
 from .env import Env
 from .errors import StructuredError
@@ -140,6 +141,8 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         if found is None:
             return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
         return found
+    if isinstance(expr, DefNode):
+        return infer_def(expr, env)
     if isinstance(expr, HoleExpr):
         return infer_hole(expr, env)
     if isinstance(expr, FnExpr) or isinstance(expr, CallExpr):
@@ -258,11 +261,14 @@ def infer_fn(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
 
     return type_error("infer_fn expects FnExpr or CallExpr", ())
 
-def infer_def(def_node: DefNode, env: Env) -> Type:
-    if isinstance(def_node, DefNode):
-        expr_type = infer_type(def_node.expr, env)
-        if isinstance(expr_type, TypeErrorVal):
-            return expr_type
-        env.extend(def_node.id, exprs_type)
-        return expr_type
-    raise ValueError(f"Unexpected node type: {type(def_node)}")
+
+def infer_def(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
+    """Bind DefNode name to inferred body type in Env; return that type."""
+    if not isinstance(expr, DefNode):
+        return type_error("infer_def expects DefNode", ())
+    ctx = env if env is not None else Env()
+    body_t = infer_type(expr.body, ctx)
+    if isinstance(body_t, TypeErrorVal):
+        return body_t
+    ctx.bind(str(expr.name), body_t)
+    return body_t

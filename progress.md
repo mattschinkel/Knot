@@ -43,9 +43,10 @@
 - **Phase 2 T11 landed manually (2026-09-10).** Crew raised StructuredError + Env.get_type fantasy. Manual `infer_hole`: bare `?` → ANY, `?:T` via `_resolve_type_name`; added `ANY` base type. **331 tests.** Resuming `--from=T12`.
 - **Syntax follow-up → R1 (2026-09-10).** Uniformity/ERR/holes/canonical feedback in `ai_docs/feedback_syntax_uniformity_err_holes.md`. R1 locked D-FB7–D-FB12 in `ai_docs/r1_decisions_feedback_uniformity_err_holes.md`: OP-only non-atoms; named FN params; ERR first-class; hole propagation in Phase 2; normalize to no-space canonical (`ADD[1,2]`); bare idents (no VAR). **Phase 2 continues (no pause).** Design §2/§4 updated.
 - **Phase 2 T12 landed manually (2026-09-10).** Crew invented `knot.expr`. Manual `infer_fn` + `FnType`; CallExpr arity/arg unify. Resuming `--from=T13`.
+- **Phase 2 T13 landed manually (2026-09-10).** Crew mangled `__init__.py` + invented `knot.nodes`. Restored package init; `infer_def` binds DefNode name→body type in Env. Resuming `--from=T14`.
 
 ## TODOs
-- Phase 2 autobuild running `--from=T13` (after T12 manual land).
+- Phase 2 autobuild running `--from=T14` (after T13 manual land).
 - D-FB11: add normalize step so canonical print has no spaces; update parser/tests/drift baseline.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
@@ -88,6 +89,7 @@
 - T24 GBNF — crew wrote a Value-based `Program` AST stub (import broken) instead of grammar rules; replaced with production-string GBNF module + tests (no numeric IDs, bracket-only).
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
+- Phase 2 T13 crew fail — mangled `__init__.py` / `knot.nodes`; landed `infer_def` manually.
 - Phase 2 T12 crew fail — invented `knot.expr`; landed `infer_fn` + `FnType` manually.
 - Phase 2 T11 crew fail — Env.get_type / TypeVar fantasy + raises; landed `infer_hole` + `ANY` manually.
 - Phase 2 T10 crew fail — invented `knot.expr` / CondExpr; landed `infer_if` for IfExpr + IF/COND OpExpr manually.
