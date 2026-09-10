@@ -49,9 +49,11 @@
 - **Phase 2 T15 landed manually (2026-09-10).** Crew circular-imported checker into types.py. Restored types; `check_collection` for LEN/AT/APPEND/CONCAT/MAP/FILTER. Resuming `--from=T16`.
 - **Phase 2 T16 landed manually (2026-09-10).** Crew invented IntLit/check_* helpers. `check_expr` = public `infer_type` dispatcher. Resuming `--from=T17`.
 - **Phase 2 DONE (2026-09-10).** T17 property tests (`test_no_raise`, `test_hole_ok`); removed bogus `src/knot/checker` file from crew; T18 drift gate PASS vs updated `docs/drift_baseline.json` (M1=21). **367 tests.**
+- **Autobuild auto-restart (2026-09-10).** Failed tasks retry (`KNOT_TASK_RETRIES`) and outer-loop restart (`KNOT_AUTO_RESTART=1`); `--watch` re-execs on process exit. See `fixes/fix_autobuild_auto_restart.md`. Continuing Phase 3.
+- **Phase 3 T1 landed manually (2026-09-10).** Watch spun overnight on mangled `effects.py` / bad tests. Manual `EffectCategory` + `EffectSet`. Resuming `--from=T2`.
 
 ## TODOs
-- Start Phase 3 (effects/capabilities) when R1 drafts tasks — or land D-FB leftovers first.
+- Phase 3 autobuild: `.venv/bin/python autobuild.py --watch --phase 3 --from=T2`.
 - D-FB11: add normalize step so canonical print has no spaces; update parser/tests if needed.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
@@ -93,6 +95,7 @@
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
 - Phase 2 T17 crew fail — wrote bogus `src/knot/checker` (not .py) and never created prop tests; landed T17+T18 manually and closed Phase 2.
+- `fix_autobuild_auto_restart.md` — autobuild stopped the phase on first crew fail; now retries + auto-restarts tasks and supports `--watch`.
 - Phase 2 T16 crew fail — invented IntLit / missing check_* helpers; landed `check_expr` as infer_type dispatcher.
 - Phase 2 T15 crew fail — circular import in types.py + Value-based tests; landed `check_collection` manually.
 - Phase 2 T14 crew fail — JSON/tool bloat + bad check_access stub; landed GET/FIELD/SET access rules manually.
@@ -109,7 +112,7 @@
 - `ask_architect.py` — R1 Q&A. **LOCAL-ONLY.** `.venv/bin/python ask_architect.py` or `--once "q"`. Env: `KNOT_LLM_MODEL`, `KNOT_LLM_BASE_URL`, `KNOT_LLM_API_KEY`, `KNOT_LLM_TEMPERATURE`.
 - `architect_phase.py` — R1 drafts phases. **LOCAL-ONLY.** `.venv/bin/python architect_phase.py --draft N` / `--tasks N`.
 - `phase_crew.py` — one-task CrewAI runner. **LOCAL-ONLY.**
-- `autobuild.py` — autonomous phase driver. **LOCAL-ONLY.** Resume Phase 2: `.venv/bin/python autobuild.py --phase 2 --from=T2`
+- `autobuild.py` — autonomous phase driver. **LOCAL-ONLY.** Auto-retries failed tasks; `--watch` restarts on exit. Phase 3: `.venv/bin/python autobuild.py --watch --phase 3`
 - `crew_chats_viewer.py` — tkinter chat GUI (needs `python3-tk`). **LOCAL-ONLY.** `.venv/bin/python crew_chats_viewer.py`
 - `requirements.txt` — `crewai==1.15.20`, `crewai-tools==1.15.20`, `pytest>=8`. **LOCAL-ONLY.**
 - Recreate venv (Linux):

@@ -9,6 +9,7 @@ Available project instructions
 - ai_docs/r1_decisions_feedback_syntax_10of10.md — R1 ACCEPT/AMEND lock for D-FB1–D-FB6
 - ai_docs/feedback_syntax_uniformity_err_holes.md — follow-up: OP invariant, types, ERR, holes, normalize, bare idents
 - ai_docs/r1_decisions_feedback_uniformity_err_holes.md — R1 lock D-FB7–D-FB12; Phase 2 continues
+- fixes/fix_autobuild_auto_restart.md — autobuild task retries + `--watch` process restart
 
 Linux quick start:
   python3 -m venv .venv
