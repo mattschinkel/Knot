@@ -7,11 +7,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ast import HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr, TypedLit, UnitExpr
+from .ast import (
+    CallExpr, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr, TypedLit, UnitExpr,
+)
 from .env import Env
 from .errors import StructuredError
 from .types import (
-    Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, unify,
+    Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, FnType, unify,
 )
 from .values import ErrorVal, Value
 
@@ -140,6 +142,8 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         return found
     if isinstance(expr, HoleExpr):
         return infer_hole(expr, env)
+    if isinstance(expr, FnExpr) or isinstance(expr, CallExpr):
+        return infer_fn(expr, env)
     if isinstance(expr, IfExpr):
         return infer_if(expr, env)
     if isinstance(expr, OpExpr):
@@ -209,12 +213,47 @@ def infer_hole(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
     return _resolve_type_name(str(expr.label))
 
 def infer_fn(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
-    """FnExpr and CallExpr application inference."""
+    """Infer FnExpr (params+body) or CallExpr application."""
     if isinstance(expr, FnExpr):
-        return infer_fn_type(expr, env)
-    elif isinstance(expr, CallExpr):
-        return infer_call(expr, env)
-    else:
-        return type_error("infer_fn: not a function application", ())
+        ctx = env if env is not None else Env()
+        ctx.enter_scope("fn")
+        param_types: list[Type] = []
+        for item in expr.params:
+            if not (isinstance(item, tuple) and len(item) >= 1):
+                ctx.leave_scope()
+                return type_error("FN param must be (name, type)", ())
+            name = item[0]
+            ann = item[1] if len(item) > 1 else None
+            if ann is None:
+                ctx.leave_scope()
+                return type_error("FN param requires type annotation", ())
+            pt = _resolve_type_name(str(ann))
+            if isinstance(pt, TypeErrorVal):
+                ctx.leave_scope()
+                return pt
+            ctx.bind(str(name), pt)
+            param_types.append(pt)
+        ret = infer_type(expr.body, ctx)
+        ctx.leave_scope()
+        if isinstance(ret, TypeErrorVal):
+            return ret
+        return FnType(tuple(param_types), ret)
 
-__all__ = []
+    if isinstance(expr, CallExpr):
+        ft = infer_type(expr.fn, env)
+        if isinstance(ft, TypeErrorVal):
+            return ft
+        if not isinstance(ft, FnType):
+            return type_error("CALL on non-function", ())
+        args = list(expr.args or [])
+        if len(args) != len(ft.params):
+            return type_error("CALL arity mismatch", ())
+        for arg, expected in zip(args, ft.params):
+            at = infer_type(arg, env)
+            if isinstance(at, TypeErrorVal):
+                return at
+            if unify(at, expected) is None:
+                return type_error("CALL arg type mismatch", ())
+        return ft.ret
+
+    return type_error("infer_fn expects FnExpr or CallExpr", ())

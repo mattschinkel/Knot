@@ -85,6 +85,14 @@ class RegionType(Type):
     region: str
 
 
+@dataclass(frozen=True)
+class FnType(Type):
+    """Function type: params -> ret (Phase 2 T12)."""
+
+    params: tuple[Type, ...]
+    ret: Type
+
+
 # Predefined base types.
 I32 = BaseType("i32")
 I64 = BaseType("i64")

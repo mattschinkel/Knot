@@ -41,13 +41,16 @@
 - **D-FB syntax land (2026-09-10).** GBNF + parser + printer tests updated for canonical `DEF[...]`, `FN[[params], body]`, `GET` only (`.` rejected), typed `f64@meters`, holes `?:T@dim`. Restored/extended `infer_type` for OpExpr (T9). **321 tests pass.** Phase 2 unblocked → resume `--from=T10`.
 - **Phase 2 T10 landed manually (2026-09-10).** Crew invented `knot.expr` / wrong CondExpr. Manual `infer_if` for IfExpr + IF/COND OpExpr (BOOL cond, unify branches). Resuming `--from=T11`.
 - **Phase 2 T11 landed manually (2026-09-10).** Crew raised StructuredError + Env.get_type fantasy. Manual `infer_hole`: bare `?` → ANY, `?:T` via `_resolve_type_name`; added `ANY` base type. **331 tests.** Resuming `--from=T12`.
+- **Syntax follow-up → R1 (2026-09-10).** Uniformity/ERR/holes/canonical feedback in `ai_docs/feedback_syntax_uniformity_err_holes.md`. R1 locked D-FB7–D-FB12 in `ai_docs/r1_decisions_feedback_uniformity_err_holes.md`: OP-only non-atoms; named FN params; ERR first-class; hole propagation in Phase 2; normalize to no-space canonical (`ADD[1,2]`); bare idents (no VAR). **Phase 2 continues (no pause).** Design §2/§4 updated.
+- **Phase 2 T12 landed manually (2026-09-10).** Crew invented `knot.expr`. Manual `infer_fn` + `FnType`; CallExpr arity/arg unify. Resuming `--from=T13`.
 
 ## TODOs
-- Phase 2 autobuild running `--from=T12` (after T11 manual land).
+- Phase 2 autobuild running `--from=T13` (after T12 manual land).
+- D-FB11: add normalize step so canonical print has no spaces; update parser/tests/drift baseline.
+- D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
+- D-FB10: hole constraint propagation in checker (beyond label resolve).
 - Apply remaining example rewrites in `axiom_design.md` (still has legacy `def`/`.` in later sections) to match D-FB1/D-FB2.
-- Bump drift baseline after D-FB grammar change; re-run Phase 1 gates.
-- Wire `ERR[...]` parse/print nodes (GBNF has Err production; AST/parser stub still TODO).
-- Extend holes surface `?:FN[...]` once shape locked in GBNF.
+- Bump drift baseline after D-FB grammar / normalize change; re-run Phase 1 gates.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).
@@ -85,6 +88,7 @@
 - T24 GBNF — crew wrote a Value-based `Program` AST stub (import broken) instead of grammar rules; replaced with production-string GBNF module + tests (no numeric IDs, bracket-only).
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
+- Phase 2 T12 crew fail — invented `knot.expr`; landed `infer_fn` + `FnType` manually.
 - Phase 2 T11 crew fail — Env.get_type / TypeVar fantasy + raises; landed `infer_hole` + `ANY` manually.
 - Phase 2 T10 crew fail — invented `knot.expr` / CondExpr; landed `infer_if` for IfExpr + IF/COND OpExpr manually.
 - Phase 2 false close — R1 task list was prose not a table → 0 tasks parsed → autobuild declared DONE and pushed; fixed tasks table + restored `values.py`; re-running.
