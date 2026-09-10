@@ -1,32 +1,35 @@
-"""GBNF grammar for Knot AIR constrained decoding (phase1_spec §7).
+"""GBNF grammar for Knot AIR constrained decoding (D-FB1–D-FB5 / 10/10 LLM bar).
 
-Exports named production strings plus a full grammar text. Bracket notation
-only; no F(...) shorthand; no numeric node IDs in the grammar (D5 / §21).
+Canonical form is ONE shape: NAME[ARGS] (+ atoms). No field-access sugar,
+no `name = expr`, no FN[params] body juxta-position — those are pretty-only.
+No numeric node IDs in the grammar (§21).
 """
 from __future__ import annotations
 
 import re
 
-# --- Named productions (identifiers match phase1_tasks T24 / phase1_spec §7) ---
+# --- Named productions ---
 
 Program = r'program ::= def*'
 
-Def = r'def ::= ident "=" expr'
+Def = r'def ::= "DEF[" ident "," expr "]"'
 
 Expr = (
-    r'expr ::= lit | ident | field-access | get | set | op-expr | if-expr | '
-    r'cond-expr | match-expr | let-expr | with-expr | hole | fn-expr | call | unit'
+    r'expr ::= lit | ident | get | set | op-expr | if-expr | '
+    r'cond-expr | match-expr | let-expr | with-expr | hole | fn-expr | '
+    r'def | call | unit | err'
 )
 
 Lit = r'lit ::= number | string | bool | nil | typed-lit'
 
 Ident = r'ident ::= identifier'
 
-FieldAccess = r'field-access ::= ident "." ident'
+# Pretty-only; not part of canonical expr (kept for documentation / tooling)
+FieldAccess = r'field-access ::= ident "." ident   # PRETTY-ONLY; canonical uses GET'
 
-Get = r'get ::= "GET[" ident "," ident "]"'
+Get = r'get ::= "GET[" expr "," ident "]"'
 
-Set = r'set ::= "SET[" ident "," ident "," expr "]"'
+Set = r'set ::= "SET[" expr "," ident "," expr "]"'
 
 Op = r'op ::= "ADD" | "SUB" | "MUL" | "DIV" | "MOD" | "NEG"'
 
@@ -43,31 +46,38 @@ Collection = (
     r'"APPEND" | "CONCAT"'
 )
 
-Binding = r'binding ::= "LET" | "WITH"'
+Binding = r'binding ::= "DEF" | "WITH"'
 
-Hole = r'hole ::= "?" | "?:" ident'
+Hole = r'hole ::= "?" | "?:" type'
 
-Function = r'fn-expr ::= "FN[" param-list "]" body'
+Function = r'fn-expr ::= "FN[" "[" param-list "]" "," body "]"'
 
 ParamList = r'param-list ::= param ("," param)*'
 
-Param = r'param ::= ident | ident ":" ident'
+Param = r'param ::= ident | ident ":" type'
 
 Body = r'body ::= expr'
 
 Unit = r'unit ::= "UNIT"'
 
-# Supporting terminals / composites used above
+Err = (
+    r'err ::= "ERR[" ident "," path "," type "," type ("," fix)* "]" | '
+    r'"ERROR[" arg-list "]"'
+)
+
 _SUPPORT = [
-    r'op-expr ::= op "[" arg-list "]"',
+    r'op-expr ::= (op | comparison | logic | control | access | collection | binding) "[" arg-list "]"',
     r'if-expr ::= "IF[" expr "," expr "," expr "]"',
     r'cond-expr ::= "COND[" arg-list "]"',
     r'match-expr ::= "MATCH[" arg-list "]"',
-    r'let-expr ::= "LET[" arg-list "]"',
+    r'let-expr ::= "LET[" arg-list "]"   # legacy; prefer DEF',
     r'with-expr ::= "WITH[" arg-list "]"',
     r'call ::= ident "[" arg-list "]"',
     r'arg-list ::= expr ("," expr)*',
-    r'typed-lit ::= lit-atom ":" ident',
+    r'typed-lit ::= lit-atom ":" type',
+    r'type ::= identifier ("@" identifier)?',
+    r'path ::= "[" (ident | number) ("," (ident | number))* "]"',
+    r'fix ::= expr',
     r'lit-atom ::= number | string | bool | nil',
     r'number ::= "-"? [0-9]+ ("." [0-9]+)?',
     r'string ::= "\'" [^\'\\]* ("\\" . [^\'\\]*)* "\'"',
@@ -99,6 +109,7 @@ RULES: dict[str, str] = {
     "Param": Param,
     "Body": Body,
     "Unit": Unit,
+    "Err": Err,
 }
 
 
@@ -109,19 +120,12 @@ def grammar_text() -> str:
 
 
 def has_numeric_node_ids(text: str | None = None) -> bool:
-    """True if grammar text appears to allow authored numeric node IDs.
-
-    Detects ID/node-id style rules that consume bare integers as addresses.
-    Literal digit tokens inside keywords (none) and number literals for values
-    are fine; forbidding `id ::= [0-9]+` / `node-id` productions is the goal.
-    """
+    """True if grammar text appears to allow authored numeric node IDs."""
     src = grammar_text() if text is None else text
     if re.search(r"(?i)\b(node[_-]?id|numeric[_-]?id)\b\s*::=", src):
         return True
     if re.search(r'(?i)\bid\s*::=\s*\[0-9\]', src):
         return True
-    # Bracket form must not include a free-standing integer ID slot like OP[123, ...]
-    # as a grammar alternative for addressing.
     if re.search(r'(?i)"@"\s*[0-9]', src):
         return True
     return False
@@ -130,5 +134,4 @@ def has_numeric_node_ids(text: str | None = None) -> bool:
 def uses_paren_shorthand(text: str | None = None) -> bool:
     """True if grammar allows F(...) call/op shorthand (forbidden in GBNF)."""
     src = grammar_text() if text is None else text
-    # Disallow productions that open ops/calls with '(' instead of '['
     return bool(re.search(r'"(?:ADD|SUB|MUL|FN|GET|SET)"\s*"\("', src))

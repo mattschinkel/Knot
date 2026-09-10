@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 
 from knot.addressing import generate_id
-from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, FieldAccess, TypedLit, DefNode, FnExpr
+from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, TypedLit, DefNode, FnExpr
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -24,23 +24,38 @@ def _skip_ws(s: str, i: int) -> int:
     return i
 
 
+def _parse_type(s: str, i: int) -> tuple[str, int]:
+    """Parse a type name: ident or ident@ident (D-FB3). Returns (type_str, new_i)."""
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("expected type name")
+    name = m.group(0)
+    i = m.end()
+    i2 = _skip_ws(s, i)
+    if i2 < len(s) and s[i2] == "@":
+        i2 += 1
+        m2 = _IDENT.match(s, i2)
+        if not m2:
+            raise ParseError("expected dimension after '@'")
+        name = name + "@" + m2.group(0)
+        i = m2.end()
+    return name, i
+
+
 def _parse_atom(s: str, i: int):
     """Parse one expression starting at i. Returns (node, new_index)."""
     i = _skip_ws(s, i)
     if i >= len(s):
         raise ParseError("unexpected end of input")
 
-    # Hole: ? or ?:Type
+    # Hole: ? or ?:Type (Type may be f64@meters)
     if s[i] == "?":
         i += 1
         typ = None
         if i < len(s) and s[i] == ":":
             i += 1
-            m = _IDENT.match(s, i)
-            if not m:
-                raise ParseError("expected type after ?:")
-            typ = m.group(0)
-            i = m.end()
+            typ, i = _parse_type(s, i)
         node = HoleExpr(id=generate_id(), path=[], label=typ)
         return node, i
 
@@ -60,10 +75,8 @@ def _parse_atom(s: str, i: int):
         j2 = _skip_ws(s, j)
         if j2 < len(s) and s[j2] == ":":
             j2 += 1
-            m2 = _IDENT.match(s, j2)
-            if not m2:
-                raise ParseError("expected type name after ':'")
-            return TypedLit(node.value, m2.group(0), id=generate_id()), m2.end()
+            typ, j2 = _parse_type(s, j2)
+            return TypedLit(node.value, typ, id=generate_id()), j2
         return node, j
 
     # Number or Ident or OP[...] or UNIT
@@ -75,7 +88,11 @@ def _parse_atom(s: str, i: int):
 
     i = _skip_ws(s, i)
     if i < len(s) and s[i] == "[":
-        # OP[args...]
+        # Canonical FN[[params], body] and DEF[name, expr]
+        if tok.upper() == "FN":
+            return _parse_fn_brackets(s, i)
+        if tok.upper() == "DEF":
+            return _parse_def_brackets(s, i)
         args, i = _parse_arglist(s, i)
         return OpExpr(op=tok, children=args, id=generate_id()), i
 
@@ -83,55 +100,31 @@ def _parse_atom(s: str, i: int):
         return UnitExpr(id=generate_id()), i
     if _NUM.match(tok):
         val: int | float = float(tok) if "." in tok else int(tok)
-        # typed lit sugar: 2:i32
         i2 = _skip_ws(s, i)
         if i2 < len(s) and s[i2] == ":":
             i2 += 1
-            m2 = _IDENT.match(s, i2)
-            if not m2:
-                raise ParseError("expected type name after ':'")
-            return TypedLit(val, m2.group(0), id=generate_id()), m2.end()
+            typ, i2 = _parse_type(s, i2)
+            return TypedLit(val, typ, id=generate_id()), i2
         return LitExpr(val), i
     if tok in ("true", "false"):
         return LitExpr(tok == "true"), i
     if tok == "nil":
         return LitExpr(None), i
-    # string already handled above; typed string would be 'x':Type after quote parse
-    # identifier, possibly with .field sugar (user.name -> FieldAccess)
-    node: object = IdentExpr(id=tok)
-    while True:
-        i2 = _skip_ws(s, i)
-        if i2 < len(s) and s[i2] == ".":
-            i2 += 1
-            m2 = _IDENT.match(s, i2)
-            if not m2:
-                raise ParseError("expected field name after '.'")
-            field = m2.group(0)
-            i2 = m2.end()
-            node = FieldAccess(id=node, field_name=field, path=[])
-            i = i2
-            continue
-        break
-    return node, i
+    # identifier — no `.` sugar in canonical (D-FB1); use GET[...]
+    i2 = _skip_ws(s, i)
+    if i2 < len(s) and s[i2] == ".":
+        raise ParseError(
+            "field-access sugar 'obj.field' is pretty-only; "
+            "canonical form is GET[obj, field]"
+        )
+    return IdentExpr(id=tok), i
 
 
 def parse_field_access(text: str):
-    """Parse field-access sugar: `obj.field` (-> FieldAccess).
-
-    Also accepts already-desugared `GET[obj, field]` via parse_expr.
-    """
-    if text is None or not str(text).strip():
-        raise ParseError("empty field access")
-    s = str(text).strip()
-    if "." not in s:
-        raise ParseError("field access requires obj.field")
-    node, i = _parse_atom(s, 0)
-    i = _skip_ws(s, i)
-    if i < len(s):
-        raise ParseError(f"trailing input: {s[i:]!r}")
-    if not isinstance(node, FieldAccess):
-        raise ParseError("not a field access expression")
-    return node
+    """Pretty-view helper only. Canonical AIR must use GET[obj, field] (D-FB1)."""
+    raise ParseError(
+        "field-access sugar is pretty-only; use GET[obj, field] in canonical AIR"
+    )
 
 
 def _parse_arglist(s: str, i: int):
@@ -227,79 +220,102 @@ def _parse_param(s: str, i: int):
     typ = None
     if i < len(s) and s[i] == ":":
         i += 1
-        m2 = _IDENT.match(s, i)
-        if not m2:
-            raise ParseError("expected type after ':' in param")
-        typ = m2.group(0)
-        i = m2.end()
+        typ, i = _parse_type(s, i)
     return (name, typ), i
 
 
+def _parse_param_list(s: str, i: int) -> tuple[list, int]:
+    """Parse [param, ...] starting at '['."""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' to start param list")
+    i += 1
+    params: list = []
+    i = _skip_ws(s, i)
+    if i < len(s) and s[i] == "]":
+        return params, i + 1
+    while True:
+        param, i = _parse_param(s, i)
+        params.append(param)
+        i = _skip_ws(s, i)
+        if i >= len(s):
+            raise ParseError("unclosed param list")
+        if s[i] == "]":
+            return params, i + 1
+        if s[i] in ",;":
+            i += 1
+            continue
+        raise ParseError("expected ',' or ']' in param list")
+
+
+def _parse_fn_brackets(s: str, i: int) -> tuple[FnExpr, int]:
+    """Parse FN[[params], body] starting at the '[' after FN (D-FB1)."""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("FN requires [")
+    i += 1
+    i = _skip_ws(s, i)
+    params, i = _parse_param_list(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != ",":
+        raise ParseError("FN[[params], body] requires comma before body")
+    i += 1
+    body, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed FN[...]")
+    return FnExpr(params=params, body=body, id=generate_id()), i + 1
+
+
+def _parse_def_brackets(s: str, i: int) -> tuple[DefNode, int]:
+    """Parse DEF[name, expr] starting at the '[' after DEF (D-FB2)."""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("DEF requires [")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("expected name in DEF")
+    name = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != ",":
+        raise ParseError("DEF[name, expr] requires comma")
+    i += 1
+    body, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed DEF[...]")
+    return DefNode(name=name, body=body, id=generate_id()), i + 1
+
+
 def parse_fn(text: str) -> FnExpr:
-    """Parse FN[params...] body  e.g. FN[x:i32] MUL[x, x]."""
+    """Parse canonical FN[[params], body] (D-FB1)."""
     if text is None or not str(text).strip():
         raise ParseError("empty fn")
     s = str(text).strip()
-    i = 0
-    i = _skip_ws(s, i)
+    i = _skip_ws(s, 0)
     if not s[i:].upper().startswith("FN"):
         raise ParseError("expected FN")
     i += 2
     i = _skip_ws(s, i)
-    if i >= len(s) or s[i] != "[":
-        raise ParseError("FN requires [params]")
-    i += 1
-    params = []
-    i = _skip_ws(s, i)
-    if i < len(s) and s[i] == "]":
-        i += 1
-    else:
-        while True:
-            param, i = _parse_param(s, i)
-            params.append(param)
-            i = _skip_ws(s, i)
-            if i >= len(s):
-                raise ParseError("unclosed FN params")
-            if s[i] == "]":
-                i += 1
-                break
-            if s[i] in ",;":
-                i += 1
-                continue
-            raise ParseError("expected ',' or ']' in FN params")
-    body, i = _parse_atom(s, i)
+    node, i = _parse_fn_brackets(s, i)
     i = _skip_ws(s, i)
     if i < len(s):
         raise ParseError(f"trailing input: {s[i:]!r}")
-    return FnExpr(params=params, body=body, id=generate_id())
+    return node
 
 
 def parse_def(text: str) -> DefNode:
-    """Parse a definition: `name = expr` or `def name = expr`."""
+    """Parse canonical DEF[name, expr] (D-FB2)."""
     if text is None or not str(text).strip():
         raise ParseError("empty def")
     s = str(text).strip()
-    i = 0
+    i = _skip_ws(s, 0)
+    if not s[i:].upper().startswith("DEF"):
+        raise ParseError("expected DEF[name, expr] (legacy name=expr removed from canonical)")
+    i += 3
     i = _skip_ws(s, i)
-    if s[i:].lower().startswith("def") and (len(s) == i + 3 or not s[i + 3].isalnum()):
-        i += 3
-        i = _skip_ws(s, i)
-    m = _IDENT.match(s, i)
-    if not m:
-        raise ParseError("expected name in def")
-    name = m.group(0)
-    i = m.end()
-    i = _skip_ws(s, i)
-    if i >= len(s) or s[i] != "=":
-        raise ParseError("expected '=' in def")
-    i += 1
-    i = _skip_ws(s, i)
-    # Body may be an FN[...] expr — use parse_fn when it starts with FN
-    if s[i:].upper().startswith("FN"):
-        body = parse_fn(s[i:])
-        return DefNode(name=name, body=body, id=generate_id())
-    body, i = _parse_atom(s, i)
+    node, i = _parse_def_brackets(s, i)
     i = _skip_ws(s, i)
     if i < len(s):
         raise ParseError(f"trailing input: {s[i:]!r}")
-    return DefNode(name=name, body=body, id=generate_id())
+    return node

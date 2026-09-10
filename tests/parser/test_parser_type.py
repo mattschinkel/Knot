@@ -10,11 +10,11 @@ def test_parse_typed_lit_int():
     assert n.type_name == "i32"
 
 
-def test_parse_typed_lit_float_unit():
-    n = parse_typed_lit("10:meters")
+def test_parse_typed_lit_unit_dim():
+    n = parse_typed_lit("10:f64@meters")
     assert isinstance(n, TypedLit)
     assert n.value == 10
-    assert n.type_name == "meters"
+    assert n.type_name == "f64@meters"
 
 
 def test_parse_typed_lit_via_expr():

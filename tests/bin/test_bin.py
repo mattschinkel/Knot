@@ -27,7 +27,7 @@ def test_serialize_op_roundtrip():
 
 
 def test_serialize_def_roundtrip():
-    n = parse_def("square = FN[x:i32] MUL[x, x]")
+    n = parse_def("DEF[square, FN[[x:i32], MUL[x, x]]]")
     out = deserialize(serialize(n))
     assert isinstance(out, DefNode)
     assert out.name == "square"

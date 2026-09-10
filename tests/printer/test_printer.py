@@ -1,5 +1,5 @@
 from knot.addressing import reset_ids
-from knot.parser import parse_expr, parse_def, parse_field_access, parse_hole
+from knot.parser import parse_expr, parse_def, parse_hole
 from knot.printer import print_ast
 
 
@@ -34,11 +34,6 @@ def test_print_ast_fn_shorthand():
     assert "[" not in out
 
 
-def test_print_ast_field_sugar():
-    out = print_ast(parse_field_access("user.name"))
-    assert out == "user.name"
-
-
 def test_print_ast_get_as_field():
     out = print_ast(parse_expr("GET[user, name]"))
     assert out == "user.name"
@@ -50,7 +45,7 @@ def test_print_ast_hole():
 
 
 def test_print_ast_def_fn():
-    out = print_ast(parse_def("square = FN[x:i32] MUL[x, x]"))
+    out = print_ast(parse_def("DEF[square, FN[[x:i32], MUL[x, x]]]"))
     assert out.startswith("fn square(x: i32)")
     assert "x * x" in out
     assert "{" in out and "}" in out

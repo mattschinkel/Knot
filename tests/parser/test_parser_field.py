@@ -1,30 +1,23 @@
 from knot.parser import parse_field_access, parse_expr, ParseError
-from knot.ast import FieldAccess, IdentExpr
+from knot.ast import OpExpr, IdentExpr
 import pytest
 
 
-def test_parse_field_access_simple():
-    n = parse_field_access("user.name")
-    assert isinstance(n, FieldAccess)
-    assert n.field_name == "name"
-    assert isinstance(n.id, IdentExpr)
-    assert n.id.id == "user"
+def test_canonical_get_not_dot():
+    n = parse_expr("GET[user, name]")
+    assert isinstance(n, OpExpr)
+    assert n.op == "GET"
+    assert isinstance(n.children[0], IdentExpr)
+    assert n.children[0].id == "user"
+    assert isinstance(n.children[1], IdentExpr)
+    assert n.children[1].id == "name"
 
 
-def test_parse_field_access_chained():
-    n = parse_field_access("a.b.c")
-    assert isinstance(n, FieldAccess)
-    assert n.field_name == "c"
-    assert isinstance(n.id, FieldAccess)
-    assert n.id.field_name == "b"
-
-
-def test_parse_expr_field_sugar():
-    n = parse_expr("user.name")
-    assert isinstance(n, FieldAccess)
-    assert n.field_name == "name"
-
-
-def test_parse_field_access_requires_dot():
+def test_dot_sugar_rejected_in_expr():
     with pytest.raises(ParseError):
-        parse_field_access("user")
+        parse_expr("user.name")
+
+
+def test_parse_field_access_helper_rejected():
+    with pytest.raises(ParseError):
+        parse_field_access("user.name")

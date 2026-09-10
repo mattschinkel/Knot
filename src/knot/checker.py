@@ -7,11 +7,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .ast import IdentExpr, LitExpr, TypedLit, UnitExpr
+from .ast import IdentExpr, LitExpr, OpExpr, TypedLit, UnitExpr
 from .env import Env
 from .errors import StructuredError
 from .types import (
-    Type, BaseType, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER,
+    Type, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER,
 )
 from .values import ErrorVal, Value
 
@@ -48,6 +48,11 @@ _BASE_BY_NAME = {
     "bool": BOOL, "string": STRING, "bytes": BYTES, "unit": UNIT, "never": NEVER,
 }
 
+_NUMERIC = frozenset({I32, I64, F32, F64})
+_ARITH_OPS = frozenset({"ADD", "SUB", "MUL", "DIV", "MOD"})
+_UNARY_OPS = frozenset({"NEG", "NOT"})
+_COMPARE_OPS = frozenset({"EQ", "NE", "LT", "LE", "GT", "GE", "AND", "OR"})
+
 
 def _lit_type(value: object) -> Type | TypeErrorVal:
     if isinstance(value, bool):
@@ -65,51 +70,17 @@ def _lit_type(value: object) -> Type | TypeErrorVal:
     return type_error("unsupported literal", ())
 
 
-def infer_type(expr, env):
-    match expr:
-        case IdentExpr(id):
-            return env.lookup(id)
-        case LitExpr(value):
-            return infer_literal_type(value)
-        case UnitExpr():
-            return UNIT
-        case _:
-            return type_error("unknown expression type", ())
-
-
-def infer_literal_type(value):
-    if isinstance(value, bool):
-        return BOOL
-    if isinstance(value, int):
-        return I32
-    if isinstance(value, float):
-        return F64
-    if isinstance(value, str):
-        return STRING
-    return type_error("unknown literal type", ())
-
-
-def infer_literal_type(value):
-    if isinstance(value, bool):
-        return BOOL
-    if isinstance(value, int):
-        return I32
-    if isinstance(value, float):
-        return F64
-    if isinstance(value, str):
-        return STRING
-    return type_error("unknown literal type", ())
-
-
-_NUMERIC = frozenset({I32, I64, F32, F64})
-_ARITH_OPS = frozenset({"ADD", "SUB", "MUL", "DIV", "MOD"})
+def _resolve_type_name(name: str) -> Type | TypeErrorVal:
+    """Resolve a typed-lit type string (i32 or f64@meters base part)."""
+    base = name.split("@", 1)[0]
+    t = _BASE_BY_NAME.get(base)
+    if t is None:
+        return type_error("unknown type " + repr(name), ())
+    return t
 
 
 def check_binary_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
-    """Type rule for binary kernel ops (Phase 2 T6).
-
-    Spec: ADD/SUB/MUL/DIV/MOD are (T, T) -> T for numeric T; no implicit casts.
-    """
+    """Type rule for binary kernel ops (Phase 2 T6)."""
     if op not in _ARITH_OPS:
         return type_error("unknown binary op " + repr(op), ())
     if t1 not in _NUMERIC or t2 not in _NUMERIC:
@@ -118,11 +89,9 @@ def check_binary_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
         return type_error("binary " + op + " operand type mismatch", ())
     return t1
 
-def check_unary_op(op: str, t: Type) -> Type | TypeErrorVal:
-    """Type rule for unary ops: NEG, NOT.
 
-    NEG: numeric T -> T; NOT: Bool -> Bool.
-    """
+def check_unary_op(op: str, t: Type) -> Type | TypeErrorVal:
+    """Type rule for unary ops: NEG, NOT."""
     if op == "NEG":
         if t not in _NUMERIC:
             return type_error("NEG requires numeric type", ())
@@ -132,6 +101,7 @@ def check_unary_op(op: str, t: Type) -> Type | TypeErrorVal:
             return type_error("NOT requires BOOL type", ())
         return t
     return type_error("unknown unary op " + repr(op), ())
+
 
 def check_compare_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
     """Comparison and logic ops: EQ NE LT LE GT GE AND OR -> Bool."""
@@ -150,3 +120,43 @@ def check_compare_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
             return type_error(op + " requires BOOL types", ())
         return BOOL
     return type_error("unknown compare op " + repr(op), ())
+
+
+def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
+    """Infer the type of a kernel AST expression."""
+    if isinstance(expr, LitExpr):
+        return _lit_type(expr.value)
+    if isinstance(expr, TypedLit):
+        return _resolve_type_name(expr.type_name)
+    if isinstance(expr, UnitExpr):
+        return UNIT
+    if isinstance(expr, IdentExpr):
+        ctx = env if env is not None else Env()
+        name = expr.id if isinstance(expr.id, str) else str(expr.id)
+        found = ctx.lookup(name)
+        if found is None:
+            return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
+        return found
+    if isinstance(expr, OpExpr):
+        kids = list(expr.children or [])
+        if expr.op in _UNARY_OPS:
+            if len(kids) != 1:
+                return type_error("unary " + expr.op + " arity", ())
+            t0 = infer_type(kids[0], env)
+            if isinstance(t0, TypeErrorVal):
+                return t0
+            return check_unary_op(expr.op, t0)
+        if expr.op in _ARITH_OPS or expr.op in _COMPARE_OPS:
+            if len(kids) != 2:
+                return type_error("binary " + expr.op + " arity", ())
+            t1 = infer_type(kids[0], env)
+            if isinstance(t1, TypeErrorVal):
+                return t1
+            t2 = infer_type(kids[1], env)
+            if isinstance(t2, TypeErrorVal):
+                return t2
+            if expr.op in _ARITH_OPS:
+                return check_binary_op(expr.op, t1, t2)
+            return check_compare_op(expr.op, t1, t2)
+        return type_error("unknown op " + repr(expr.op), ())
+    return type_error("cannot infer type of " + type(expr).__name__, ())

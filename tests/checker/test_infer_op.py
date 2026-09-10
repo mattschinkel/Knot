@@ -1,133 +1,38 @@
-def test_infer_type_ident_expr():
-    from knot.checker import infer_type
-    from knot.values import IntVal
-    from knot.ast import IdentExpr
-    from knot.types import Type
+"""infer_type for OpExpr via check_binary_op / check_unary_op (Phase 2 T9)."""
 
-    expr = IdentExpr(id=1)
-    result = infer_type(expr)
-    assert result is not None
+from __future__ import annotations
+
+from knot.ast import LitExpr, OpExpr
+from knot.checker import TypeErrorVal, infer_type
+from knot.types import I32, BOOL, F64
 
 
-def test_infer_type_lit_expr():
-    from knot.checker import infer_type
-    from knot.ast import LitExpr
-    from knot.types import I32
-
-    expr = LitExpr(value=I32(5))
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_add():
+    assert infer_type(OpExpr("ADD", [LitExpr(1), LitExpr(2)])) is I32
 
 
-def test_infer_type_unit_expr():
-    from knot.checker import infer_type
-    from knot.ast import UnitExpr
-    from knot.types import I32
-
-    expr = UnitExpr()
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_mul_nested():
+    inner = OpExpr("ADD", [LitExpr(1), LitExpr(2)])
+    assert infer_type(OpExpr("MUL", [inner, LitExpr(3)])) is I32
 
 
-def test_infer_type_add_expr():
-    from knot.checker import infer_type
-    from knot.ast import BinOpExpr
-    from knot.types import I32
-
-    expr = BinOpExpr(left=I32(5), right=I32(3), op='+')
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_neg():
+    assert infer_type(OpExpr("NEG", [LitExpr(1)])) is I32
 
 
-def test_infer_type_sub_expr():
-    from knot.checker import infer_type
-    from knot.ast import BinOpExpr
-    from knot.types import I32
-
-    expr = BinOpExpr(left=I32(5), right=I32(3), op='-')
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_not():
+    assert infer_type(OpExpr("NOT", [LitExpr(True)])) is BOOL
 
 
-def test_infer_type_mul_expr():
-    from knot.checker import infer_type
-    from knot.ast import BinOpExpr
-    from knot.types import I32
-
-    expr = BinOpExpr(left=I32(5), right=I32(3), op='*')
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_eq():
+    assert infer_type(OpExpr("EQ", [LitExpr(1), LitExpr(2)])) is BOOL
 
 
-def test_infer_type_neg_expr():
-    from knot.checker import infer_type
-    from knot.ast import UnOpExpr
-    from knot.types import I32
-
-    expr = UnOpExpr(op='-', value=I32(5))
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_add_mismatch():
+    # 1 is i32, 1.5 is f64 — no implicit cast
+    err = infer_type(OpExpr("ADD", [LitExpr(1), LitExpr(1.5)]))
+    assert isinstance(err, TypeErrorVal)
 
 
-def test_infer_type_not_expr():
-    from knot.checker import infer_type
-    from knot.ast import UnOpExpr
-    from knot.types import I32
-
-    expr = UnOpExpr(op='not', value=I32(5))
-    result = infer_type(expr)
-    assert result is not None
-
-
-def test_infer_type_ident_with_env():
-    from knot.checker import infer_type
-    from knot.ast import IdentExpr
-    from knot.types import Type
-
-    expr = IdentExpr(id=1)
-    result = infer_type(expr)
-    assert result is not None
-
-
-def test_infer_type_nested_binop():
-    from knot.checker import infer_type
-    from knot.ast import BinOpExpr
-    from knot.types import I32
-
-    expr = BinOpExpr(left=BinOpExpr(left=I32(5), right=I32(3), op='+'),
-                    right=I32(2), op='*')
-    result = infer_type(expr)
-    assert result is not None
-
-
-def test_infer_type_op_expr():
-    from knot.checker import infer_type
-    from knot.ast import OpExpr
-    from knot.types import I32
-
-    expr = OpExpr(op='+', left=I32(5), right=I32(3))
-    result = infer_type(expr)
-    assert result is not None
-
-
-def test_infer_type_invalid_type():
-    from knot.checker import infer_type
-    from knot.ast import IdentExpr
-
-    expr = IdentExpr(id=1)
-    result = infer_type(expr)
-    assert result is not None
-
-
-def test_infer_type_binop_expr():
-    from knot.checker import infer_type
-    from knot.ast import BinOpExpr
-    from knot.types import I32
-
-    expr = BinOpExpr(
-        left=I32(5),
-        right=I32(3),
-        op='+'
-    )
-    result = infer_type(expr)
-    assert result is not None
+def test_infer_float_add():
+    assert infer_type(OpExpr("ADD", [LitExpr(1.0), LitExpr(2.0)])) is F64

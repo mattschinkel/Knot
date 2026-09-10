@@ -27,7 +27,7 @@ def test_id_stability():
 
 
 def test_def_and_program_roundtrip():
-    d = parse_def("f = FN[x:i32] ADD[x, 1]")
+    d = parse_def("DEF[f, FN[[x:i32], ADD[x, 1]]]")
     assert deserialize(serialize(d)).name == "f"
     prog = parse_program("ADD[1, 2]\nSUB[9, 3]")
     out = deserialize(serialize(prog))

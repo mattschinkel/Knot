@@ -33,7 +33,7 @@ def test_path_stability():
 
 
 def test_def_roundtrip_structure():
-    node = parse_def("square = FN[x:i32] MUL[x, x]")
+    node = parse_def("DEF[square, FN[[x:i32], MUL[x, x]]]")
     assert isinstance(node, DefNode)
     assert node.name == "square"
     assert isinstance(node.body, FnExpr)

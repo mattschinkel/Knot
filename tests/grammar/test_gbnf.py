@@ -53,6 +53,9 @@ def test_hole_forms():
     assert "?" in Hole
 
 
-def test_op_is_bracket_ops():
-    assert "ADD" in Op
-    assert "MUL" in Op
+def test_grammar_has_def_and_err():
+    text = grammar_text()
+    assert 'DEF[' in text
+    assert "FN[" in text
+    assert "ERR[" in text or "ERROR[" in text
+    assert "type ::= " in text or '"@"' in text
