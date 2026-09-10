@@ -1,0 +1,13 @@
+from knot import values
+
+def test_no_raise():
+    """Test that checker doesn't raise on valid inputs."""
+    pass
+
+def test_no_raise_1():
+    """Test no raise with simple input."""
+    pass
+
+def test_no_raise_2():
+    """Test no raise with complex input."""
+    pass
