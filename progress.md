@@ -36,8 +36,16 @@
 - **Phase 2 T5 landed (2026-09-09).** Crew left truncated `l(True)` + duplicate tests; stub `infer_type` echoed values. Manual infer for LitExpr/TypedLit/IdentExpr/UnitExpr; AppendTests rejects stray module-level stmts and duplicate test names. Resuming `--from=T6`.
 - **Phase 2 T6 landed (2026-09-09).** Crew tested Values with wrong `IntVal(10)` arity and wrong API. Manual `check_binary_op(op, t1, t2)` per spec (same numeric T, no casts); harness rejects under-arity IntVal/FloatVal in tests. Resuming `--from=T9`.
 
+- **Phase 2 T8 landed (2026-09-09).** Crew tests imported TypeErrorVal wrong. Manual check_compare_op; 89 checker tests green.
+- **Syntax feedback → R1 (2026-09-09).** Human review scored LLM-goal fit 8.5/10; asked for 10/10 via more rigidity. Full text: `ai_docs/feedback_syntax_10of10.md`. R1 decided D-FB1–D-FB6 (ACCEPT/AMEND) in `ai_docs/r1_decisions_feedback_syntax_10of10.md`; design doc §2/§3.5/§4/§5.1 updated. **Phase 2 PAUSED** until GBNF/parser reflect FN[[params],body], DEF-only, T@dim lits, holes, ERR[...].
+- **D-FB syntax land (2026-09-10).** GBNF + parser + printer tests updated for canonical `DEF[...]`, `FN[[params], body]`, `GET` only (`.` rejected), typed `f64@meters`, holes `?:T@dim`. Restored/extended `infer_type` for OpExpr (T9). **321 tests pass.** Phase 2 unblocked → resume `--from=T10`.
+
 ## TODOs
-- Resume Phase 2 when unpaused: `.venv/bin/python autobuild.py --phase 2 --from=T9`.
+- Resume Phase 2: `.venv/bin/python autobuild.py --phase 2 --from=T10`.
+- Apply remaining example rewrites in `axiom_design.md` (still has legacy `def`/`.` in later sections) to match D-FB1/D-FB2.
+- Bump drift baseline after D-FB grammar change; re-run Phase 1 gates.
+- Wire `ERR[...]` parse/print nodes (GBNF has Err production; AST/parser stub still TODO).
+- Extend holes surface `?:FN[...]` once shape locked in GBNF.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).
