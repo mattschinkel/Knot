@@ -47,9 +47,10 @@
 - **Phase 2 T13 landed manually (2026-09-10).** Crew mangled `__init__.py` + invented `knot.nodes`. Restored package init; `infer_def` binds DefNode name→body type in Env. Resuming `--from=T14`.
 - **Phase 2 T14 landed manually (2026-09-10).** Crew HTTP 500 + broken stub. Manual `check_access` for GET/FIELD/SET on Record/Tuple/Map. Resuming `--from=T15`.
 - **Phase 2 T15 landed manually (2026-09-10).** Crew circular-imported checker into types.py. Restored types; `check_collection` for LEN/AT/APPEND/CONCAT/MAP/FILTER. Resuming `--from=T16`.
+- **Phase 2 T16 landed manually (2026-09-10).** Crew invented IntLit/check_* helpers. `check_expr` = public `infer_type` dispatcher. Resuming `--from=T17`.
 
 ## TODOs
-- Phase 2 autobuild running `--from=T16` (after T15 manual land).
+- Phase 2 autobuild running `--from=T17` (after T16 manual land).
 - D-FB11: add normalize step so canonical print has no spaces; update parser/tests/drift baseline.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
@@ -92,6 +93,7 @@
 - T24 GBNF — crew wrote a Value-based `Program` AST stub (import broken) instead of grammar rules; replaced with production-string GBNF module + tests (no numeric IDs, bracket-only).
 - T25–T29 property tests — crew used WriteModule on `tests/` (rejected) and clobbered `ast.py`/`values.py` again; restored sources and landed property tests manually.
 - T30 drift gate — crew mangled `check()` (circular imports + wrong API) and broke `tests/drift/`; restored `drift.py`, fixed tests, closed Phase 1 gates manually (spec_lint PASS, drift PASS).
+- Phase 2 T16 crew fail — invented IntLit / missing check_* helpers; landed `check_expr` as infer_type dispatcher.
 - Phase 2 T15 crew fail — circular import in types.py + Value-based tests; landed `check_collection` manually.
 - Phase 2 T14 crew fail — JSON/tool bloat + bad check_access stub; landed GET/FIELD/SET access rules manually.
 - Phase 2 T13 crew fail — mangled `__init__.py` / `knot.nodes`; landed `infer_def` manually.

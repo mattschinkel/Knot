@@ -1,86 +1,45 @@
-def test_check_expr_litexpr():
-    from knot.ast import LitExpr
-    from knot.values import IntVal
-    from knot.checker import check_expr
+"""check_expr public dispatcher (Phase 2 T16)."""
 
-    node = LitExpr(1)
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+from __future__ import annotations
 
-
-def test_check_expr_identexpr():
-    from knot.ast import IdentExpr
-    from knot.values import IntVal
-    from knot.checker import check_expr
-
-    node = IdentExpr('x')
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+from knot.ast import DefNode, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr
+from knot.checker import TypeErrorVal, check_expr
+from knot.env import Env
+from knot.types import ANY, FnType, I32, BOOL
 
 
-def test_check_expr_ifexpr():
-    from knot.ast import IfExpr
-    from knot.values import BoolVal
-    from knot.checker import check_expr
-
-    node = IfExpr(IfExpr(IfExpr(LitExpr(1), LitExpr(2), LitExpr(3)), LitExpr(4), LitExpr(5)), LitExpr(6), LitExpr(7))
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, BoolVal)
+def test_check_expr_lit():
+    assert check_expr(LitExpr(1)) is I32
 
 
-def test_check_expr_callexpr():
-    from knot.ast import CallExpr
-    from knot.values import IntVal
-    from knot.checker import check_expr
-
-    node = CallExpr('f', [LitExpr(1)])
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+def test_check_expr_op():
+    assert check_expr(OpExpr("ADD", [LitExpr(1), LitExpr(2)])) is I32
 
 
-def test_check_expr_defnode():
-    from knot.ast import DefNode
-    from knot.values import IntVal
-    from knot.checker import check_expr
-
-    node = DefNode('x', LitExpr(1))
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+def test_check_expr_if():
+    assert check_expr(IfExpr(LitExpr(True), LitExpr(1), LitExpr(2))) is I32
 
 
-def test_check_expr_fnexpr():
-    from knot.ast import FnExpr
-    from knot.values import IntVal
-    from knot.checker import check_expr
-
-    node = FnExpr('f', [LitExpr(1)], LitExpr(2))
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+def test_check_expr_hole():
+    assert check_expr(HoleExpr(id=1)) is ANY
 
 
-def test_check_expr_holeexpr():
-    from knot.ast import HoleExpr
-    from knot.values import IntVal
-    from knot.checker import check_expr
-
-    node = HoleExpr()
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+def test_check_expr_def():
+    env = Env()
+    assert check_expr(DefNode("x", LitExpr(9)), env) is I32
+    assert env.lookup("x") is I32
 
 
-def test_check_expr_opexpr():
-    from knot.ast import OpExpr
-    from knot.values import IntVal
-    from knot.checker import check_expr
+def test_check_expr_fn():
+    t = check_expr(FnExpr([("x", "i32")], IdentExpr("x")))
+    assert isinstance(t, FnType) and t.ret is I32
 
-    node = OpExpr('+', [LitExpr(1), LitExpr(2)])
-    result = check_expr(node)
-    assert result is not None
-    assert isinstance(result, IntVal)
+
+def test_check_expr_unbound():
+    err = check_expr(IdentExpr("missing"))
+    assert isinstance(err, TypeErrorVal)
+
+
+def test_check_expr_mismatch():
+    err = check_expr(OpExpr("ADD", [LitExpr(1), LitExpr(True)]))
+    assert isinstance(err, TypeErrorVal)
