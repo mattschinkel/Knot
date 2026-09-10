@@ -119,14 +119,19 @@ def check_unary_op(op: str, t: Type) -> Type | TypeErrorVal:
     return type_error("unknown unary op " + repr(op), ())
 
 def check_compare_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
-    if op == "EQ" or op == "NE":
+    """Comparison and logic ops: EQ NE LT LE GT GE AND OR -> Bool."""
+    if op in ("EQ", "NE"):
+        if t1 != t2:
+            return type_error(op + " operand type mismatch", ())
         return BOOL
-    if op == "LT" or op == "LE" or op == "GT" or op == "GE":
+    if op in ("LT", "LE", "GT", "GE"):
         if t1 not in _NUMERIC or t2 not in _NUMERIC:
-            return type_error("LT/LE/GT/GE requires numeric type", ())
+            return type_error(op + " requires numeric types", ())
+        if t1 != t2:
+            return type_error(op + " operand type mismatch", ())
         return BOOL
-    if op == "AND" or op == "OR":
+    if op in ("AND", "OR"):
         if t1 != BOOL or t2 != BOOL:
-            return type_error("AND/OR requires BOOL type", ())
+            return type_error(op + " requires BOOL types", ())
         return BOOL
     return type_error("unknown compare op " + repr(op), ())

@@ -1,103 +1,37 @@
-def test_check_compare_op_eq_any_type():
-    from knot.types import I32, F64
-    from knot.checker import check_compare_op
-    from knot import TypeErrorVal
+"""check_compare_op for EQ/NE/LT/LE/GT/GE/AND/OR (Phase 2 T8)."""
 
-    # EQ with any type should return Bool
-    assert check_compare_op(I32(1), I32(2), 'EQ') is not TypeErrorVal
-    assert check_compare_op(F64(1.5), F64(2.5), 'EQ') is not TypeErrorVal
+from __future__ import annotations
 
-    # Should return Bool type
-    result = check_compare_op(I32(1), I32(1), 'EQ')
-    assert result.type == 'BOOL'
+from knot.checker import TypeErrorVal, check_compare_op
+from knot.types import I32, I64, F64, BOOL, STRING
 
 
-def test_check_compare_op_eq_int():
-    from knot.types import I32
-    from knot.checker import check_compare_op
-
-    result = check_compare_op(I32(1), I32(2), 'EQ')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), I32(1), 'EQ')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), I32(2), 'NE')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), I32(1), 'NE')
-    assert result.type == 'BOOL'
+def test_eq_ne_same_type():
+    assert check_compare_op("EQ", I32, I32) is BOOL
+    assert check_compare_op("NE", STRING, STRING) is BOOL
 
 
-def test_check_compare_op_lt_le_gt_ge_numeric():
-    from knot.types import I32, F64
-    from knot.checker import check_compare_op
-
-    # LT, LE, GT, GE with numeric types
-    assert check_compare_op(I32(1), I32(2), 'LT') is not TypeErrorVal
-    assert check_compare_op(I32(1), I32(2), 'LE') is not TypeErrorVal
-    assert check_compare_op(I32(2), I32(1), 'GT') is not TypeErrorVal
-    assert check_compare_op(I32(2), I32(2), 'GE') is not TypeErrorVal
-
-    # Should return Bool
-    result = check_compare_op(I32(1), I32(2), 'LT')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(F64(1.5), F64(2.5), 'GT')
-    assert result.type == 'BOOL'
+def test_eq_mismatch():
+    err = check_compare_op("EQ", I32, I64)
+    assert isinstance(err, TypeErrorVal)
 
 
-def test_check_compare_op_lt_numeric():
-    from knot.types import I32, F64
-    from knot.checker import check_compare_op
-
-    result = check_compare_op(I32(1), I32(2), 'LT')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(F64(1.5), F64(2.5), 'LT')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), F64(2.5), 'LT')
-    assert result.type == 'BOOL'
+def test_ordered_numeric():
+    for op in ("LT", "LE", "GT", "GE"):
+        assert check_compare_op(op, I32, I32) is BOOL
+        assert check_compare_op(op, F64, F64) is BOOL
 
 
-def test_check_compare_op_gt_numeric():
-    from knot.types import I32, F64
-    from knot.checker import check_compare_op
-
-    result = check_compare_op(I32(1), I32(2), 'GT')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(F64(1.5), F64(2.5), 'GT')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), F64(2.5), 'GT')
-    assert result.type == 'BOOL'
+def test_ordered_mismatch_or_non_numeric():
+    assert isinstance(check_compare_op("LT", I32, I64), TypeErrorVal)
+    assert isinstance(check_compare_op("LT", BOOL, BOOL), TypeErrorVal)
 
 
-def test_check_compare_op_le_numeric():
-    from knot.types import I32, F64
-    from knot.checker import check_compare_op
-
-    result = check_compare_op(I32(1), I32(2), 'LE')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(F64(1.5), F64(2.5), 'LE')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), F64(2.5), 'LE')
-    assert result.type == 'BOOL'
+def test_and_or():
+    assert check_compare_op("AND", BOOL, BOOL) is BOOL
+    assert check_compare_op("OR", BOOL, BOOL) is BOOL
+    assert isinstance(check_compare_op("AND", I32, I32), TypeErrorVal)
 
 
-def test_check_compare_op_ge_numeric():
-    from knot.types import I32, F64
-    from knot.checker import check_compare_op
-
-    result = check_compare_op(I32(1), I32(2), 'GE')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(F64(1.5), F64(2.5), 'GE')
-    assert result.type == 'BOOL'
-
-    result = check_compare_op(I32(1), F64(2.5), 'GE')
-    assert result.type == 'BOOL'
+def test_unknown_op():
+    assert isinstance(check_compare_op("XOR", BOOL, BOOL), TypeErrorVal)
