@@ -52,9 +52,10 @@
 - **Autobuild auto-restart (2026-09-10).** Failed tasks retry (`KNOT_TASK_RETRIES`) and outer-loop restart (`KNOT_AUTO_RESTART=1`); `--watch` re-execs on process exit. See `fixes/fix_autobuild_auto_restart.md`. Continuing Phase 3.
 - **Phase 3 T1 landed manually (2026-09-10).** Watch spun overnight on mangled `effects.py` / bad tests. Manual `EffectCategory` + `EffectSet`. Resuming `--from=T2`.
 - **Crew v6 (2026-09-10).** Restore-on-retry, one-shot WriteModule/AddClass/AddFunction, sequential R2→R4 (R4 tests-only). See `fixes/fix_crew_v6_restore_oneshot_sequential.md`.
+- **Phase 3 T3–T4 landed manually (2026-09-10).** Crew stuck ~4h on T3 inventing string-based tests; manual `compose_effects` + `check_capabilities`. Resuming `--from=T5`.
 
 ## TODOs
-- Phase 3 autobuild: `.venv/bin/python autobuild.py --watch --phase 3 --from=T2` (crew v6).
+- Phase 3 autobuild: `.venv/bin/python autobuild.py --watch --phase 3 --from=T5` (crew v6).
 - D-FB11: add normalize step so canonical print has no spaces; update parser/tests if needed.
 - D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
 - D-FB10: hole constraint propagation in checker (beyond label resolve).
