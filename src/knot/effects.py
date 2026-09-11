@@ -114,3 +114,18 @@ class CapabilitySet:
 
     def issubset(self, other: CapabilitySet) -> bool:
         return self.caps <= other.caps
+
+
+def compose_effects(*sets: EffectSet) -> EffectSet:
+    """Union of effect sets (phase3_spec D4). Empty args → pure."""
+    out = EffectSet()
+    for s in sets:
+        if not isinstance(s, EffectSet):
+            raise TypeError("compose_effects expects EffectSet arguments")
+        out = out.union(s)
+    return out
+
+
+def check_capabilities(needed: CapabilitySet, granted: CapabilitySet) -> bool:
+    """True iff every needed capability is in the granted set (D5)."""
+    return needed.issubset(granted)
