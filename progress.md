@@ -67,7 +67,7 @@
 - **Compile-all golemc (2026-09-12).** Stage-1 golemc now lowers the deterministic AIR surface: COND/PAR/SEQ/REF/DEREF/UNSAFE, UNIT/nil, `"…"` + `;`, DEPENDS/MODEL/TOOL/VERSION/EXPORT stubs, selective IMPORT, CASE string tags, SUM Ident-tag sugar. Gate: `tests/selfhost/test_compile_all_golem.py`. AI INVOKE/MCP/edits remain host Python.
 - **Self-host finish (2026-09-12).** In-Golem `compile_root` IMPORT→FS_READ merge; `_call_def` threads `granted_caps`; INVOKE compile stub; VM links full `root.gol` (103 funcs) and runs linked golemc. Host-only by design: MCP, edits, live INVOKE. See `fixes/fix_compile_all_finish.md`.
 - **golemc CLI + rebuild (2026-09-12).** `python -m golem run|compile|--root|rebuild`; Golem `rebuild_roundtrip` + `CALL_PROGRAM`. See `fixes/fix_golemc_cli_rebuild.md`.
-- **Knot→Golem rename locked (2026-09-12).** `src/golem`, `.gol`, `golemc`; see `name_changes.md`.
+- **Language rename locked (2026-09-12).** Package `src/golem`, extension `.gol`, compiler `golemc`; see `name_changes.md`.
 
 ## TODOs
 - Register `golemlang.com` + USPTO for locked name **Golem** (`.gol`). Mitigate bare-Golem collisions via golemlang branding.
