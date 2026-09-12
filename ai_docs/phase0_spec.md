@@ -1,7 +1,7 @@
 # Phase 0 Spec — Core Data Model (Golem kernel, Python host)
 
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel
-> Engineer. Verification: R4 Verifier. Human observes via the dashboard
+> Engineer. Verification: R4 Verifier. Human observes via progress.md
 > (non-blocking); R1 makes all decisions.
 > Status: DECIDED by R1 (autonomous) — implemented; tests green.
 

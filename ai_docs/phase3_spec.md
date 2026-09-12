@@ -1,6 +1,6 @@
 # Phase 3 Spec — Effects / Capabilities / Contracts
 
-> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
+> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via progress.md (non-blocking); R1 makes all decisions.  
 > Status: DECIDED by R1 (autonomous) — implemented; tests green.
 
 Phase 3 introduces **effects**, **capabilities**, and **contracts** as structural features of the Golem kernel. These are not runtime semantics but **first-class type-level constructs** that shape how functions behave, what permissions they require, and what guarantees they provide. The design is grounded in the deterministic kernel's need for composable, sandboxable, and verifiable AI execution.

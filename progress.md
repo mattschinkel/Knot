@@ -11,7 +11,7 @@
 - Wrote detailed design: `ai_docs/golem_design.md` (goals, type system, AST, effects/capabilities/contracts, holes, errors, edits, modules, AI tools, build phases).
 - **Language name LOCKED (2026-09-12): Golem.** Extension `.gol`. Site/package brand `golemlang.com`. Python package `src/golem` (`import golem`). Stage-1 sources under `selfhost/**/*.gol`. Old working names removed from docs/code.
 - Designed the LLM agent build crew: `ai_docs/golem_agents.md` — 6 roles (Architect, Kernel Engineer = deterministic back-end, AI Front-end Engineer = judgment half, Verifier, DX Engineer, Scribe) mapped to the §16 build phases, with a two-half handoff invariant and a phased activation table (start with R1+R2+R4 at Phase 0). Realistic for the 4B local LLM: human stays architect, agents are scoped implementers/reviewers.
-- Built the one-page build dashboard: `web/index.html` — self-contained (inline CSS+JS, no build step, no HTTPS, works via file://). Renders from a single `STATUS` object that R6 Scribe updates after each phase gate. Shows name status, all 12 build phases with status/owner/notes + progress bar, active crew, open questions, design open items, recent fixes. Owner = R6 Scribe (documented in `ai_docs/golem_agents.md` R6 + dashboard data contract).
+- Built (then later removed) a one-page build dashboard at `web/index.html`. Status tracking is now `progress.md` only (dashboard removed 2026-09-12).
 - Added the "Syntax quality bar: 10/10 for LLMs" principle to `ai_docs/golem_design.md` §2 — the canonical syntax is held to an exceptional standard as a fit for LLM generation/editing/reasoning; features that degrade LLM reliability do not ship.
 - Added "Operating rules for agents" (`ai_docs/golem_agents.md` §6) adopting the author's applicable Cursor rules (JAL/Android rules ignored): no hacks/workarounds, minimize targeted heuristics in compiler code, continuous self-improvement, keep progress.md current, log renames in `name_changes.md`, write `fixes/fix_*.md` per issue, review `ai_docs/`, author = Matthew Schinkel, git/backup discipline, no HTTPS, no `&&` in PowerShell, .css version bump, don't assume a stopped command failed, make/MSYS2 paths.
 - Added CrewAI-ready prompts for all 6 roles (`ai_docs/golem_agents.md` §7) — concrete `role`/`goal`/`backstory` strings tuned for a 4B model: narrow scope, explicit invariants (10/10 syntax bar, deterministic kernel, no hacks), clear stop/escalate conditions, with operating rules embedded in each backstory, plus prompt-quality rules for wiring.
@@ -72,7 +72,8 @@
 ## TODOs
 - Register `golemlang.com` + USPTO for locked name **Golem** (`.gol`). Mitigate bare-Golem collisions via golemlang branding.
 - GitHub repo renamed to **GolemLang**: https://github.com/mattschinkel/GolemLang (local `origin` updated).
-- GitHub Pages live: https://mattschinkel.github.io/GolemLang/ (`docs/index.html` + `docs/dashboard.html`).
+- GitHub Pages live: https://mattschinkel.github.io/GolemLang/ (`docs/index.html` landing only).
+- **Build dashboard removed (2026-09-12).** Deleted `web/index.html` and `docs/dashboard.html`; status lives in `progress.md`.
 
 - Tier-3 / public rename / native LLVM — deferred until name pick.
 - In-Golem multi-file IMPORT link — DONE (`compile_root` + `fix_compile_all_finish.md`).
@@ -165,7 +166,6 @@
 - `tests/selfhost/test_compile_all_golem.py` — golemc compile-all AIR gate
 - `python -m golem run|compile|rebuild` — daily golemc CLI (see `selfhost/README.md`)
 - **Linux (current host):** activate with `source .venv/bin/activate`, or prefix commands with `.venv/bin/python`.
-- `web/index.html` — Golem build dashboard. Serve: `.venv/bin/python -m http.server 8000 --directory web` → http://localhost:8000 (no HTTPS).
 - `two_agent_crew.py` — 2-agent CrewAI demo vs LAN llama-server. **LOCAL-ONLY.** `.venv/bin/python two_agent_crew.py`
 - `ask_architect.py` — R1 Q&A. **LOCAL-ONLY.** `.venv/bin/python ask_architect.py` or `--once "q"`. Env: `GOLEM_LLM_MODEL`, `GOLEM_LLM_BASE_URL`, `GOLEM_LLM_API_KEY`, `GOLEM_LLM_TEMPERATURE`.
 - `architect_phase.py` — R1 drafts phases. **LOCAL-ONLY.** `.venv/bin/python architect_phase.py --draft N` / `--tasks N`.

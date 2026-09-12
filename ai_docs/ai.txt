@@ -14,7 +14,7 @@ This project explores using a local LLM with free/open-source agent tooling to h
 - Review files in ai_docs/ at the start of work.
 - When working with .css files, bump the version after edits.
 - Do not restore from backup without asking.
-- Never `git checkout HEAD` / reset / force-push without the Architect's (R1) OK; take a backup first. R1 is autonomous and approves these itself (no human gate); R6 logs the operation to the dashboard. A local git repo is maintained for the agents to use.
+- Never `git checkout HEAD` / reset / force-push without the Architect's (R1) OK; take a backup first. R1 is autonomous and approves these itself (no human gate); R6 logs the operation in progress.md. A local git repo is maintained for the agents to use.
 - When using Windows PowerShell, do not use `&&` with commands.
 - **Build path (2026-09-11):** Cursor implements Golem against phase specs. The 4B CrewAI autobuild is abandoned for implementation (see `fixes/fix_stop_crew_cursor_drives.md`).
 - **Language name (LOCKED 2026-09-12):** **Golem**. Source extension **`.gol`**. Site/package brand **golemlang** (`golemlang.com`). Python package path `src/golem`.

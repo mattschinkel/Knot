@@ -1,6 +1,6 @@
 # Phase 1 Spec — AST + Parser + GBNF Grammar (Golem kernel, Python host)
 
-> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
+> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via progress.md (non-blocking); R1 makes all decisions.  
 > Status: DECIDED by R1 (autonomous) — implemented; tests green (Phase 1 closed 2026-09-09).
 
 Phase 1 builds the **AST model** and the **canonical text parser**. It introduces **node IDs**, **structural paths**, and **symbolic labels** as the LLM's addressing scheme. The phase delivers a constrained-decoding GBNF grammar that ensures only valid syntax can be emitted by the LLM. This is the foundation for Phase 2's type checker and beyond.

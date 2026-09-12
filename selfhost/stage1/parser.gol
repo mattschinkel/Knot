@@ -328,8 +328,8 @@ DEF[parse_toplevel,FN[[toks,i],
               ]
             ]
           ],
-          IF[AND[EQ[TAG[AT[toks,i]],'Ident'],OR[EQ[PAYLOAD[AT[toks,i]],'TEST'],EQ[PAYLOAD[AT[toks,i]],'PROPERTY']]],
-            MATCH[parse_test_or_prop[toks,i],
+          IF[AND[EQ[TAG[AT[toks,i]],'Ident'],EQ[PAYLOAD[AT[toks,i]],'TEST']],
+            MATCH[parse_test[toks,i],
               CASE[Ok,t,
                 MATCH[parse_toplevel[toks,AT[t,0]],
                   CASE[Ok,rest,
@@ -337,6 +337,15 @@ DEF[parse_toplevel,FN[[toks,i],
                 ]
               ]
             ],
+            IF[AND[EQ[TAG[AT[toks,i]],'Ident'],EQ[PAYLOAD[AT[toks,i]],'PROPERTY']],
+              MATCH[parse_test_or_prop[toks,i],
+                CASE[Ok,t,
+                  MATCH[parse_toplevel[toks,AT[t,0]],
+                    CASE[Ok,rest,
+                      SUM['Ok',LIST[AT[rest,0],CONCAT[LIST[AT[t,1]],AT[rest,1]]]]]
+                  ]
+                ]
+              ],
             IF[AND[EQ[TAG[AT[toks,i]],'Ident'],OR[EQ[PAYLOAD[AT[toks,i]],'DEPENDS'],OR[EQ[PAYLOAD[AT[toks,i]],'MODEL'],OR[EQ[PAYLOAD[AT[toks,i]],'TOOL'],OR[EQ[PAYLOAD[AT[toks,i]],'VERSION'],EQ[PAYLOAD[AT[toks,i]],'EXPORT']]]]]],
               MATCH[parse_stub_form[toks,i,PAYLOAD[AT[toks,i]]],
                 CASE[Ok,st,

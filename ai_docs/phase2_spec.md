@@ -1,6 +1,6 @@
 # Phase 2 Spec — Type Checker (Golem kernel, Python host)
 
-> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
+> Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via progress.md (non-blocking); R1 makes all decisions.  
 > Status: DECIDED by R1 (autonomous) — DRAFT for crew implementation; no checker yet.
 
 Phase 2 builds the **type checker** for the Golem kernel. It introduces type rules for kernel operations, partial typing with holes, and structural type inference. The kernel operates on values and types defined in Phase 0; this phase adds the logic to infer and check types at runtime.

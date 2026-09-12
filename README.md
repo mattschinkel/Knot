@@ -612,7 +612,7 @@ lsp/                   # Language server
 vm/                    # Runtime / VM
 tests/                 # Tests
 tools/                 # Development tools
-web/                   # Build / progress dashboard
+docs/                  # GitHub Pages landing (docs/index.html)
 
 progress.md            # Development progress
 instructions.txt       # Project instructions

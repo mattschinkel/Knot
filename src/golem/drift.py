@@ -116,7 +116,7 @@ def check(
 
 
 def summarize(report: DriftReport) -> str:
-    """One-line-per-metric summary for R6 to log to the dashboard."""
+    """One-line-per-metric summary for R6 to log in progress.md."""
     lines = [f"Phase {report.phase} drift gate: "
              + ("PASS" if report.gate_passed else "REGRESSION")]
     for r in report.results:
