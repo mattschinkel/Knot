@@ -1,6 +1,7 @@
 Available project instructions
 
 Language: **Golem** (LOCKED). Extension: `.gol`. Brand: golemlang.com. Package: `src/golem`.
+GitHub: https://github.com/mattschinkel/GolemLang
 
 - ai_docs/ai.txt — project-wide AI working rules, local-LLM preference, and doc conventions
 - progress.md — highlights, TODOs, previous issues, and important scripts
