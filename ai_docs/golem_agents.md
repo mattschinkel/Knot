@@ -297,7 +297,7 @@ names the role that primarily enforces it.
   before any reset/force-push. R6 logs every git operation to the dashboard
   so the human can observe (non-blocking). Other agents (R2, R3, R4, R5)
   must still request R1's approval before any reset/force-push.
-- **Remote for pushes:** `origin` -> `https://github.com/mattschinkel/Golem.git`
+- **Remote for pushes:** `origin` -> `https://github.com/mattschinkel/GolemLang.git`
   (GitHub). Agents push normal commits to `origin/master`; do NOT
   force-push or reset `origin` without R1's OK + a backup first.
 - **Do not restore from backup without asking.** Refer to backups to
