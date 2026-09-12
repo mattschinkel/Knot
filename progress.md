@@ -162,6 +162,7 @@
 - `python -m golem compile FILE` — Stage-1 golemc compile (optional `--host-fallback`)
 - `selfhost/harness/` — Stage 1/2 tests: `.venv/bin/python -m pytest selfhost/harness -q`
 - `tests/selfhost/test_compile_all_golem.py` — golemc compile-all AIR gate
+- `python -m golem run|compile|rebuild` — daily golemc CLI (see `selfhost/README.md`)
 - **Linux (current host):** activate with `source .venv/bin/activate`, or prefix commands with `.venv/bin/python`.
 - `web/index.html` — Golem build dashboard. Serve: `.venv/bin/python -m http.server 8000 --directory web` → http://localhost:8000 (no HTTPS).
 - `two_agent_crew.py` — 2-agent CrewAI demo vs LAN llama-server. **LOCAL-ONLY.** `.venv/bin/python two_agent_crew.py`
