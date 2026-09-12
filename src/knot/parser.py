@@ -33,6 +33,8 @@ from knot.ast import (
     RefExpr,
     DerefExpr,
     UnsafeExpr,
+    MatchExpr,
+    MatchCase,
 )
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
@@ -148,6 +150,8 @@ def _parse_atom(s: str, i: int):
             return _parse_deref_brackets(s, i)
         if tok.upper() == "UNSAFE":
             return _parse_unsafe_brackets(s, i)
+        if tok.upper() == "MATCH":
+            return _parse_match_brackets(s, i)
         args, i = _parse_arglist(s, i)
         return OpExpr(op=tok, children=args, id=generate_id()), i
 
@@ -967,3 +971,63 @@ def _parse_unsafe_brackets(s: str, i: int) -> tuple[UnsafeExpr, int]:
     if i >= len(s) or s[i] != "]":
         raise ParseError("unclosed UNSAFE[...]")
     return UnsafeExpr(caps=caps, body=body, id=generate_id()), i + 1
+
+
+def _parse_match_brackets(s: str, i: int) -> tuple[MatchExpr, int]:
+    """MATCH[scrutinee, CASE[tag, body]|CASE[tag, name, body], ...]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after MATCH")
+    i += 1
+    scrutinee, i = _parse_atom(s, i)
+    cases: list[MatchCase] = []
+    i = _skip_ws(s, i)
+    while i < len(s) and s[i] != "]":
+        if s[i] != ",":
+            raise ParseError("expected ',' or ']' in MATCH")
+        i += 1
+        i = _skip_ws(s, i)
+        if not s[i:].upper().startswith("CASE"):
+            raise ParseError("MATCH arms must be CASE[...]")
+        i += 4
+        if i >= len(s) or s[i] != "[":
+            raise ParseError("CASE expects [...]")
+        i += 1
+        i = _skip_ws(s, i)
+        # tag: ident or 'string'
+        if i < len(s) and s[i] in "'\"":
+            tag_node, i = _parse_atom(s, i)
+            from knot.ast import LitExpr
+
+            if not isinstance(tag_node, LitExpr) or not isinstance(tag_node.value, str):
+                raise ParseError("CASE tag must be ident or string")
+            tag = tag_node.value
+        else:
+            m = _IDENT.match(s, i)
+            if not m:
+                raise ParseError("CASE expects tag")
+            tag = m.group(0)
+            i = m.end()
+        i = _expect_comma(s, i)
+        # either body, or binding, body
+        first, i = _parse_atom(s, i)
+        i = _skip_ws(s, i)
+        binding = None
+        body = first
+        if i < len(s) and s[i] == ",":
+            # first was binding ident
+            from knot.ast import IdentExpr
+
+            if not isinstance(first, IdentExpr):
+                raise ParseError("CASE binding must be ident")
+            binding = str(first.id)
+            i += 1
+            body, i = _parse_atom(s, i)
+            i = _skip_ws(s, i)
+        if i >= len(s) or s[i] != "]":
+            raise ParseError("unclosed CASE[...]")
+        i += 1
+        cases.append(MatchCase(tag=tag, body=body, binding=binding))
+        i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed MATCH[...]")
+    return MatchExpr(scrutinee=scrutinee, cases=cases, id=generate_id()), i + 1

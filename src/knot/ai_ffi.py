@@ -222,3 +222,71 @@ def invoke_expr(
 ) -> Value:
     """Invoke from an InvokeExpr AST node."""
     return invoke(registry, expr.name, expr.args, granted)
+
+
+def make_openai_compatible_handler(
+    *,
+    base_url: str = "http://127.0.0.1:8081/v1",
+    model: str = "local",
+    api_key: str = "local",
+    timeout_s: float = 60.0,
+) -> Handler:
+    """Live MODEL handler via OpenAI-compatible HTTP (LAN; no HTTPS required).
+
+    Expects args[0] to be a StringVal prompt; returns AiResult(StringVal, confidence).
+    """
+    import json
+    import urllib.error
+    import urllib.request
+
+    def handler(args: tuple[Value, ...]) -> Value:
+        if not args or not isinstance(args[0], StringVal):
+            return ErrorVal(
+                StructuredError(
+                    kind="handler",
+                    message="openai handler expects StringVal prompt",
+                    op="MODEL",
+                )
+            )
+        prompt = args[0].value
+        url = base_url.rstrip("/") + "/chat/completions"
+        body = json.dumps(
+            {
+                "model": model,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0,
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + api_key,
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as e:
+            return ErrorVal(
+                StructuredError(
+                    kind="llm",
+                    message=str(e),
+                    op="MODEL",
+                )
+            )
+        try:
+            text = data["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError):
+            return ErrorVal(
+                StructuredError(
+                    kind="llm",
+                    message="unexpected LLM response shape",
+                    op="MODEL",
+                )
+            )
+        return AiResult(value=StringVal(str(text)), confidence=1.0, model=model)
+
+    return handler

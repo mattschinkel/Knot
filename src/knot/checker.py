@@ -246,7 +246,100 @@ def infer_type(
         return type_error("DEREF expects RegionType", ())
     if isinstance(expr, UnsafeExpr):
         return infer_type(expr.body, env, expected=expected)
+    from .ast import MatchExpr
+
+    if isinstance(expr, MatchExpr):
+        st = infer_type(expr.scrutinee, env)
+        if isinstance(st, TypeErrorVal):
+            return st
+        if not expr.cases:
+            return type_error("MATCH needs cases", ())
+        result = None
+        for case in expr.cases:
+            bt = infer_type(case.body, env)
+            if isinstance(bt, TypeErrorVal):
+                return bt
+            if result is None:
+                result = bt
+            else:
+                u = unify(result, bt)
+                if u is None:
+                    return type_error("MATCH branch mismatch", ())
+                result = u
+        return _meet_expected(result, expected)
     if isinstance(expr, OpExpr):
+        kids = list(expr.children or [])
+        if expr.op in ("IF", "COND"):
+            return infer_if(expr, env, expected=expected)
+        if expr.op in ("GET", "SET", "FIELD"):
+            return _infer_access_op(expr, env)
+        if expr.op in _COLLECTION_OPS or expr.op in (
+            "LIST",
+            "SLICE",
+            "CODEPOINT",
+            "FROM_CODEPOINT",
+            "MAP_NEW",
+            "MAP_GET",
+            "MAP_SET",
+            "RECORD",
+            "SUM",
+            "TAG",
+            "PAYLOAD",
+            "FS_READ",
+            "FS_WRITE",
+            "PRINT",
+            "BYTES_FROM_STRING",
+            "STRING_FROM_BYTES",
+        ):
+            if expr.op == "LIST":
+                from .types import ListType
+
+                if not kids:
+                    return _meet_expected(ListType(I32), expected)
+                et = infer_type(kids[0], env)
+                if isinstance(et, TypeErrorVal):
+                    return et
+                for k in kids[1:]:
+                    t = infer_type(k, env)
+                    if isinstance(t, TypeErrorVal):
+                        return t
+                    if unify(et, t) is None:
+                        return type_error("LIST elem mismatch", ())
+                return _meet_expected(ListType(et), expected)
+            if expr.op == "MAP_NEW":
+                from .types import MapType
+
+                return _meet_expected(MapType(STRING, I32), expected)
+            if expr.op in _COLLECTION_OPS:
+                return _infer_collection_op(expr, env)
+            # other runtime ops: soft ANY / concrete where easy
+            types = []
+            for k in kids:
+                t = infer_type(k, env)
+                if isinstance(t, TypeErrorVal):
+                    return t
+                types.append(t)
+            if expr.op == "SLICE" and types:
+                return _meet_expected(types[0], expected)
+            if expr.op == "CODEPOINT":
+                return _meet_expected(I32, expected)
+            if expr.op == "FROM_CODEPOINT":
+                return _meet_expected(STRING, expected)
+            if expr.op == "TAG":
+                return _meet_expected(STRING, expected)
+            if expr.op == "FS_READ":
+                return _meet_expected(BYTES, expected)
+            if expr.op in ("FS_WRITE", "PRINT"):
+                return _meet_expected(UNIT, expected)
+            if expr.op == "BYTES_FROM_STRING":
+                return _meet_expected(BYTES, expected)
+            if expr.op == "STRING_FROM_BYTES":
+                return _meet_expected(STRING, expected)
+            if types:
+                return _meet_expected(types[-1], expected)
+            from .types import ANY
+
+            return _meet_expected(ANY, expected)
         kids = list(expr.children or [])
         if expr.op in ("IF", "COND"):
             return infer_if(expr, env, expected=expected)
@@ -544,12 +637,14 @@ def check_collection(op: str, *arg_types: Type) -> Type | TypeErrorVal:
             return type_error("AT index must be i32", ())
         if isinstance(args[0], ListType):
             return args[0].elem
+        if args[0] is STRING or args[0] == STRING:
+            return STRING
         if isinstance(args[0], TupleType):
             # index unknown statically → error unless single elem; use elem unify
             if not args[0].elems:
                 return type_error("AT on empty tuple", ())
             return args[0].elems[0]
-        return type_error("AT requires list or tuple", ())
+        return type_error("AT requires list, tuple, or string", ())
 
     if op == "APPEND":
         if len(args) != 2:
@@ -563,8 +658,12 @@ def check_collection(op: str, *arg_types: Type) -> Type | TypeErrorVal:
     if op == "CONCAT":
         if len(args) != 2:
             return type_error("CONCAT arity", ())
+        if (args[0] is STRING or args[0] == STRING) and (
+            args[1] is STRING or args[1] == STRING
+        ):
+            return STRING
         if not isinstance(args[0], ListType) or not isinstance(args[1], ListType):
-            return type_error("CONCAT requires lists", ())
+            return type_error("CONCAT requires lists or strings", ())
         if unify(args[0].elem, args[1].elem) is None:
             return type_error("CONCAT elem type mismatch", ())
         return args[0]

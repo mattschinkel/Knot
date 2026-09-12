@@ -311,6 +311,33 @@ def evaluate(
     if conc is not None:
         return conc
 
+    from .ast import MatchExpr, MatchCase
+    from .values import SumVal, StringVal
+
+    if isinstance(expr, MatchExpr):
+        scr = ev(expr.scrutinee)
+        if isinstance(scr, ErrorVal):
+            return scr
+        if not isinstance(scr, SumVal):
+            return ErrorVal(
+                StructuredError(kind="type", op="MATCH", message="scrutinee must be sum")
+            )
+        for case in expr.cases:
+            if case.tag == scr.tag:
+                local = dict(binds)
+                if case.binding:
+                    local[case.binding] = scr.payload
+                return evaluate(
+                    case.body,
+                    env,
+                    program=program,
+                    bindings=local,
+                    granted_caps=granted_caps,
+                )
+        return ErrorVal(
+            StructuredError(kind="match", op="MATCH", message="no matching CASE")
+        )
+
     if isinstance(expr, HoleExpr) or isinstance(expr, HoleVal):
         hid = getattr(expr, "id", None)
         return ErrorVal(
@@ -359,7 +386,7 @@ def evaluate(
         op = str(expr.op)
         # Named user function call: foo[args] → DEF[foo, FN[...]]
         if program is not None and op not in _KERNEL_OPS:
-            return _call_def(op, kids, program, binds)
+            return _call_def(op, kids, program, binds, granted_caps=granted_caps)
         if op in _ARITH_BIN and len(kids) == 2:
             a, b = ev(kids[0]), ev(kids[1])
             if isinstance(a, ErrorVal):
@@ -391,13 +418,21 @@ def evaluate(
                 return BoolVal(not a.value)
             return ErrorVal(StructuredError(kind="eval", op=op, message="bad operands"))
         if op in ("AND", "OR") and len(kids) == 2:
-            a, b = ev(kids[0]), ev(kids[1])
+            a = ev(kids[0])
             if isinstance(a, ErrorVal):
                 return a
+            if not isinstance(a, BoolVal):
+                return ErrorVal(StructuredError(kind="eval", op=op, message="bad operands"))
+            # short-circuit
+            if op == "AND" and not a.value:
+                return BoolVal(False)
+            if op == "OR" and a.value:
+                return BoolVal(True)
+            b = ev(kids[1])
             if isinstance(b, ErrorVal):
                 return b
-            if isinstance(a, BoolVal) and isinstance(b, BoolVal):
-                return BoolVal(a.value and b.value if op == "AND" else a.value or b.value)
+            if isinstance(b, BoolVal):
+                return BoolVal(b.value)
             return ErrorVal(StructuredError(kind="eval", op=op, message="bad operands"))
         if op in ("IF", "COND") and len(kids) == 3:
             c = ev(kids[0])
@@ -406,6 +441,72 @@ def evaluate(
             if isinstance(c, BoolVal) and c.value:
                 return ev(kids[1])
             return ev(kids[2])
+        # Stage 0.5 runtime ops
+        from .runtime_ops import RUNTIME_OPS, eval_op
+        from .ast import IdentExpr as _Ident
+
+        if op in RUNTIME_OPS:
+            if op == "RECORD":
+                # RECORD[name, FIELD[k,v], ...]
+                flat: list = []
+                if not kids:
+                    return ErrorVal(
+                        StructuredError(kind="arity", op="RECORD", message="need name")
+                    )
+                name_v = ev(kids[0])
+                if isinstance(name_v, ErrorVal):
+                    return name_v
+                flat.append(name_v)
+                for f in kids[1:]:
+                    if isinstance(f, OpExpr) and str(f.op).upper() == "FIELD":
+                        fk = list(f.children or [])
+                        if len(fk) != 2:
+                            return ErrorVal(
+                                StructuredError(
+                                    kind="arity", op="FIELD", message="FIELD[k,v]"
+                                )
+                            )
+                        kn, vv = fk[0], fk[1]
+                        if isinstance(kn, _Ident):
+                            flat.append(StringVal(str(kn.id)))
+                        else:
+                            kv = ev(kn)
+                            if isinstance(kv, ErrorVal):
+                                return kv
+                            flat.append(kv)
+                        val = ev(vv)
+                        if isinstance(val, ErrorVal):
+                            return val
+                        flat.append(val)
+                    else:
+                        return ErrorVal(
+                            StructuredError(
+                                kind="eval", op="RECORD", message="expected FIELD"
+                            )
+                        )
+                return eval_op("RECORD", flat, granted=granted_caps)
+            if op == "GET" and len(kids) == 2:
+                base = ev(kids[0])
+                if isinstance(base, ErrorVal):
+                    return base
+                fld = kids[1]
+                if isinstance(fld, _Ident):
+                    from .values import StringVal as SV
+
+                    return eval_op("GET", [base, SV(str(fld.id))], granted=granted_caps)
+                fv = ev(fld)
+                if isinstance(fv, ErrorVal):
+                    return fv
+                return eval_op("GET", [base, fv], granted=granted_caps)
+            if op == "MAP_NEW":
+                return eval_op("MAP_NEW", [], granted=granted_caps)
+            vals = []
+            for kid in kids:
+                v = ev(kid)
+                if isinstance(v, ErrorVal):
+                    return v
+                vals.append(v)
+            return eval_op(op, vals, granted=granted_caps)
         for kid in kids:
             v = ev(kid)
             if isinstance(v, ErrorVal) and v.err.kind == "hole_trap":
@@ -427,7 +528,13 @@ def evaluate(
     if isinstance(expr, CallExpr):
         fn = expr.fn
         if isinstance(fn, IdentExpr) and program is not None:
-            return _call_def(str(fn.id), list(expr.args or []), program, binds)
+            return _call_def(
+                str(fn.id),
+                list(expr.args or []),
+                program,
+                binds,
+                granted_caps=granted_caps,
+            )
         return ErrorVal(StructuredError(kind="eval", message="CALL not implemented"))
     return ErrorVal(
         StructuredError(kind="eval", message="cannot evaluate " + type(expr).__name__)
@@ -436,8 +543,13 @@ def evaluate(
 
 _ARITH_BIN = frozenset({"ADD", "SUB", "MUL", "DIV", "MOD"})
 _CMP_BIN = frozenset({"EQ", "NE", "LT", "LE", "GT", "GE"})
-_KERNEL_OPS = _ARITH_BIN | _CMP_BIN | frozenset(
-    {"NEG", "NOT", "AND", "OR", "IF", "COND", "GET", "SET", "FIELD"}
+from .runtime_ops import RUNTIME_OPS
+
+_KERNEL_OPS = (
+    _ARITH_BIN
+    | _CMP_BIN
+    | frozenset({"NEG", "NOT", "AND", "OR", "IF", "COND", "GET", "SET", "FIELD"})
+    | RUNTIME_OPS
 )
 
 
@@ -476,6 +588,8 @@ def _eval_cmp(op: str, a: Value, b: Value) -> Value:
         x, y = a.value, b.value
     elif isinstance(a, BoolVal) and isinstance(b, BoolVal) and op in ("EQ", "NE"):
         x, y = a.value, b.value
+    elif isinstance(a, StringVal) and isinstance(b, StringVal) and op in ("EQ", "NE"):
+        x, y = a.value, b.value
     else:
         return ErrorVal(StructuredError(kind="eval", op=op, message="bad operands"))
     if op == "EQ":
@@ -498,6 +612,8 @@ def _call_def(
     args: list,
     program: object,
     outer_binds: dict,
+    *,
+    granted_caps=None,
 ) -> Value:
     from .ast import DefNode, FnExpr
 
@@ -519,10 +635,16 @@ def _call_def(
             )
         local = dict(outer_binds)
         for (pname, _pt), arg in zip(body.params, args):
-            v = evaluate(arg, program=program, bindings=outer_binds)
+            v = evaluate(
+                arg, program=program, bindings=outer_binds, granted_caps=granted_caps
+            )
             if isinstance(v, ErrorVal):
                 return v
             local[str(pname)] = v
-        return evaluate(body.body, program=program, bindings=local)
+        return evaluate(
+            body.body, program=program, bindings=local, granted_caps=granted_caps
+        )
     # Non-FN body: evaluate directly (constant def)
-    return evaluate(body, program=program, bindings=outer_binds)
+    return evaluate(
+        body, program=program, bindings=outer_binds, granted_caps=granted_caps
+    )

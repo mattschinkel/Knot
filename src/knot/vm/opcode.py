@@ -30,3 +30,6 @@ class Op(IntEnum):
     RETURN = 41
     POP = 50
     HOLE_TRAP = 60
+    NATIVE = 70  # next: const_idx of op name (str), then arity
+    PAR = 80  # next: arity N; pop N values → TupleVal (source order)
+    SEQ = 81  # next: arity N; pop N values, keep last (or unit)

@@ -1,0 +1,139 @@
+DEF[is_digit,FN[[c:string],AND[GE[CODEPOINT[c],48],LE[CODEPOINT[c],57]]]]
+DEF[is_alpha,FN[[c:string],OR[AND[GE[CODEPOINT[c],65],LE[CODEPOINT[c],90]],AND[GE[CODEPOINT[c],97],LE[CODEPOINT[c],122]]]]]
+DEF[is_ident_start,FN[[c:string],OR[is_alpha[c],EQ[c,'_']]]]
+DEF[is_ident_cont,FN[[c:string],OR[is_ident_start[c],is_digit[c]]]]
+DEF[is_space,FN[[c:string],OR[EQ[c,' '],OR[EQ[CODEPOINT[c],9],OR[EQ[CODEPOINT[c],10],EQ[CODEPOINT[c],13]]]]]]
+
+DEF[lex_digits_str,FN[[s:string,i:i32],
+  IF[OR[GE[i,LEN[s]],NOT[is_digit[AT[s,i]]]],
+    SUM['Pair',LIST[i,'']],
+    MATCH[lex_digits_str[s,ADD[i,1]],
+      CASE[Pair,p,
+        SUM['Pair',LIST[AT[p,0],CONCAT[AT[s,i],AT[p,1]]]]]
+    ]
+  ]
+]]
+
+DEF[lex_number_go,FN[[s:string,i:i32,acc:i32],
+  IF[OR[GE[i,LEN[s]],NOT[is_digit[AT[s,i]]]],
+    SUM['Pair',LIST[i,acc]],
+    lex_number_go[s,ADD[i,1],ADD[MUL[acc,10],SUB[CODEPOINT[AT[s,i]],48]]]
+  ]
+]]
+
+DEF[lex_number,FN[[s:string,i:i32],
+  IF[OR[GE[i,LEN[s]],NOT[is_digit[AT[s,i]]]],
+    SUM['Err','num'],
+    MATCH[lex_digits_str[s,i],
+      CASE[Pair,ds,
+        IF[AND[LT[AT[ds,0],LEN[s]],AND[EQ[AT[s,AT[ds,0]],'.'],AND[LT[ADD[AT[ds,0],1],LEN[s]],is_digit[AT[s,ADD[AT[ds,0],1]]]]]],
+          MATCH[lex_digits_str[s,ADD[AT[ds,0],1]],
+            CASE[Pair,fs,
+              SUM['Pair',LIST[AT[fs,0],SUM['FloatStr',CONCAT[CONCAT[AT[ds,1],'.'],AT[fs,1]]]]]
+            ]
+          ],
+          MATCH[lex_number_go[s,ADD[i,1],SUB[CODEPOINT[AT[s,i]],48]],
+            CASE[Pair,p,
+              SUM['Pair',LIST[AT[p,0],SUM['Int',AT[p,1]]]]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+]]
+
+DEF[lex_ident,FN[[s:string,i:i32],
+  IF[OR[GE[i,LEN[s]],NOT[is_ident_cont[AT[s,i]]]],
+    SUM['Pair',LIST[i,'']],
+    MATCH[lex_ident[s,ADD[i,1]],
+      CASE[Pair,p,
+        SUM['Pair',LIST[AT[p,0],CONCAT[AT[s,i],AT[p,1]]]]]
+    ]
+  ]
+]]
+
+DEF[lex_string_q,FN[[s:string,i:i32,q:string],
+  IF[GE[i,LEN[s]],
+    SUM['Err','unclosed_string'],
+    IF[EQ[AT[s,i],q],
+      SUM['Pair',LIST[ADD[i,1],'']],
+      IF[AND[EQ[AT[s,i],'\\'],LT[ADD[i,1],LEN[s]]],
+        MATCH[lex_string_q[s,ADD[i,2],q],
+          CASE[Pair,p,
+            SUM['Pair',LIST[AT[p,0],CONCAT[AT[s,ADD[i,1]],AT[p,1]]]]]
+        ],
+        MATCH[lex_string_q[s,ADD[i,1],q],
+          CASE[Pair,p,
+            SUM['Pair',LIST[AT[p,0],CONCAT[AT[s,i],AT[p,1]]]]]
+        ]
+      ]
+    ]
+  ]
+]]
+
+DEF[lex_string,FN[[s:string,i:i32],lex_string_q[s,i,FROM_CODEPOINT[39]]]]
+
+DEF[lex_go,FN[[s:string,i:i32,acc],
+  IF[GE[i,LEN[s]],
+    APPEND[acc,SUM['Eof',0]],
+    IF[is_space[AT[s,i]],
+      lex_go[s,ADD[i,1],acc],
+      IF[EQ[AT[s,i],';'],
+        lex_go[s,ADD[i,1],acc],
+        IF[is_digit[AT[s,i]],
+          MATCH[lex_number[s,i],
+            CASE[Pair,p,
+              IF[EQ[TAG[AT[p,1]],'FloatStr'],
+                lex_go[s,AT[p,0],APPEND[acc,SUM['Float',PAYLOAD[AT[p,1]]]]],
+                lex_go[s,AT[p,0],APPEND[acc,SUM['Num',PAYLOAD[AT[p,1]]]]]
+              ]
+            ]
+          ],
+          IF[is_ident_start[AT[s,i]],
+            MATCH[lex_ident[s,i],
+              CASE[Pair,p,
+                lex_go[s,AT[p,0],APPEND[acc,SUM['Ident',AT[p,1]]]]]
+            ],
+            IF[EQ[AT[s,i],FROM_CODEPOINT[39]],
+              MATCH[lex_string_q[s,ADD[i,1],FROM_CODEPOINT[39]],
+                CASE[Pair,p,
+                  lex_go[s,AT[p,0],APPEND[acc,SUM['Str',AT[p,1]]]]]
+              ],
+              IF[EQ[AT[s,i],FROM_CODEPOINT[34]],
+                MATCH[lex_string_q[s,ADD[i,1],FROM_CODEPOINT[34]],
+                  CASE[Pair,p,
+                    lex_go[s,AT[p,0],APPEND[acc,SUM['Str',AT[p,1]]]]]
+                ],
+                IF[EQ[AT[s,i],'['],
+                  lex_go[s,ADD[i,1],APPEND[acc,SUM['LBrack',0]]],
+                  IF[EQ[AT[s,i],']'],
+                    lex_go[s,ADD[i,1],APPEND[acc,SUM['RBrack',0]]],
+                    IF[EQ[AT[s,i],','],
+                      lex_go[s,ADD[i,1],APPEND[acc,SUM['Comma',0]]],
+                      IF[EQ[AT[s,i],':'],
+                        lex_go[s,ADD[i,1],APPEND[acc,SUM['Colon',0]]],
+                        IF[EQ[AT[s,i],'?'],
+                          lex_go[s,ADD[i,1],APPEND[acc,SUM['Hole',0]]],
+                          IF[EQ[AT[s,i],'@'],
+                            lex_go[s,ADD[i,1],APPEND[acc,SUM['At',0]]],
+                            IF[EQ[AT[s,i],'-'],
+                              lex_go[s,ADD[i,1],APPEND[acc,SUM['Minus',0]]],
+                              APPEND[acc,SUM['Err',AT[s,i]]]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          ]
+        ]
+      ]
+    ]
+  ]
+]]
+
+DEF[lex,FN[[s:string],lex_go[s,0,LIST[]]]]

@@ -151,3 +151,43 @@ def region_subtype(s: Type, t: Type) -> bool:
             return False
         return subtype(s.inner, t.inner)
     return False
+
+
+def borrow_check(expr: object, *, borrowed: set[str] | None = None) -> ErrorVal | None:
+    """Lightweight borrow/move check for REF/DEREF nesting (Phase 11 polish).
+
+    Rules (subset):
+    - DEREF of non-REF path is not checked here (runtime).
+    - Nested REF to the same region name while already borrowed → ErrorVal.
+    - Moving (SEQ last) a RegionVal that is still borrowed → ErrorVal.
+    """
+    borrowed = set(borrowed or ())
+    if isinstance(expr, RefExpr):
+        if expr.region in borrowed:
+            return ErrorVal(
+                StructuredError(
+                    kind="borrow",
+                    message="region already borrowed: " + str(expr.region),
+                    op="REF",
+                )
+            )
+        child = set(borrowed)
+        child.add(expr.region)
+        return borrow_check(expr.expr, borrowed=child)
+    if isinstance(expr, DerefExpr):
+        return borrow_check(expr.expr, borrowed=borrowed)
+    if isinstance(expr, ParExpr):
+        for b in expr.branches:
+            err = borrow_check(b, borrowed=borrowed)
+            if err is not None:
+                return err
+        return None
+    if isinstance(expr, SeqExpr):
+        for s in expr.steps:
+            err = borrow_check(s, borrowed=borrowed)
+            if err is not None:
+                return err
+        return None
+    if isinstance(expr, UnsafeExpr):
+        return borrow_check(expr.body, borrowed=borrowed)
+    return None

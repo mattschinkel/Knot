@@ -30,6 +30,7 @@ def run(
     *,
     call: str | None = None,
     args: list[Value] | None = None,
+    granted_caps=None,
 ) -> Value:
     """Compile and execute. If call= is set, treat input as program of DEFs."""
     if call is not None:
@@ -41,12 +42,11 @@ def run(
         image = compile_program(items)
         if isinstance(image, ErrorVal):
             return image
-        return VM(image).call(call, list(args or []))
+        return VM(image, granted_caps=granted_caps).call(call, list(args or []))
     ch = compile_expr(expr_or_program)
     if isinstance(ch, ErrorVal):
         return ch
-    # need empty image for CALL-less chunks
-    return VM(ProgramImage()).run_chunk(ch)
+    return VM(ProgramImage(), granted_caps=granted_caps).run_chunk(ch)
 
 
 def measure_m5(*, warmup: int = 3, runs: int = 21) -> float:

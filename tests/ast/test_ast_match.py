@@ -1,38 +1,32 @@
+"""MatchExpr Stage 0.5 shape: MATCH[scrutinee, CASE...]."""
+
+from knot.ast import LitExpr, MatchCase, MatchExpr
+
+
 def test_matchexpr_repr():
-    from knot.ast import MatchExpr
-    node = MatchExpr(pattern=None, body=None)
-    assert repr(node) == 'MatchExpr(pattern=None, body=None)'
+    node = MatchExpr(scrutinee=LitExpr(1), cases=[])
+    assert "MatchExpr" in repr(node)
 
 
 def test_matchexpr_eq():
-    from knot.ast import MatchExpr
-    node1 = MatchExpr(pattern=None, body=None)
-    node2 = MatchExpr(pattern=None, body=None)
-    assert node1 == node2
+    a = MatchExpr(LitExpr(1), [MatchCase("A", LitExpr(2))])
+    b = MatchExpr(LitExpr(1), [MatchCase("A", LitExpr(2))])
+    assert a == b
 
 
 def test_matchexpr_hash():
-    from knot.ast import MatchExpr
-    node = MatchExpr(pattern=None, body=None)
+    node = MatchExpr(LitExpr(1), [])
     assert hash(node) is not None
 
 
 def test_matchexpr_children():
-    from knot.ast import MatchExpr
-    node = MatchExpr(pattern=None, body=None)
-    children = node.children
-    assert len(children) == 2
-    assert children[0] is None
-    assert children[1] is None
+    body = LitExpr(9)
+    node = MatchExpr(LitExpr(1), [MatchCase("T", body)])
+    kids = node.children
+    assert kids[0] == LitExpr(1)
+    assert kids[1] == body
 
 
-def test_matchexpr_pattern_repr():
-    from knot.ast import MatchExpr
-    node = MatchExpr(pattern=None, body=None)
-    assert node.pattern is None
-
-
-def test_matchexpr_body_repr():
-    from knot.ast import MatchExpr
-    node = MatchExpr(pattern=None, body=None)
-    assert node.body is None
+def test_matchcase_binding():
+    c = MatchCase("Lit", LitExpr(0), binding="x")
+    assert c.tag == "Lit" and c.binding == "x"

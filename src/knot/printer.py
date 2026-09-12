@@ -8,6 +8,7 @@ from knot.ast import (
     CallExpr,
     CondExpr,
     DefNode,
+    DerefExpr,
     FieldAccess,
     FnExpr,
     HoleExpr,
@@ -16,9 +17,16 @@ from knot.ast import (
     LetExpr,
     LitExpr,
     MatchExpr,
+    ModelDecl,
+    ModuleDecl,
     OpExpr,
+    ParExpr,
+    RefExpr,
+    SeqExpr,
+    ToolDecl,
     TypedLit,
     UnitExpr,
+    UnsafeExpr,
     WithExpr,
     ErrExpr,
 )
@@ -78,7 +86,34 @@ def _print(node) -> str:
     if isinstance(node, CondExpr):
         return "cond(" + _print(node.cond) + ")"
     if isinstance(node, MatchExpr):
-        return "match(" + _print(node.pattern) + ", " + _print(node.body) + ")"
+        arms = ", ".join(
+            "case "
+            + c.tag
+            + (("(" + c.binding + ")" if c.binding else ""))
+            + " => "
+            + _print(c.body)
+            for c in node.cases
+        )
+        return "match " + _print(node.scrutinee) + " { " + arms + " }"
+    if isinstance(node, ModuleDecl):
+        body = "; ".join(_print(b) for b in node.body)
+        ex = ", ".join(node.exports) if node.exports else ""
+        return "module " + str(node.name) + " { " + body + (" export " + ex if ex else "") + " }"
+    if isinstance(node, ParExpr):
+        return "par(" + ", ".join(_print(b) for b in node.branches) + ")"
+    if isinstance(node, SeqExpr):
+        return "seq(" + ", ".join(_print(s) for s in node.steps) + ")"
+    if isinstance(node, RefExpr):
+        return "ref@" + str(node.region) + "(" + _print(node.expr) + ")"
+    if isinstance(node, DerefExpr):
+        return "deref(" + _print(node.expr) + ")"
+    if isinstance(node, UnsafeExpr):
+        caps = ", ".join(node.caps)
+        return "unsafe[" + caps + "](" + _print(node.body) + ")"
+    if isinstance(node, ModelDecl):
+        return "model " + str(node.name)
+    if isinstance(node, ToolDecl):
+        return "tool " + str(node.name)
     if isinstance(node, LetExpr):
         return _print_let(node)
     if isinstance(node, WithExpr):

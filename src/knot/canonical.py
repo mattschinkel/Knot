@@ -9,6 +9,7 @@ from knot.ast import (
     CallExpr,
     DefNode,
     DependsDecl,
+    DerefExpr,
     ErrExpr,
     ExportList,
     FnExpr,
@@ -20,6 +21,7 @@ from knot.ast import (
     InlineTest,
     InvokeExpr,
     LitExpr,
+    MatchExpr,
     ModelDecl,
     ModuleDecl,
     OpExpr,
@@ -31,7 +33,6 @@ from knot.ast import (
     TypedLit,
     UnitExpr,
     UnsafeExpr,
-    DerefExpr,
 )
 
 
@@ -52,6 +53,16 @@ def normalize(src: str) -> str:
 
 
 def _canon(node) -> str:
+    if isinstance(node, MatchExpr):
+        parts = [_canon(node.scrutinee)]
+        for c in node.cases:
+            if c.binding:
+                parts.append(
+                    "CASE[" + c.tag + "," + c.binding + "," + _canon(c.body) + "]"
+                )
+            else:
+                parts.append("CASE[" + c.tag + "," + _canon(c.body) + "]")
+        return "MATCH[" + ",".join(parts) + "]"
     if isinstance(node, ParExpr):
         return "PAR[" + ",".join(_canon(b) for b in node.branches) + "]"
     if isinstance(node, SeqExpr):

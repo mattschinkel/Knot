@@ -1,0 +1,1 @@
+DEF[square,FN[[x:i32],MUL[x,x]]]

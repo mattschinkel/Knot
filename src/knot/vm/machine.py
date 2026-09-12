@@ -10,11 +10,18 @@ from knot.values import (
     ErrorVal,
     FloatVal,
     IntVal,
+    StringVal,
     Value,
 )
 from knot.vm.chunk import Chunk
 from knot.vm.compiler import FuncInfo, ProgramImage
 from knot.vm.opcode import Op
+
+
+def _name_from_const(c: object) -> str:
+    if isinstance(c, StringVal):
+        return c.value
+    return str(c)
 
 
 @dataclass
@@ -26,10 +33,11 @@ class Frame:
 
 
 class VM:
-    def __init__(self, image: ProgramImage | None = None) -> None:
+    def __init__(self, image: ProgramImage | None = None, granted_caps=None) -> None:
         self.image = image or ProgramImage()
         self.stack: list[Value] = []
         self.frames: list[Frame] = []
+        self.granted_caps = granted_caps
 
     def run_chunk(self, chunk: Chunk, *, arity_locals: int = 0) -> Value:
         self.stack.clear()
@@ -47,7 +55,11 @@ class VM:
                 StructuredError(kind="vm", message="arity mismatch " + name)
             )
         self.stack.clear()
-        self.frames = [Frame(chunk=fn.chunk, locals=list(args))]
+        nlocals = fn.nlocals if fn.nlocals else fn.arity
+        if nlocals < len(args):
+            nlocals = len(args)
+        frame_locals: list = list(args) + [None] * (nlocals - len(args))
+        self.frames = [Frame(chunk=fn.chunk, locals=frame_locals)]
         return self._interpret()
 
     def _interpret(self) -> Value:
@@ -143,18 +155,18 @@ class VM:
                 frame.ip += 1
                 arity = ch.code[frame.ip]
                 frame.ip += 1
-                name = ch.constants[name_idx]
-                fn = self.image.functions.get(str(name))
+                name = _name_from_const(ch.constants[name_idx])
+                fn = self.image.functions.get(name)
                 if fn is None:
                     return ErrorVal(
                         StructuredError(
-                            kind="vm", message="unknown function " + str(name)
+                            kind="vm", message="unknown function " + name
                         )
                     )
                 if arity != fn.arity:
                     return ErrorVal(
                         StructuredError(
-                            kind="vm", message="arity mismatch " + str(name)
+                            kind="vm", message="arity mismatch " + name
                         )
                     )
                 args = [self.stack.pop() for _ in range(arity)]
@@ -163,7 +175,11 @@ class VM:
                 for a in args:
                     if isinstance(a, ErrorVal):
                         return a
-                self.frames.append(Frame(chunk=fn.chunk, locals=list(args)))
+                nlocals = fn.nlocals if fn.nlocals else fn.arity
+                if nlocals < arity:
+                    nlocals = arity
+                frame_locals: list = list(args) + [None] * (nlocals - arity)
+                self.frames.append(Frame(chunk=fn.chunk, locals=frame_locals))
             elif op == Op.RETURN:
                 ret = self.stack.pop() if self.stack else ErrorVal(
                     StructuredError(kind="vm", message="empty return")
@@ -181,11 +197,49 @@ class VM:
                         kind="hole_trap", message="VM reached a hole"
                     )
                 )
+            elif op == Op.NATIVE:
+                name_idx = ch.code[frame.ip]
+                frame.ip += 1
+                arity = ch.code[frame.ip]
+                frame.ip += 1
+                name = _name_from_const(ch.constants[name_idx])
+                args = [self.stack.pop() for _ in range(arity)]
+                args.reverse()
+                for a in args:
+                    if isinstance(a, ErrorVal):
+                        return a
+                from knot.runtime_ops import eval_op
+
+                result = eval_op(name, args, granted=self.granted_caps)
+                if isinstance(result, ErrorVal):
+                    return result
+                self.stack.append(result)
+            elif op == Op.PAR:
+                arity = ch.code[frame.ip]
+                frame.ip += 1
+                args = [self.stack.pop() for _ in range(arity)]
+                args.reverse()
+                for a in args:
+                    if isinstance(a, ErrorVal):
+                        return a
+                from knot.values import TupleVal
+
+                types = tuple(a.type for a in args)
+                self.stack.append(TupleVal(tuple(args), types))
+            elif op == Op.SEQ:
+                arity = ch.code[frame.ip]
+                frame.ip += 1
+                args = [self.stack.pop() for _ in range(arity)]
+                args.reverse()
+                for a in args:
+                    if isinstance(a, ErrorVal):
+                        return a
+                from knot.values import UnitVal
+
+                self.stack.append(args[-1] if args else UnitVal())
             else:
                 return ErrorVal(
-                    StructuredError(
-                        kind="vm", message="unknown opcode " + str(op)
-                    )
+                    StructuredError(kind="vm", message="unknown opcode " + str(op))
                 )
             # propagate ErrorVal left on stack from arith
             if self.stack and isinstance(self.stack[-1], ErrorVal):
@@ -226,6 +280,8 @@ def _cmp(op: int, a: Value, b: Value) -> Value:
     if isinstance(b, ErrorVal):
         return b
     if isinstance(a, IntVal) and isinstance(b, IntVal):
+        x, y = a.value, b.value
+    elif isinstance(a, StringVal) and isinstance(b, StringVal) and op in (Op.EQ, Op.NE):
         x, y = a.value, b.value
     else:
         return ErrorVal(StructuredError(kind="vm", message="bad cmp"))

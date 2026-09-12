@@ -1,4 +1,4 @@
-"""python -m knot  — CLI for MCP / kb / --llm (Phase 12). No HTTPS."""
+"""python -m knot  — CLI for MCP / kb / --llm / knotc (Phase 12 + self-host). No HTTPS."""
 
 from __future__ import annotations
 
@@ -33,6 +33,14 @@ def main(argv: list[str] | None = None) -> int:
     tool = sub.add_parser("tool", help="call one MCP tool")
     tool.add_argument("name")
     tool.add_argument("--args", default="{}", help="JSON object of arguments")
+
+    comp = sub.add_parser("compile", help="compile AIR with Stage-1 knotc (or host fallback)")
+    comp.add_argument("file", help="path to .knot AIR source")
+    comp.add_argument(
+        "--host-fallback",
+        action="store_true",
+        help="on knotc error, fall back to host compile_program",
+    )
 
     args = p.parse_args(argv)
 
@@ -75,6 +83,30 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"ok": False, "error": {"kind": "json", "message": str(e)}}))
             return 1
         print(json.dumps(call_tool(args.name, payload), default=str))
+        return 0
+
+    if args.cmd == "compile":
+        from pathlib import Path
+
+        from knot.knotc_bridge import compile_prefer_knotc, compile_with_knotc
+        from knot.values import ErrorVal
+
+        src = Path(args.file).read_text(encoding="utf-8")
+        result = (
+            compile_prefer_knotc(src) if args.host_fallback else compile_with_knotc(src)
+        )
+        if isinstance(result, ErrorVal):
+            print(json.dumps({"ok": False, "error": str(result.err)}))
+            return 1
+        print(
+            json.dumps(
+                {
+                    "ok": True,
+                    "functions": sorted(result.functions.keys()),
+                    "count": len(result.functions),
+                }
+            )
+        )
         return 0
 
     return 1

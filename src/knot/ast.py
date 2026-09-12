@@ -185,39 +185,65 @@ class CondExpr(ExprNode):
     def __lt__(self, other):
         return self.cond < other.cond
 
-class MatchExpr(ExprNode):
-    __slots__ = ('pattern', 'body')
+class MatchCase:
+    """One MATCH arm: CASE[tag, body] or CASE[tag, binding, body]."""
 
-    def __init__(self, pattern=None, body=None):
-        self.pattern = pattern
+    def __init__(self, tag, body, binding=None):
+        self.tag = str(tag)
         self.body = body
+        self.binding = None if binding is None else str(binding)
 
     def __repr__(self):
-        return f'MatchExpr(pattern={self.pattern!r}, body={self.body!r})'
+        return (
+            "MatchCase("
+            + repr(self.tag)
+            + ", "
+            + repr(self.body)
+            + ", "
+            + repr(self.binding)
+            + ")"
+        )
 
     def __eq__(self, other):
-        if not isinstance(other, MatchExpr):
-            return False
-        return (self.pattern == other.pattern and
-                self.body == other.body)
+        return (
+            isinstance(other, MatchCase)
+            and self.tag == other.tag
+            and self.body == other.body
+            and self.binding == other.binding
+        )
 
     def __hash__(self):
-        return hash((self.pattern, self.body))
+        return hash((self.tag, self.body, self.binding))
 
-    def __lt__(self, other):
-        if not isinstance(other, MatchExpr):
-            return False
-        if self.pattern is None and other.pattern is None:
-            return self.body is not None and other.body is not None
-        if self.pattern is None:
-            return True
-        if other.pattern is None:
-            return False
-        return self.pattern < other.pattern
+
+class MatchExpr(ExprNode):
+    """MATCH[scrutinee, CASE[tag, body]|CASE[tag, name, body], ...] (Stage 0.5)."""
+
+    def __init__(self, scrutinee, cases=None, id=None):
+        self.scrutinee = scrutinee
+        self.cases = list(cases or [])
+        self.id = id
 
     @property
     def children(self):
-        return (self.pattern, self.body)
+        kids = [self.scrutinee]
+        for c in self.cases:
+            kids.append(c.body)
+        return tuple(kids)
+
+    def __repr__(self):
+        return "MatchExpr(" + repr(self.scrutinee) + ", " + repr(self.cases) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, MatchExpr)
+            and self.scrutinee == other.scrutinee
+            and self.cases == other.cases
+        )
+
+    def __hash__(self):
+        return hash((self.scrutinee, tuple(self.cases)))
+
 
 class LetExpr(ExprNode):
     __slots__ = ('id', 'path', 'label')

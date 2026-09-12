@@ -4,6 +4,8 @@ Available project instructions
 - progress.md — highlights, TODOs, previous issues, and important scripts
 - name_changes.md — rename log for variables, functions, and procedures (create when first rename happens)
 - fixes/ — one fix_*.md per issue (problem + fix)
+- ai_docs/selfhost_plan.md — self-host bootstrap track (§22) Stage 2 DONE
+- ai_docs/stage0_5_spec.md — Stage 0.5 stdlib/runtime (DONE)
 - ai_docs/phase12_spec.md — Phase 12 MCP + kb + --llm (DONE; §16 complete)
 - ai_docs/phase12_tasks.md — Phase 12 task table
 - ai_docs/phase11_spec.md — Phase 11 concurrency / regions / unsafe (DONE)
@@ -25,6 +27,10 @@ Available project instructions
 - ai_docs/phase4_tasks.md — Phase 4 task table
 - fixes/fix_stop_crew_cursor_drives.md — stop 4B crew; Cursor implements Knot (Phase 3 done)
 - fixes/fix_linux_port.md — Windows→Linux port (venv, LF line endings, tkinter, test quarantine)
+- selfhost/ — Stage 1 knotc (DEF/FN) + harness; Stage 2 self-compile gate green
+- fixes/fix_match_store_local_selfhost.md — MATCH temps + lex_number + self-lex quote
+- fixes/fix_compile_all_knot.md — knotc compile-all deterministic AIR surface
+- fixes/fix_compile_all_finish.md — compile_root IMPORT link + caps + INVOKE stub
 - ai_docs/feedback_syntax_10of10.md — external review pushing canonical syntax to 10/10 for LLMs
 - ai_docs/r1_decisions_feedback_syntax_10of10.md — R1 ACCEPT/AMEND lock for D-FB1–D-FB6
 - ai_docs/feedback_syntax_uniformity_err_holes.md — follow-up: OP invariant, types, ERR, holes, normalize, bare idents

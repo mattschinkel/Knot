@@ -1,0 +1,2 @@
+DEF[ast_lit,FN[[n:i32],SUM['Lit',n]]]
+DEF[ast_call,FN[[name:string,args],SUM['Call',LIST[name,args]]]]

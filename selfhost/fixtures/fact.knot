@@ -1,0 +1,1 @@
+DEF[fact,FN[[n:i32],IF[LE[n,1],1,MUL[n,fact[SUB[n,1]]]]]]

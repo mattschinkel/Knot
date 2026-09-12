@@ -1,0 +1,75 @@
+DEF[check_ok,FN[[ast],
+  IF[EQ[TAG[ast],'Prog'],
+    check_items[PAYLOAD[ast],0],
+    check_expr[ast]
+  ]
+]]
+
+DEF[is_skip_item,FN[[t],
+  OR[EQ[t,'Import'],OR[EQ[t,'Export'],OR[EQ[t,'TEST'],OR[EQ[t,'PROPERTY'],OR[EQ[t,'DEPENDS'],OR[EQ[t,'MODEL'],OR[EQ[t,'TOOL'],OR[EQ[t,'VERSION'],EQ[t,'EXPORT']]]]]]]]]
+]]
+
+DEF[check_items,FN[[items,i],
+  IF[GE[i,LEN[items]],
+    true,
+    IF[is_skip_item[TAG[AT[items,i]]],
+      check_items[items,ADD[i,1]],
+      IF[EQ[TAG[AT[items,i]],'Def'],
+        IF[check_expr[AT[PAYLOAD[AT[items,i]],1]],
+          check_items[items,ADD[i,1]],
+          false
+        ],
+        IF[EQ[TAG[AT[items,i]],'Main'],
+          IF[check_expr[PAYLOAD[AT[items,i]]],
+            check_items[items,ADD[i,1]],
+            false
+          ],
+          IF[EQ[TAG[AT[items,i]],'Module'],
+            check_items[CONCAT[AT[PAYLOAD[AT[items,i]],1],SLICE[items,ADD[i,1],LEN[items]]],0],
+            false
+          ]
+        ]
+      ]
+    ]
+  ]
+]]
+
+DEF[check_expr,FN[[ast],
+  IF[OR[EQ[TAG[ast],'Lit'],OR[EQ[TAG[ast],'StrLit'],OR[EQ[TAG[ast],'FloatLit'],OR[EQ[TAG[ast],'TypedLit'],OR[EQ[TAG[ast],'Unit'],OR[EQ[TAG[ast],'Var'],OR[EQ[TAG[ast],'Hole'],EQ[TAG[ast],'ErrAst']]]]]]]],
+    true,
+    IF[EQ[TAG[ast],'Fn'],
+      check_expr[AT[PAYLOAD[ast],1]],
+      IF[EQ[TAG[ast],'Call'],
+        check_args[AT[PAYLOAD[ast],1],0],
+        IF[EQ[TAG[ast],'Match'],
+          AND[check_expr[AT[PAYLOAD[ast],0]],check_cases[AT[PAYLOAD[ast],1],0]],
+          true
+        ]
+      ]
+    ]
+  ]
+]]
+
+DEF[check_args,FN[[args,i],
+  IF[GE[i,LEN[args]],
+    true,
+    IF[check_expr[AT[args,i]],
+      check_args[args,ADD[i,1]],
+      false
+    ]
+  ]
+]]
+
+DEF[check_cases,FN[[cases,i],
+  IF[GE[i,LEN[cases]],
+    true,
+    MATCH[AT[cases,i],
+      CASE[Case,c,
+        IF[check_expr[AT[c,2]],
+          check_cases[cases,ADD[i,1]],
+          false
+        ]
+      ]
+    ]
+  ]
+]]

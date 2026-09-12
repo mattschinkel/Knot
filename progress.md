@@ -27,6 +27,7 @@
 - Created a local git repo for the agents to use: `git init` in the project root, `.gitignore` (ignores `.venv/`, `__pycache__`, OS/editor junk), initial commit `4571436` on `master` with all design/crew/dashboard/wiring/progress/instructions files. Per the rule above, agents must get R1's OK before any `git checkout HEAD`/reset.
 - Added GitHub remote `origin` -> `https://github.com/mattschinkel/Knot.git` and pushed `master` (tracks `origin/master`). Agents push normal commits to `origin`; no force-push/reset without R1's OK + backup. Repo: https://github.com/mattschinkel/Knot
 - Name search (2026-09-08): checked ~30 candidates; the obvious-root space (node/graph/knot/syntax) AND construction-craft real words (cairn/ashlar/quoin) AND short coined names (zynta/korvex/vyntra/kynex) ALL collide. Cairn & Ashlar are near-identical competitor languages. Cleanest verified candidate = **Nodigma** (nodigma.com NXDOMAIN, no collisions). Added "second-round findings" cluster (Cairn, Ashlar, AILANG, Causari, Grafema, Nodus, Knot) to `ai_docs/axiom_design.md` §20 — sharpens our novelty claim: content-addressed graph + blast-radius + AI-native + MCP is now table stakes, not a differentiator.
+- Name search round 3 (2026-09-12): author wants a name that signals **for AI, not humans** (Nodigma fails that). Best cleared shortlist: Syntongue, Xenoling, Agongue/Agentongue, Glotair/Airglot, Machglot. Crowded “agent-native” competitor space (NTNT, Zerolang, Semaprax, Agency) → prefer “synthetic/alien tongue” over another “agent-*” brand.
 - **Phase 1 DONE (2026-09-09).** AST, addressing, bracket parser, pretty printer, bin serialize/deserialize, GBNF, property tests (T25–T29), and gates (spec_lint + drift M1–M3) are green. Much of T14+ was Cursor manual-fix + `--from=TN` after 4B crew hard-stops. Baseline: `docs/drift_baseline.json`. Dashboard Phase 1 marked done.
 - **Phase 2 paused (2026-09-09).** T1 (`unify`) landed green; stopped mid-T2 (`subtype`). Resume with `autobuild.py --phase 2 --from=T2`.
 - **Linux port (2026-09-09).** Project runs on Linux: `.venv` recreated (Python 3.10), deps installed, CRLF→LF + `.gitattributes`, `python3-tk` installed, Phase 0 `subtype` restored, WIP `test_subtype.py` quarantined, mangled AST unit tests rewritten. **272 tests pass.** LAN LLM reachable (`LocoOperator-4B` @ `192.168.0.50:8081`).
@@ -63,9 +64,18 @@
 - **Phase 10 DONE (2026-09-12).** MODEL/TOOL/INVOKE AIR; `AiResult` + confidence; `ToolRegistry` invoke/constrain with caps. **542 tests.**
 - **Phase 11 DONE (2026-09-12).** PAR/SEQ dataflow; REF/DEREF + RegionVal; UNSAFE + `unsafe` capability; RegionType subtype. **564 tests.**
 - **Phase 12 DONE (2026-09-12).** MCP tools (eval/typecheck/run/constrain/doc_query/query); `kb` token budget; `--llm` policies; `python -m knot`. **587 tests. §16 build complete.**
+- **Self-host bootstrap (2026-09-12).** Stage 0.5–2 + phased full features: A1 surface (holes/ERR/typed/RECORD), A2 IMPORT/`root.knot`, A3 `check.knot`, A4 Stage-2 gates, B `knotc_bridge` + `knot compile`, C pretty-view/PAR opcodes/borrow/live MODEL handler.
+- **Compile-all knotc (2026-09-12).** Stage-1 knotc now lowers the deterministic AIR surface: COND/PAR/SEQ/REF/DEREF/UNSAFE, UNIT/nil, `"…"` + `;`, DEPENDS/MODEL/TOOL/VERSION/EXPORT stubs, selective IMPORT, CASE string tags, SUM Ident-tag sugar. Gate: `tests/selfhost/test_compile_all_knot.py`. AI INVOKE/MCP/edits remain host Python.
+- **Self-host finish (2026-09-12).** In-Knot `compile_root` IMPORT→FS_READ merge; `_call_def` threads `granted_caps`; INVOKE compile stub; VM links full `root.knot` (103 funcs) and runs linked knotc. Host-only by design: MCP, edits, live INVOKE. See `fixes/fix_compile_all_finish.md`.
 
 ## TODOs
-- Post-v1 polish: pretty-view sugar, richer borrow checker, PAR bytecode opcodes, live LLM handlers for MODEL.
+- **Pick public name (AI-not-human signal).** Author likes **Golem** root (animated construct / not human). Strong free compounds (2026-09-12): **GolemTongue**, **GolemSpeak**, **GolemGlot**, **GolemLang**, **GolemLing**, **GolemAir**, **GolemForm**. Bare `golem.com` / Golem Network / `golem.ai` / `golem.dev` are taken — compound required. Also liked earlier: Agentongue, RobotTongue, MachSpeak. Rejected: AgentTongue.com (live competitor), AgentSpeak (classic language), Nodigma (weak AI signal). Register chosen `.com` + USPTO before locking.
+- Tier-3 / public rename / native LLVM — deferred until name pick.
+- In-Knot multi-file IMPORT link — DONE (`compile_root` + `fix_compile_all_finish.md`).
+- INVOKE runtime + MCP + edits — host-only by design (documented); compile stub for INVOKE done.
+- Post-v1 polish: pretty-view, PAR opcodes, borrow, live MODEL — DONE (Phase C).
+- Prefer Stage-1 knotc for deterministic lowering — DONE (`knotc_bridge`).
+- Compile-all deterministic AIR via knotc — DONE (`fixes/fix_compile_all_knot.md` + finish).
 - D-FB11: normalize/canonical print — DONE for core AST via `canonical.py` (pretty view unchanged).
 - D-FB9: wire `ERR[...]` parse/print/AST — DONE Phase 5; apply REPLACE — DONE Phase 6 (`apply_edit`).
 - D-FB10: hole constraint propagation in checker (beyond label resolve). — DONE Phase 4.
@@ -80,6 +90,7 @@
 - Phase 10 — DONE 2026-09-12.
 - Phase 11 — DONE 2026-09-12.
 - Phase 12 — DONE 2026-09-12 (§16 complete).
+- Stage 0.5 / Stage 1 expr knotc / Stage 2 expr gate — DONE 2026-09-12.
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
 - Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`). Crew no longer the build path (see `fixes/fix_stop_crew_cursor_drives.md`).
 - Teach `architect_phase.py --tasks` to emit the markdown table format `parse_tasks` requires (prevent false phase close on 0 tasks). Low priority while crew unused.
@@ -116,6 +127,11 @@
 - Phase 9 — bytecode VM, compile/run, M5 latency.
 - Phase 10 — MODEL/TOOL/INVOKE, AiResult, ToolRegistry constrain.
 - Phase 11 — PAR/SEQ, REF/DEREF, UNSAFE caps, RegionType subtype.
+- Stage 0.5/1/2 self-host — `runtime_ops`, DEF/FN Stage-1 knotc, Stage 2 self-compile round-trip.
+- `fix_match_store_local_selfhost.md` — MATCH temp locals + short-circuit AND/OR; Stage-1 `lex_number` multi-digit; self-lex `FROM_CODEPOINT[39]`.
+- `fix_phased_full_features.md` — A1–C: knotc surface/modules/check, knotc_bridge, pretty/PAR/borrow/MODEL HTTP.
+- `fix_compile_all_knot.md` — Stage-1 knotc lowers full deterministic AIR (COND/PAR/SEQ/REF/stubs/quotes).
+- `fix_compile_all_finish.md` — compile_root IMPORT link, granted_caps in _call_def, INVOKE stub.
 - Phase 12 — MCP tools, kb, --llm formatter, `python -m knot`.
 - `fix_linux_port.md` — Windows→Linux move: no venv, CRLF sources, missing tkinter, broken mid-T2 subtype WIP + mangled AST unit tests; fixed env/line endings/tests so 272 pytest green on Linux.
 - `fix_crew_bloat_gates.md` — 4B recursive/dunder WriteModule bloat + invented IntType imports caused HTTP 500 and wrong Env; harness now rejects bloat/overwrite/unknown imports at the tool boundary.
@@ -138,7 +154,9 @@
 - Phase 2 T10 crew fail — invented `knot.expr` / CondExpr; landed `infer_if` for IfExpr + IF/COND OpExpr manually.
 - Phase 2 false close — R1 task list was prose not a table → 0 tasks parsed → autobuild declared DONE and pushed; fixed tasks table + restored `values.py`; re-running.
 
-## Scripts
+- `python -m knot compile FILE` — Stage-1 knotc compile (optional `--host-fallback`)
+- `selfhost/harness/` — Stage 1/2 tests: `.venv/bin/python -m pytest selfhost/harness -q`
+- `tests/selfhost/test_compile_all_knot.py` — knotc compile-all AIR gate
 - **Linux (current host):** activate with `source .venv/bin/activate`, or prefix commands with `.venv/bin/python`.
 - `web/index.html` — Knot build dashboard. Serve: `.venv/bin/python -m http.server 8000 --directory web` → http://localhost:8000 (no HTTPS).
 - `two_agent_crew.py` — 2-agent CrewAI demo vs LAN llama-server. **LOCAL-ONLY.** `.venv/bin/python two_agent_crew.py`
@@ -151,6 +169,8 @@
 - `python -m knot` — CLI: `mcp`, `kb`, `llm`, `tool` (Phase 12). Example: `PYTHONPATH=src python -m knot tool eval --args '{"source":"ADD[1,2]"}'`
 - `src/knot/mcp/` — MCP tools + stdio JSON-RPC (no HTTPS). `from knot.mcp import call_tool`
 - `src/knot/kb.py` / `llm_out.py` — token-budgeted kb + `--llm` policies
+- `src/knot/runtime_ops.py` — Stage 0.5 string/list/map/record/MATCH/IO ops
+- `selfhost/` — Stage 1 knotc (`.knot`) + harness (`harness/test_stage1.py`, `test_stage2.py`)
 
 - `crew_chats_viewer.py` — tkinter chat GUI (needs `python3-tk`). **LOCAL-ONLY.** `.venv/bin/python crew_chats_viewer.py`
 - `requirements.txt` — `crewai==1.15.20`, `crewai-tools==1.15.20`, `pytest>=8`. **LOCAL-ONLY.**
