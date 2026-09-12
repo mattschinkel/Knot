@@ -72,6 +72,7 @@
 ## TODOs
 - Register `golemlang.com` + USPTO for locked name **Golem** (`.gol`). Mitigate bare-Golem collisions via golemlang branding.
 - GitHub repo renamed to **GolemLang**: https://github.com/mattschinkel/GolemLang (local `origin` updated).
+- GitHub Pages content: `docs/index.html` + `docs/dashboard.html` (Golem-branded). Enable from branch `master` / `/docs` after push.
 
 - Tier-3 / public rename / native LLVM — deferred until name pick.
 - In-Golem multi-file IMPORT link — DONE (`compile_root` + `fix_compile_all_finish.md`).
