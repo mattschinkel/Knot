@@ -8,7 +8,32 @@ from __future__ import annotations
 import re
 
 from knot.addressing import generate_id
-from knot.ast import HoleExpr, IdentExpr, LitExpr, OpExpr, UnitExpr, TypedLit, DefNode, FnExpr
+from knot.ast import (
+    HoleExpr,
+    IdentExpr,
+    LitExpr,
+    OpExpr,
+    UnitExpr,
+    TypedLit,
+    DefNode,
+    FnExpr,
+    ErrExpr,
+    InlineTest,
+    InlineCase,
+    PropertyDecl,
+    ModuleDecl,
+    ImportDecl,
+    DependsDecl,
+    ExportList,
+    ModelDecl,
+    ToolDecl,
+    InvokeExpr,
+    ParExpr,
+    SeqExpr,
+    RefExpr,
+    DerefExpr,
+    UnsafeExpr,
+)
 
 _NUM = re.compile(r"-?\d+(?:\.\d+)?")
 _IDENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -93,6 +118,36 @@ def _parse_atom(s: str, i: int):
             return _parse_fn_brackets(s, i)
         if tok.upper() == "DEF":
             return _parse_def_brackets(s, i)
+        if tok.upper() == "ERR":
+            return _parse_err_brackets(s, i)
+        if tok.upper() == "TEST":
+            return _parse_test_brackets(s, i)
+        if tok.upper() == "PROPERTY":
+            return _parse_property_brackets(s, i)
+        if tok.upper() == "MODULE":
+            return _parse_module_brackets(s, i)
+        if tok.upper() == "IMPORT":
+            return _parse_import_brackets(s, i)
+        if tok.upper() == "DEPENDS":
+            return _parse_depends_brackets(s, i)
+        if tok.upper() == "EXPORT":
+            return _parse_export_brackets(s, i)
+        if tok.upper() == "MODEL":
+            return _parse_model_brackets(s, i)
+        if tok.upper() == "TOOL":
+            return _parse_tool_brackets(s, i)
+        if tok.upper() == "INVOKE":
+            return _parse_invoke_brackets(s, i)
+        if tok.upper() == "PAR":
+            return _parse_par_brackets(s, i)
+        if tok.upper() == "SEQ":
+            return _parse_seq_brackets(s, i)
+        if tok.upper() == "REF":
+            return _parse_ref_brackets(s, i)
+        if tok.upper() == "DEREF":
+            return _parse_deref_brackets(s, i)
+        if tok.upper() == "UNSAFE":
+            return _parse_unsafe_brackets(s, i)
         args, i = _parse_arglist(s, i)
         return OpExpr(op=tok, children=args, id=generate_id()), i
 
@@ -110,8 +165,16 @@ def _parse_atom(s: str, i: int):
         return LitExpr(tok == "true"), i
     if tok == "nil":
         return LitExpr(None), i
-    # identifier — no `.` sugar in canonical (D-FB1); use GET[...]
+    # identifier — may be a type atom with @dim (e.g. f64@meters in CONVERT)
     i2 = _skip_ws(s, i)
+    if i2 < len(s) and s[i2] == "@":
+        i2 += 1
+        m2 = _IDENT.match(s, i2)
+        if not m2:
+            raise ParseError("expected dimension after '@'")
+        tok = tok + "@" + m2.group(0)
+        i = m2.end()
+        i2 = _skip_ws(s, i)
     if i2 < len(s) and s[i2] == ".":
         raise ParseError(
             "field-access sugar 'obj.field' is pretty-only; "
@@ -319,3 +382,588 @@ def parse_def(text: str) -> DefNode:
     if i < len(s):
         raise ParseError(f"trailing input: {s[i:]!r}")
     return node
+
+
+def _parse_path_list(s: str, i: int) -> tuple[list, int]:
+    """Parse structural path `[seg,...]` (idents or numbers)."""
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("ERR path must be [...]")
+    i += 1
+    segs: list = []
+    i = _skip_ws(s, i)
+    if i < len(s) and s[i] == "]":
+        return segs, i + 1
+    while True:
+        i = _skip_ws(s, i)
+        m = _NUM.match(s, i)
+        if m:
+            tok = m.group(0)
+            segs.append(int(tok) if "." not in tok else float(tok))
+            i = m.end()
+        else:
+            m = _IDENT.match(s, i)
+            if not m:
+                raise ParseError("expected path segment")
+            segs.append(m.group(0))
+            i = m.end()
+        i = _skip_ws(s, i)
+        if i >= len(s):
+            raise ParseError("unclosed path '['")
+        if s[i] == "]":
+            return segs, i + 1
+        if s[i] in ",;":
+            i += 1
+            continue
+        raise ParseError(f"expected ',' or ']' in path at {i}")
+
+
+def _parse_err_brackets(s: str, i: int) -> tuple[ErrExpr, int]:
+    """Parse ERR[code, path, expected, actual, fix*] starting at '['."""
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after ERR")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("ERR expects code ident")
+    code = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] not in ",;":
+        raise ParseError("ERR expects ',' after code")
+    i += 1
+    path, i = _parse_path_list(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] not in ",;":
+        raise ParseError("ERR expects ',' after path")
+    i += 1
+    expected, i = _parse_type(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] not in ",;":
+        raise ParseError("ERR expects ',' after expected type")
+    i += 1
+    actual, i = _parse_type(s, i)
+    fixes = []
+    i = _skip_ws(s, i)
+    while i < len(s) and s[i] in ",;":
+        i += 1
+        i = _skip_ws(s, i)
+        if i < len(s) and s[i] == "]":
+            break
+        fix, i = _parse_atom(s, i)
+        fixes.append(fix)
+        i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed ERR[...]")
+    return (
+        ErrExpr(
+            code=code,
+            path=path,
+            expected=expected,
+            actual=actual,
+            fixes=fixes,
+            id=generate_id(),
+        ),
+        i + 1,
+    )
+
+
+def parse_err(text: str) -> ErrExpr:
+    """Parse canonical ERR[code, path, expected, actual, fixes*]."""
+    node = parse_expr(text)
+    if not isinstance(node, ErrExpr):
+        raise ParseError("expected ERR[...]")
+    return node
+
+
+def _parse_test_brackets(s: str, i: int) -> tuple[InlineTest, int]:
+    """Parse TEST[name, CASE[in,out], ...] starting at '['."""
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after TEST")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("TEST expects name")
+    name = m.group(0)
+    i = m.end()
+    cases = []
+    i = _skip_ws(s, i)
+    while i < len(s) and s[i] in ",;":
+        i += 1
+        i = _skip_ws(s, i)
+        if i < len(s) and s[i] == "]":
+            break
+        # CASE[in, out] or bare pair via CASE
+        i2 = _skip_ws(s, i)
+        if s[i2:].upper().startswith("CASE"):
+            i = i2 + 4
+            i = _skip_ws(s, i)
+            if i >= len(s) or s[i] != "[":
+                raise ParseError("expected CASE[...]")
+            args, i = _parse_arglist(s, i)
+            if len(args) != 2:
+                raise ParseError("CASE needs in, out")
+            cases.append(InlineCase(args[0], args[1]))
+        else:
+            raise ParseError("TEST cases must be CASE[in,out]")
+        i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed TEST[...]")
+    return InlineTest(name=name, cases=cases, id=generate_id()), i + 1
+
+
+def _parse_property_brackets(s: str, i: int) -> tuple[PropertyDecl, int]:
+    """Parse PROPERTY[name, [[x:T,...], body]] starting at '['."""
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after PROPERTY")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("PROPERTY expects name")
+    name = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] not in ",;":
+        raise ParseError("PROPERTY expects ',' after name")
+    i += 1
+    i = _skip_ws(s, i)
+    # [[params], body] — same shape as FN body section
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("PROPERTY expects [[params],body]")
+    # Reuse FN bracket parse: fake by calling internal that expects [[params],body]
+    # _parse_fn_brackets expects to start at '[' of FN[...]. Here we have [[params],body]
+    # which is the inside of FN. Parse param list then body.
+    i += 1  # consume outer '[' of [[params], body]
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("PROPERTY params must be [[...],body]")
+    params, i = _parse_param_list(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] not in ",;":
+        raise ParseError("PROPERTY expects ',' after params")
+    i += 1
+    body, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed PROPERTY params/body group")
+    i += 1
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed PROPERTY[...]")
+    return PropertyDecl(name=name, params=params, body=body, id=generate_id()), i + 1
+
+
+
+def _parse_ident_list_args(s: str, i: int) -> tuple[list[str], int]:
+    """Parse remaining comma-separated idents until ']' (does not consume ']')."""
+    names: list[str] = []
+    i = _skip_ws(s, i)
+    if i < len(s) and s[i] == "]":
+        return names, i
+    while True:
+        i = _skip_ws(s, i)
+        m = _IDENT.match(s, i)
+        if not m:
+            raise ParseError("expected ident")
+        names.append(m.group(0))
+        i = m.end()
+        i = _skip_ws(s, i)
+        if i >= len(s) or s[i] == "]":
+            return names, i
+        if s[i] in ",;":
+            i += 1
+            continue
+        raise ParseError("expected ',' or ']'")
+
+
+def _parse_export_brackets(s: str, i: int) -> tuple[ExportList, int]:
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after EXPORT")
+    i += 1
+    names, i = _parse_ident_list_args(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed EXPORT[...]")
+    return ExportList(names=names, id=generate_id()), i + 1
+
+
+def _parse_module_brackets(s: str, i: int) -> tuple[ModuleDecl, int]:
+    """MODULE[name, items..., EXPORT[...]]"""
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after MODULE")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("MODULE expects name")
+    name = m.group(0)
+    i = m.end()
+    body = []
+    exports: list[str] = []
+    version = "0"
+    i = _skip_ws(s, i)
+    while i < len(s) and s[i] in ",;":
+        i += 1
+        i = _skip_ws(s, i)
+        if i < len(s) and s[i] == "]":
+            break
+        # optional VERSION[1.2]
+        if s[i:].upper().startswith("VERSION"):
+            i2 = i + 7
+            i2 = _skip_ws(s, i2)
+            if i2 >= len(s) or s[i2] != "[":
+                raise ParseError("VERSION expects [...]")
+            args, i = _parse_arglist(s, i2)
+            if len(args) != 1 or not isinstance(args[0], (LitExpr, IdentExpr)):
+                raise ParseError("VERSION expects one atom")
+            version = str(args[0].value if isinstance(args[0], LitExpr) else args[0].id)
+            i = _skip_ws(s, i)
+            continue
+        node, i = _parse_atom(s, i)
+        if isinstance(node, ExportList):
+            exports = list(node.names)
+        else:
+            body.append(node)
+        i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed MODULE[...]")
+    return ModuleDecl(
+        name=name, body=body, exports=exports, version=version, id=generate_id()
+    ), i + 1
+
+
+def _parse_import_brackets(s: str, i: int) -> tuple[ImportDecl, int]:
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after IMPORT")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("IMPORT expects module name")
+    mod = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    names: list[str] = []
+    if i < len(s) and s[i] in ",;":
+        i += 1
+        names, i = _parse_ident_list_args(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed IMPORT[...]")
+    return ImportDecl(module=mod, names=names, id=generate_id()), i + 1
+
+
+def _parse_depends_brackets(s: str, i: int) -> tuple[DependsDecl, int]:
+    """DEPENDS[mod, version] or DEPENDS[mod, version, CAPS[a,b]]"""
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after DEPENDS")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("DEPENDS expects module name")
+    mod = m.group(0)
+    i = m.end()
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] not in ",;":
+        raise ParseError("DEPENDS expects version")
+    i += 1
+    i = _skip_ws(s, i)
+    # version: number or ident or string
+    ver_node, i = _parse_atom(s, i)
+    if isinstance(ver_node, LitExpr):
+        version = str(ver_node.value)
+    elif isinstance(ver_node, IdentExpr):
+        version = str(ver_node.id)
+    else:
+        raise ParseError("DEPENDS version must be atom")
+    caps: list[str] = []
+    i = _skip_ws(s, i)
+    if i < len(s) and s[i] in ",;":
+        i += 1
+        i = _skip_ws(s, i)
+        if s[i:].upper().startswith("CAPS"):
+            i = i + 4
+            i = _skip_ws(s, i)
+            if i >= len(s) or s[i] != "[":
+                raise ParseError("CAPS expects [...]")
+            # CAPS may use dotted names like net.request — parse as idents with dots?
+            i += 1
+            caps, i = _parse_cap_names(s, i)
+            if i >= len(s) or s[i] != "]":
+                raise ParseError("unclosed CAPS[...]")
+            i += 1
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed DEPENDS[...]")
+    return DependsDecl(module=mod, version=version, caps=caps, id=generate_id()), i + 1
+
+
+def _parse_cap_names(s: str, i: int) -> tuple[list[str], int]:
+    """Parse capability names allowing dots: net.request, fs.read."""
+    names: list[str] = []
+    i = _skip_ws(s, i)
+    if i < len(s) and s[i] == "]":
+        return names, i
+    while True:
+        i = _skip_ws(s, i)
+        m = _IDENT.match(s, i)
+        if not m:
+            raise ParseError("expected capability name")
+        name = m.group(0)
+        i = m.end()
+        while i < len(s) and s[i] == ".":
+            i += 1
+            m2 = _IDENT.match(s, i)
+            if not m2:
+                raise ParseError("expected name after '.' in capability")
+            name = name + "." + m2.group(0)
+            i = m2.end()
+        names.append(name)
+        i = _skip_ws(s, i)
+        if i >= len(s) or s[i] == "]":
+            return names, i
+        if s[i] in ",;":
+            i += 1
+            continue
+        raise ParseError("expected ',' or ']' in CAPS")
+
+
+def _parse_type_bracket(s: str, i: int, label: str) -> tuple[str, int]:
+    """Parse IN[type] or OUT[type] starting at IN/OUT token end (at '[')."""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError(label + " expects [...]")
+    i += 1
+    typ, i = _parse_type(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed " + label + "[...]")
+    return typ, i + 1
+
+
+def _parse_conf_bracket(s: str, i: int) -> tuple[bool, int]:
+    """Parse CONF[true|false] starting at '[' after CONF."""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("CONF expects [...]")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("CONF expects true or false")
+    tok = m.group(0).lower()
+    i = m.end()
+    if tok not in ("true", "false"):
+        raise ParseError("CONF expects true or false")
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed CONF[...]")
+    return tok == "true", i + 1
+
+
+def _parse_effects_bracket(s: str, i: int) -> tuple[list[str], int]:
+    """Parse EFFECTS[a,b] starting at '[' after EFFECTS."""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("EFFECTS expects [...]")
+    i += 1
+    names, i = _parse_cap_names(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed EFFECTS[...]")
+    return names, i + 1
+
+
+def _expect_comma(s: str, i: int) -> int:
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != ",":
+        raise ParseError("expected ','")
+    return i + 1
+
+
+def _parse_model_brackets(s: str, i: int) -> tuple[ModelDecl, int]:
+    """MODEL[name,IN[T],OUT[U],CONF[bool],EFFECTS[...]]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after MODEL")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("MODEL expects name")
+    name = m.group(0)
+    i = m.end()
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("IN"):
+        raise ParseError("MODEL expects IN[...]")
+    i += 2
+    in_t, i = _parse_type_bracket(s, i, "IN")
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("OUT"):
+        raise ParseError("MODEL expects OUT[...]")
+    i += 3
+    out_t, i = _parse_type_bracket(s, i, "OUT")
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("CONF"):
+        raise ParseError("MODEL expects CONF[...]")
+    i += 4
+    conf, i = _parse_conf_bracket(s, i)
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("EFFECTS"):
+        raise ParseError("MODEL expects EFFECTS[...]")
+    i += 7
+    effects, i = _parse_effects_bracket(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed MODEL[...]")
+    return (
+        ModelDecl(
+            name=name,
+            in_type=in_t,
+            out_type=out_t,
+            confidence=conf,
+            effects=effects,
+            id=generate_id(),
+        ),
+        i + 1,
+    )
+
+
+def _parse_tool_brackets(s: str, i: int) -> tuple[ToolDecl, int]:
+    """TOOL[name,IN[T],OUT[U],EFFECTS[...]]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after TOOL")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("TOOL expects name")
+    name = m.group(0)
+    i = m.end()
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("IN"):
+        raise ParseError("TOOL expects IN[...]")
+    i += 2
+    in_t, i = _parse_type_bracket(s, i, "IN")
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("OUT"):
+        raise ParseError("TOOL expects OUT[...]")
+    i += 3
+    out_t, i = _parse_type_bracket(s, i, "OUT")
+    i = _expect_comma(s, i)
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("EFFECTS"):
+        raise ParseError("TOOL expects EFFECTS[...]")
+    i += 7
+    effects, i = _parse_effects_bracket(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed TOOL[...]")
+    return (
+        ToolDecl(name=name, in_type=in_t, out_type=out_t, effects=effects, id=generate_id()),
+        i + 1,
+    )
+
+
+def _parse_invoke_brackets(s: str, i: int) -> tuple[InvokeExpr, int]:
+    """INVOKE[name,arg...]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after INVOKE")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("INVOKE expects name")
+    name = m.group(0)
+    i = m.end()
+    args = []
+    i = _skip_ws(s, i)
+    while i < len(s) and s[i] != "]":
+        if s[i] != ",":
+            raise ParseError("expected ',' or ']' in INVOKE")
+        i += 1
+        arg, i = _parse_atom(s, i)
+        args.append(arg)
+        i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed INVOKE[...]")
+    return InvokeExpr(name=name, args=args, id=generate_id()), i + 1
+
+
+def _parse_par_brackets(s: str, i: int) -> tuple[ParExpr, int]:
+    """PAR[e1,e2,...]"""
+    args, i = _parse_arglist(s, i)
+    return ParExpr(branches=args, id=generate_id()), i
+
+
+def _parse_seq_brackets(s: str, i: int) -> tuple[SeqExpr, int]:
+    """SEQ[e1,e2,...]"""
+    args, i = _parse_arglist(s, i)
+    return SeqExpr(steps=args, id=generate_id()), i
+
+
+def _parse_ref_brackets(s: str, i: int) -> tuple[RefExpr, int]:
+    """REF[region,expr]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after REF")
+    i += 1
+    i = _skip_ws(s, i)
+    m = _IDENT.match(s, i)
+    if not m:
+        raise ParseError("REF expects region name")
+    region = m.group(0)
+    i = m.end()
+    i = _expect_comma(s, i)
+    expr, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed REF[...]")
+    return RefExpr(region=region, expr=expr, id=generate_id()), i + 1
+
+
+def _parse_deref_brackets(s: str, i: int) -> tuple[DerefExpr, int]:
+    """DEREF[expr]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after DEREF")
+    i += 1
+    expr, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed DEREF[...]")
+    return DerefExpr(expr=expr, id=generate_id()), i + 1
+
+
+def _parse_unsafe_brackets(s: str, i: int) -> tuple[UnsafeExpr, int]:
+    """UNSAFE[CAPS[cap...],body]"""
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("expected '[' after UNSAFE")
+    i += 1
+    i = _skip_ws(s, i)
+    if not s[i:].upper().startswith("CAPS"):
+        raise ParseError("UNSAFE expects CAPS[...]")
+    i += 4
+    if i >= len(s) or s[i] != "[":
+        raise ParseError("CAPS expects [...]")
+    i += 1
+    caps, i = _parse_cap_names(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed CAPS[...]")
+    i += 1
+    i = _expect_comma(s, i)
+    body, i = _parse_atom(s, i)
+    i = _skip_ws(s, i)
+    if i >= len(s) or s[i] != "]":
+        raise ParseError("unclosed UNSAFE[...]")
+    return UnsafeExpr(caps=caps, body=body, id=generate_id()), i + 1

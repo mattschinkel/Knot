@@ -8,8 +8,9 @@ so value/type tests compile against the real hook.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
+from .effects import CapabilitySet, EffectSet
 from .units import Dimension, DIMENSIONLESS
 
 
@@ -87,10 +88,16 @@ class RegionType(Type):
 
 @dataclass(frozen=True)
 class FnType(Type):
-    """Function type: params -> ret (Phase 2 T12)."""
+    """Function type: params -> ret [@effects] [<caps>] (Phase 2 T12 / Phase 3 T8).
+
+    effects — type-level effect set (default pure / empty).
+    caps    — capabilities the function requires at call time (default none).
+    """
 
     params: tuple[Type, ...]
     ret: Type
+    effects: EffectSet = field(default_factory=EffectSet)
+    caps: CapabilitySet = field(default_factory=CapabilitySet)
 
 
 # Predefined base types.
@@ -140,6 +147,10 @@ def subtype(s: Type, t: Type) -> bool:
         if len(s.elems) != len(t.elems):
             return False
         return all(subtype(a, b) for a, b in zip(s.elems, t.elems))
+    if isinstance(s, RegionType) and isinstance(t, RegionType):
+        if s.region != t.region:
+            return False
+        return subtype(s.inner, t.inner)
     return False
 
 

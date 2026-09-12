@@ -35,5 +35,12 @@ class Env:
                 return scope[name]
         return None
 
+    def bindings(self) -> dict[str, Type]:
+        """Flat view of all bindings (inner scopes shadow outer)."""
+        out: dict[str, Type] = {}
+        for scope in self._scopes:
+            out.update(scope)
+        return out
+
     def __contains__(self, name: object) -> bool:
         return isinstance(name, str) and self.lookup(name) is not None

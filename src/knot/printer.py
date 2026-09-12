@@ -20,6 +20,7 @@ from knot.ast import (
     TypedLit,
     UnitExpr,
     WithExpr,
+    ErrExpr,
 )
 
 _INFIX = {
@@ -86,6 +87,21 @@ def _print(node) -> str:
         if node.label:
             return "?:" + str(node.label)
         return "?"
+    if isinstance(node, ErrExpr):
+        path = "[" + ", ".join(str(p) for p in node.path) + "]"
+        fixes = "".join(", " + _print(f) for f in node.fixes)
+        return (
+            "err("
+            + str(node.code)
+            + ", "
+            + path
+            + ", "
+            + str(node.expected)
+            + ", "
+            + str(node.actual)
+            + fixes
+            + ")"
+        )
     if isinstance(node, TypedLit):
         return _lit_text(node.value) + ":" + str(node.type_name)
     if isinstance(node, LitExpr):

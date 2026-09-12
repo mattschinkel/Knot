@@ -4,6 +4,26 @@ Available project instructions
 - progress.md — highlights, TODOs, previous issues, and important scripts
 - name_changes.md — rename log for variables, functions, and procedures (create when first rename happens)
 - fixes/ — one fix_*.md per issue (problem + fix)
+- ai_docs/phase12_spec.md — Phase 12 MCP + kb + --llm (DONE; §16 complete)
+- ai_docs/phase12_tasks.md — Phase 12 task table
+- ai_docs/phase11_spec.md — Phase 11 concurrency / regions / unsafe (DONE)
+- ai_docs/phase11_tasks.md — Phase 11 task table
+- ai_docs/phase10_spec.md — Phase 10 AI/tool FFI (DONE)
+- ai_docs/phase10_tasks.md — Phase 10 task table
+- ai_docs/phase9_spec.md — Phase 9 bytecode VM (DONE)
+- ai_docs/phase9_tasks.md — Phase 9 task table
+- ai_docs/phase8_spec.md — Phase 8 modules + dependencies (DONE)
+- ai_docs/phase8_tasks.md — Phase 8 task table
+- ai_docs/phase7_spec.md — Phase 7 inline tests/properties/fuzz (DONE)
+- ai_docs/phase7_tasks.md — Phase 7 task table
+- name_changes.md — rename log (InlineTest/InlineCase)
+- ai_docs/phase6_spec.md — Phase 6 edit operations (DONE)
+- ai_docs/phase6_tasks.md — Phase 6 task table
+- ai_docs/phase5_spec.md — Phase 5 structured errors + repairs (DONE)
+- ai_docs/phase5_tasks.md — Phase 5 task table
+- ai_docs/phase4_spec.md — Phase 4 holes + VALID/PARTIAL/INVALID (DONE)
+- ai_docs/phase4_tasks.md — Phase 4 task table
+- fixes/fix_stop_crew_cursor_drives.md — stop 4B crew; Cursor implements Knot (Phase 3 done)
 - fixes/fix_linux_port.md — Windows→Linux port (venv, LF line endings, tkinter, test quarantine)
 - ai_docs/feedback_syntax_10of10.md — external review pushing canonical syntax to 10/10 for LLMs
 - ai_docs/r1_decisions_feedback_syntax_10of10.md — R1 ACCEPT/AMEND lock for D-FB1–D-FB6
@@ -15,5 +35,7 @@ Linux quick start:
   python3 -m venv .venv
   .venv/bin/pip install -r requirements.txt
   .venv/bin/python -m pytest -q
+
+Build path: Cursor implements Knot (no 4B crew). See fixes/fix_stop_crew_cursor_drives.md.
 
 If new instruction files are added, list them here.

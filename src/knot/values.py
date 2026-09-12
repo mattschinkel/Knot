@@ -197,5 +197,38 @@ class ErrorVal(Value):
     def type(self) -> Type:
         return NEVER
 
+
+@dataclass(frozen=True)
+class AiResult(Value):
+    """Result of an ai-effectful MODEL invoke (Phase 10 / design §11).
+
+    Only MODEL handlers produce AiResult. The deterministic kernel never
+    invents confidence. confidence is None when MODEL declared CONF[false].
+    """
+
+    value: Value
+    confidence: float | None
+    model: str
+    version: str = "0"
+
+    @property
+    def type(self) -> Type:
+        return self.value.type
+
+
+@dataclass(frozen=True)
+class RegionVal(Value):
+    """A value tagged with a named region / lifetime (Phase 11)."""
+
+    value: Value
+    region: str
+
+    @property
+    def type(self) -> Type:
+        from .types import RegionType
+
+        return RegionType(self.value.type, self.region)
+
+
 def TypeVar(name):
     return type(name, (), {})

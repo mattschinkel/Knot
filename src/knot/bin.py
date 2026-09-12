@@ -10,7 +10,7 @@ import json
 from typing import Any
 
 from knot.ast import (
-    DefNode, FieldAccess, FnExpr, HoleExpr, IdentExpr, LitExpr, OpExpr,
+    DefNode, ErrExpr, FieldAccess, FnExpr, HoleExpr, IdentExpr, LitExpr, OpExpr,
     TypedLit, UnitExpr,
 )
 from knot.addressing import generate_id, reset_ids
@@ -39,6 +39,15 @@ def _node_to_dict(node: Any) -> dict:
         }
     if isinstance(node, DefNode):
         return {"kind": "Def", "name": node.name, "body": _node_to_dict(node.body)}
+    if isinstance(node, ErrExpr):
+        return {
+            "kind": "Err",
+            "code": node.code,
+            "path": list(node.path),
+            "expected": node.expected,
+            "actual": node.actual,
+            "fixes": [_node_to_dict(f) for f in node.fixes],
+        }
     raise TypeError(f"cannot serialize {type(node).__name__}")
 
 
@@ -63,6 +72,15 @@ def _dict_to_node(d: dict) -> Any:
         return FnExpr(params=params, body=_dict_to_node(d["body"]), id=generate_id())
     if kind == "Def":
         return DefNode(name=d["name"], body=_dict_to_node(d["body"]), id=generate_id())
+    if kind == "Err":
+        return ErrExpr(
+            code=d["code"],
+            path=list(d.get("path") or []),
+            expected=d.get("expected"),
+            actual=d.get("actual"),
+            fixes=[_dict_to_node(f) for f in d.get("fixes") or []],
+            id=generate_id(),
+        )
     raise TypeError(f"unknown kind {kind!r}")
 
 

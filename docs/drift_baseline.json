@@ -1,9 +1,11 @@
 {
-  "phase": 2,
-  "note": "Phase 2 gate baseline (2026-09-10). M1 lower after D-FB compact AIR samples. PENDING metrics omitted.",
+  "phase": 12,
+  "note": "Phase 12 gate baseline (2026-09-12). MCP + kb + --llm. M1–M5 unchanged.",
   "metrics": {
     "M1_token_count": 21.0,
     "M2_generation_accuracy": 1.0,
-    "M3_edit_roundtrip": 1.0
+    "M3_edit_roundtrip": 1.0,
+    "M4_partial_coherence": 1.0,
+    "M5_compile_latency": 50.0
   }
 }

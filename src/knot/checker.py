@@ -8,14 +8,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .ast import (
-    CallExpr, DefNode, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr,
+    CallExpr, DefNode, ErrExpr, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr,
     TypedLit, UnitExpr,
 )
 from .env import Env
 from .errors import StructuredError
 from .types import (
     Type, ANY, BOOL, I32, I64, F32, F64, STRING, BYTES, UNIT, NEVER, FnType,
-    ListType, SetType, RecordType, TupleType, MapType, unify,
+    ListType, SetType, RecordType, TupleType, MapType, subtype, unify,
 )
 from .values import ErrorVal, Value
 
@@ -128,33 +128,128 @@ def check_compare_op(op: str, t1: Type, t2: Type) -> Type | TypeErrorVal:
     return type_error("unknown compare op " + repr(op), ())
 
 
-def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
-    """Infer the type of a kernel AST expression."""
+def _is_bare_hole(expr: object) -> bool:
+    return isinstance(expr, HoleExpr) and (expr.label is None or expr.label == "")
+
+
+def _infer_binary_operands(
+    left: object,
+    right: object,
+    env: Env | None,
+    expected: Type | None,
+) -> tuple[Type | TypeErrorVal, Type | TypeErrorVal]:
+    """Infer binary operands with hole constraint propagation (Phase 4 D3).
+
+    Concrete operands are inferred without a sibling expected type so existing
+    op error messages stay accurate; bare holes adopt the other side (or
+    ``expected`` when both are holes / AND-OR BOOL).
+    """
+    if expected is BOOL and not _is_bare_hole(left) and not _is_bare_hole(right):
+        return (
+            infer_type(left, env, expected=BOOL),
+            infer_type(right, env, expected=BOOL),
+        )
+    if _is_bare_hole(left) and not _is_bare_hole(right):
+        t2 = infer_type(right, env)
+        if isinstance(t2, TypeErrorVal):
+            return t2, t2
+        t1 = infer_type(left, env, expected=t2)
+        return t1, t2
+    if _is_bare_hole(right) and not _is_bare_hole(left):
+        t1 = infer_type(left, env)
+        if isinstance(t1, TypeErrorVal):
+            return t1, t1
+        t2 = infer_type(right, env, expected=t1)
+        return t1, t2
+    if _is_bare_hole(left) and _is_bare_hole(right):
+        t1 = infer_type(left, env, expected=expected)
+        t2 = infer_type(right, env, expected=expected)
+        return t1, t2
+    return infer_type(left, env), infer_type(right, env)
+
+
+def infer_type(
+    expr: object,
+    env: Env | None = None,
+    expected: Type | None = None,
+) -> Type | TypeErrorVal:
+    """Infer the type of a kernel AST expression.
+
+    ``expected`` (Phase 4) is an optional bidirectional check type. Bare holes
+    adopt it; other nodes unify with it when both sides are concrete.
+    """
     if isinstance(expr, LitExpr):
-        return _lit_type(expr.value)
+        got = _lit_type(expr.value)
+        return _meet_expected(got, expected)
     if isinstance(expr, TypedLit):
-        return _resolve_type_name(expr.type_name)
+        got = _resolve_type_name(expr.type_name)
+        if isinstance(got, TypeErrorVal):
+            return got
+        return _meet_expected(got, expected)
     if isinstance(expr, UnitExpr):
-        return UNIT
+        return _meet_expected(UNIT, expected)
     if isinstance(expr, IdentExpr):
         ctx = env if env is not None else Env()
         name = expr.id if isinstance(expr.id, str) else str(expr.id)
         found = ctx.lookup(name)
         if found is None:
             return type_error("unbound identifier " + repr(name), tuple(expr.path or ()))
-        return found
+        return _meet_expected(found, expected)
     if isinstance(expr, DefNode):
         return infer_def(expr, env)
     if isinstance(expr, HoleExpr):
-        return infer_hole(expr, env)
+        return infer_hole(expr, env, expected=expected)
+    if isinstance(expr, ErrExpr):
+        # First-class error value; type is never (flows anywhere).
+        for fix in expr.fixes:
+            from .repairs import validate_fix
+
+            if not validate_fix(fix):
+                return type_error("ERR fix has invalid shape", ())
+        return NEVER
     if isinstance(expr, FnExpr) or isinstance(expr, CallExpr):
         return infer_fn(expr, env)
     if isinstance(expr, IfExpr):
-        return infer_if(expr, env)
+        return infer_if(expr, env, expected=expected)
+    from .ast import DerefExpr, ParExpr, RefExpr, SeqExpr, UnsafeExpr
+    from .concurrency import infer_par_type, infer_ref_type, infer_seq_type
+
+    if isinstance(expr, ParExpr):
+        branch_ts = []
+        for b in expr.branches:
+            t = infer_type(b, env)
+            if isinstance(t, TypeErrorVal):
+                return t
+            branch_ts.append(t)
+        return _meet_expected(infer_par_type(branch_ts), expected)
+    if isinstance(expr, SeqExpr):
+        step_ts = []
+        for s in expr.steps:
+            t = infer_type(s, env)
+            if isinstance(t, TypeErrorVal):
+                return t
+            step_ts.append(t)
+        return _meet_expected(infer_seq_type(step_ts), expected)
+    if isinstance(expr, RefExpr):
+        inner = infer_type(expr.expr, env)
+        if isinstance(inner, TypeErrorVal):
+            return inner
+        return _meet_expected(infer_ref_type(inner, expr.region), expected)
+    if isinstance(expr, DerefExpr):
+        from .types import RegionType
+
+        t = infer_type(expr.expr, env)
+        if isinstance(t, TypeErrorVal):
+            return t
+        if isinstance(t, RegionType):
+            return _meet_expected(t.inner, expected)
+        return type_error("DEREF expects RegionType", ())
+    if isinstance(expr, UnsafeExpr):
+        return infer_type(expr.body, env, expected=expected)
     if isinstance(expr, OpExpr):
         kids = list(expr.children or [])
         if expr.op in ("IF", "COND"):
-            return infer_if(expr, env)
+            return infer_if(expr, env, expected=expected)
         if expr.op in ("GET", "SET", "FIELD"):
             return _infer_access_op(expr, env)
         if expr.op in _COLLECTION_OPS:
@@ -162,27 +257,56 @@ def infer_type(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         if expr.op in _UNARY_OPS:
             if len(kids) != 1:
                 return type_error("unary " + expr.op + " arity", ())
-            t0 = infer_type(kids[0], env)
+            child_expected = None
+            if expr.op == "NEG" and expected is not None and expected in _NUMERIC:
+                child_expected = expected
+            elif expr.op == "NOT":
+                child_expected = BOOL
+            t0 = infer_type(kids[0], env, expected=child_expected)
             if isinstance(t0, TypeErrorVal):
                 return t0
-            return check_unary_op(expr.op, t0)
+            got = check_unary_op(expr.op, t0)
+            if isinstance(got, TypeErrorVal):
+                return got
+            return _meet_expected(got, expected)
         if expr.op in _ARITH_OPS or expr.op in _COMPARE_OPS:
             if len(kids) != 2:
                 return type_error("binary " + expr.op + " arity", ())
-            t1 = infer_type(kids[0], env)
+            op_expected = expected if expr.op in _ARITH_OPS else None
+            if expr.op in ("AND", "OR"):
+                op_expected = BOOL
+            t1, t2 = _infer_binary_operands(kids[0], kids[1], env, op_expected)
             if isinstance(t1, TypeErrorVal):
                 return t1
-            t2 = infer_type(kids[1], env)
             if isinstance(t2, TypeErrorVal):
                 return t2
             if expr.op in _ARITH_OPS:
-                return check_binary_op(expr.op, t1, t2)
-            return check_compare_op(expr.op, t1, t2)
+                got = check_binary_op(expr.op, t1, t2)
+            else:
+                got = check_compare_op(expr.op, t1, t2)
+            if isinstance(got, TypeErrorVal):
+                return got
+            return _meet_expected(got, expected)
         return type_error("unknown op " + repr(expr.op), ())
     return type_error("cannot infer type of " + type(expr).__name__, ())
 
 
-def infer_if(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
+def _meet_expected(got: Type, expected: Type | None) -> Type | TypeErrorVal:
+    if expected is None:
+        return got
+    u = unify(got, expected)
+    if u is not None:
+        return u
+    if subtype(got, expected):
+        return expected
+    return type_error("type does not match expected", ())
+
+
+def infer_if(
+    expr: object,
+    env: Env | None = None,
+    expected: Type | None = None,
+) -> Type | TypeErrorVal:
     """IF/COND: (Bool, T, T) -> T via unify of then/else branches."""
     if isinstance(expr, IfExpr):
         cond, then_b, else_b = expr.cond, expr.then_branch, expr.else_branch
@@ -194,36 +318,56 @@ def infer_if(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
     else:
         return type_error("infer_if expects IfExpr or IF/COND OpExpr", ())
 
-    ct = infer_type(cond, env)
+    ct = infer_type(cond, env, expected=BOOL)
     if isinstance(ct, TypeErrorVal):
         return ct
     if ct != BOOL:
         return type_error("IF condition must be BOOL", ())
 
-    tt = infer_type(then_b, env)
+    tt = infer_type(then_b, env, expected=expected)
     if isinstance(tt, TypeErrorVal):
         return tt
-    et = infer_type(else_b, env)
+    et = infer_type(else_b, env, expected=expected if expected is not None else tt)
     if isinstance(et, TypeErrorVal):
         return et
 
     unified = unify(tt, et)
     if unified is None:
         return type_error("IF branch type mismatch", ())
-    return unified
+    return _meet_expected(unified, expected)
 
 
-def infer_hole(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
-    """HoleExpr: bare `?` is any; `?:T` / `?:T@dim` resolves the label."""
+def infer_hole(
+    expr: object,
+    env: Env | None = None,
+    expected: Type | None = None,
+) -> Type | TypeErrorVal:
+    """HoleExpr: bare `?` adopts expected (or ANY); `?:T` resolves / meets expected."""
     if not isinstance(expr, HoleExpr):
         return type_error("infer_hole expects HoleExpr", ())
-    if expr.label is None or expr.label == "":
-        return ANY
-    return _resolve_type_name(str(expr.label))
+    labeled: Type | None = None
+    if expr.label is not None and expr.label != "":
+        resolved = _resolve_type_name(str(expr.label))
+        if isinstance(resolved, TypeErrorVal):
+            return resolved
+        labeled = resolved
+    if labeled is not None and expected is not None:
+        return _meet_expected(labeled, expected)
+    if labeled is not None:
+        return labeled
+    if expected is not None:
+        return expected
+    return ANY
 
 def infer_fn(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
-    """Infer FnExpr (params+body) or CallExpr application."""
+    """Infer FnExpr (params+body) or CallExpr application.
+
+    When FnExpr carries Phase 3 effects/caps annotations, they are attached
+    to the resulting FnType (AIR form for those annotations is not locked yet).
+    """
     if isinstance(expr, FnExpr):
+        from .effects import CapabilitySet, EffectSet
+
         ctx = env if env is not None else Env()
         ctx.enter_scope("fn")
         param_types: list[Type] = []
@@ -246,7 +390,9 @@ def infer_fn(expr: object, env: Env | None = None) -> Type | TypeErrorVal:
         ctx.leave_scope()
         if isinstance(ret, TypeErrorVal):
             return ret
-        return FnType(tuple(param_types), ret)
+        effects = expr.effects if isinstance(expr.effects, EffectSet) else EffectSet()
+        caps = expr.caps if isinstance(expr.caps, CapabilitySet) else CapabilitySet()
+        return FnType(tuple(param_types), ret, effects=effects, caps=caps)
 
     if isinstance(expr, CallExpr):
         ft = infer_type(expr.fn, env)

@@ -26,6 +26,7 @@ class EffectCategory(Enum):
     TIME_NOW = "time.now"
     RANDOM = "random"
     AI = "ai"
+    UNSAFE = "unsafe"
 
 
 @dataclass(frozen=True)
@@ -83,6 +84,7 @@ class Capability(Enum):
     TIME_NOW = "time.now"
     RANDOM = "random"
     AI = "ai"
+    UNSAFE = "unsafe"
 
 
 @dataclass(frozen=True)
@@ -129,3 +131,34 @@ def compose_effects(*sets: EffectSet) -> EffectSet:
 def check_capabilities(needed: CapabilitySet, granted: CapabilitySet) -> bool:
     """True iff every needed capability is in the granted set (D5)."""
     return needed.issubset(granted)
+
+
+def _effects_to_capabilities(effects: EffectSet) -> CapabilitySet:
+    """Map non-pure effect categories to same-named capabilities."""
+    caps: list[Capability] = []
+    for eff in effects:
+        if eff is EffectCategory.PURE:
+            continue
+        try:
+            caps.append(Capability(eff.value))
+        except ValueError:
+            # Unknown effect name has no matching capability token.
+            continue
+    return CapabilitySet(caps)
+
+
+def validate_call_effects(fn_type: object, granted: CapabilitySet) -> bool:
+    """True iff call-site granted capabilities cover the function's needs (D5/D8).
+
+    Needed set = FnType.caps union capabilities implied by FnType.effects
+    (excluding pure). Empty needs always succeed.
+    """
+    # Local import avoids types↔effects cycle at module load for annotate-only use.
+    from .types import FnType
+
+    if not isinstance(fn_type, FnType):
+        raise TypeError("validate_call_effects expects a FnType")
+    if not isinstance(granted, CapabilitySet):
+        raise TypeError("validate_call_effects expects a CapabilitySet")
+    needed = fn_type.caps.union(_effects_to_capabilities(fn_type.effects))
+    return check_capabilities(needed, granted)

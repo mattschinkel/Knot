@@ -53,16 +53,36 @@
 - **Phase 3 T1 landed manually (2026-09-10).** Watch spun overnight on mangled `effects.py` / bad tests. Manual `EffectCategory` + `EffectSet`. Resuming `--from=T2`.
 - **Crew v6 (2026-09-10).** Restore-on-retry, one-shot WriteModule/AddClass/AddFunction, sequential R2→R4 (R4 tests-only). See `fixes/fix_crew_v6_restore_oneshot_sequential.md`.
 - **Phase 3 T3–T4 landed manually (2026-09-10).** Crew stuck ~4h on T3 inventing string-based tests; manual `compose_effects` + `check_capabilities`. Resuming `--from=T5`.
+- **Crew abandoned; Cursor drives Knot (2026-09-11).** 4B crew not used for implementation going forward. Phase 3 T5–T12 landed manually: contracts, FnType effects/caps, infer_fn annotations, validate_call_effects, props, drift gate. **414 tests.** Baseline `docs/drift_baseline.json` phase 3.
+- **Phase 4 DONE (2026-09-11).** `partial.py`: VALID/PARTIAL/INVALID, hole reports + candidates, `evaluate` hole_trap ErrorVal; checker `expected=` hole propagation (D-FB10); M4=1.0. **439 tests.**
+- **Phase 5 DONE (2026-09-11).** `ErrExpr` + ERR parse/print; `print_canonical`/`normalize` (D-FB11); `suggest_repairs` + `diagnose` → ErrorVal; ErrExpr → NEVER. **460 tests.**
+- **Phase 6 DONE (2026-09-11).** `edits.py`: path get/replace/delete/insert; `apply_edit` REPLACE/DELETE/INSERT/RENAME/REPLACE_MATCH; blast_radius + revalidation. **483 tests.**
+- **Phase 7 DONE (2026-09-12).** `InlineTest`/`PropertyDecl`; TEST/PROPERTY parse+canonical; `run_suite`/`fuzz_samples`/`verify_program`; richer `evaluate`. **497 tests.**
+- **Phase 8 DONE (2026-09-12).** `ModuleDecl`/`IMPORT`/`DEPENDS`; `ModuleRegistry` + `link_program`; capability-gated depends. **511 tests.**
+- **Phase 9 DONE (2026-09-12).** Bytecode VM (`src/knot/vm/`): compile AST → chunk, CALL/RETURN, hole trap; `measure_m5` <200ms. **523 tests.**
+- **Phase 10 DONE (2026-09-12).** MODEL/TOOL/INVOKE AIR; `AiResult` + confidence; `ToolRegistry` invoke/constrain with caps. **542 tests.**
+- **Phase 11 DONE (2026-09-12).** PAR/SEQ dataflow; REF/DEREF + RegionVal; UNSAFE + `unsafe` capability; RegionType subtype. **564 tests.**
+- **Phase 12 DONE (2026-09-12).** MCP tools (eval/typecheck/run/constrain/doc_query/query); `kb` token budget; `--llm` policies; `python -m knot`. **587 tests. §16 build complete.**
 
 ## TODOs
-- Phase 3 autobuild: `.venv/bin/python autobuild.py --watch --phase 3 --from=T5` (crew v6).
-- D-FB11: add normalize step so canonical print has no spaces; update parser/tests if needed.
-- D-FB9: wire `ERR[...]` parse/print/AST (GBNF exists); fix ops as OP nodes; apply REPLACE in Phase 6.
-- D-FB10: hole constraint propagation in checker (beyond label resolve).
+- Post-v1 polish: pretty-view sugar, richer borrow checker, PAR bytecode opcodes, live LLM handlers for MODEL.
+- D-FB11: normalize/canonical print — DONE for core AST via `canonical.py` (pretty view unchanged).
+- D-FB9: wire `ERR[...]` parse/print/AST — DONE Phase 5; apply REPLACE — DONE Phase 6 (`apply_edit`).
+- D-FB10: hole constraint propagation in checker (beyond label resolve). — DONE Phase 4.
 - Drive Phase 2 to green (type checker); continue manual landings after 4B hard-stops. — DONE 2026-09-10.
+- Phase 3 — DONE 2026-09-11 (Cursor, not crew).
+- Phase 4 — DONE 2026-09-11.
+- Phase 5 — DONE 2026-09-11.
+- Phase 6 — DONE 2026-09-11.
+- Phase 7 — DONE 2026-09-12.
+- Phase 8 — DONE 2026-09-12.
+- Phase 9 — DONE 2026-09-12.
+- Phase 10 — DONE 2026-09-12.
+- Phase 11 — DONE 2026-09-12.
+- Phase 12 — DONE 2026-09-12 (§16 complete).
 - If agents/scripts run as root against the matt-owned tree, use `sudo -u matt` for git (or add a user-level `safe.directory`); do not use global git config from the agent unless the author asks.
-- Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`).
-- Teach `architect_phase.py --tasks` to emit the markdown table format `parse_tasks` requires (prevent false phase close on 0 tasks).
+- Harden `phase_crew.py` WriteModule: refuse overwriting large existing modules with tiny unrelated stubs; refuse WriteModule when target already has substantial code (prefer AddFunction/AddClass). — DONE (see `fixes/fix_crew_bloat_gates.md`). Crew no longer the build path (see `fixes/fix_stop_crew_cursor_drives.md`).
+- Teach `architect_phase.py --tasks` to emit the markdown table format `parse_tasks` requires (prevent false phase close on 0 tasks). Low priority while crew unused.
 - Confirm whether the server already serves the OpenHands UI (full Canvas) or backend-only.
 - If building the LLM-native language: specify the core value model, type system, and expression/AST (with stable node IDs) before inventing syntax. Do not start with agent/knowledge/uncertainty features.
 - Start Phase 0 of Axiom: define value representation, type representation, and units/dimensions (see `ai_docs/axiom_design.md`).
@@ -87,6 +107,16 @@
 - **Generalize `phase_crew.py` to run an arbitrary task from `phaseN_tasks.md`** (it is currently hardcoded to the `Dimension.pow` pilot with `SetDimensionMethod`/`AppendTestUnitsPy`). Phase 1 tasks target new files (`ast.py`, `parser.py`, `printer.py`, `bin.py`, `grammar/gbnf.py`, `addressing.py`), so the harness needs task-driven pinned-path write tools (e.g. `WriteModule(file, content)` + `AppendTests(file, content)`) and a task selector (`--phase 1 --task T1`).
 
 ## Previous issues
+- `fix_stop_crew_cursor_drives.md` — 4B crew abandoned for implementation; Cursor landed Phase 3 T5–T12.
+- Phase 4 — holes/partial compile (`partial.py`, expected= propagation, M4 drift).
+- Phase 5 — ERR AST, repairs, diagnose, canonical print (D-FB9/D-FB11).
+- Phase 6 — surgical edits, REPLACE_MATCH, blast_radius + revalidation.
+- Phase 7 — inline TEST/PROPERTY, fuzz_samples, verify_program.
+- Phase 8 — MODULE/IMPORT/DEPENDS, registry, link_program.
+- Phase 9 — bytecode VM, compile/run, M5 latency.
+- Phase 10 — MODEL/TOOL/INVOKE, AiResult, ToolRegistry constrain.
+- Phase 11 — PAR/SEQ, REF/DEREF, UNSAFE caps, RegionType subtype.
+- Phase 12 — MCP tools, kb, --llm formatter, `python -m knot`.
 - `fix_linux_port.md` — Windows→Linux move: no venv, CRLF sources, missing tkinter, broken mid-T2 subtype WIP + mangled AST unit tests; fixed env/line endings/tests so 272 pytest green on Linux.
 - `fix_crew_bloat_gates.md` — 4B recursive/dunder WriteModule bloat + invented IntType imports caused HTTP 500 and wrong Env; harness now rejects bloat/overwrite/unknown imports at the tool boundary.
 - Phase 2 T2 crew hard-stop (Linux) — llama-server context overflow (10076>8192) + tests importing nonexistent `IntType`; landed structural subtype manually; tightened `_file_ref` / failure feedback; autobuild git `safe.directory` per-call.
@@ -115,7 +145,13 @@
 - `ask_architect.py` — R1 Q&A. **LOCAL-ONLY.** `.venv/bin/python ask_architect.py` or `--once "q"`. Env: `KNOT_LLM_MODEL`, `KNOT_LLM_BASE_URL`, `KNOT_LLM_API_KEY`, `KNOT_LLM_TEMPERATURE`.
 - `architect_phase.py` — R1 drafts phases. **LOCAL-ONLY.** `.venv/bin/python architect_phase.py --draft N` / `--tasks N`.
 - `phase_crew.py` — one-task CrewAI runner. **LOCAL-ONLY.**
-- `autobuild.py` — autonomous phase driver. **LOCAL-ONLY.** Auto-retries failed tasks; `--watch` restarts on exit. Phase 3: `.venv/bin/python autobuild.py --watch --phase 3`
+- `src/knot/vm/` — bytecode compiler + stack VM. `from knot.vm import run, measure_m5`
+- `src/knot/ai_ffi.py` — MODEL/TOOL registry, invoke, constrain. `from knot.ai_ffi import ToolRegistry, invoke`
+- `src/knot/concurrency.py` — PAR/SEQ/REF/UNSAFE. `from knot.concurrency import eval_par, check_unsafe`
+- `python -m knot` — CLI: `mcp`, `kb`, `llm`, `tool` (Phase 12). Example: `PYTHONPATH=src python -m knot tool eval --args '{"source":"ADD[1,2]"}'`
+- `src/knot/mcp/` — MCP tools + stdio JSON-RPC (no HTTPS). `from knot.mcp import call_tool`
+- `src/knot/kb.py` / `llm_out.py` — token-budgeted kb + `--llm` policies
+
 - `crew_chats_viewer.py` — tkinter chat GUI (needs `python3-tk`). **LOCAL-ONLY.** `.venv/bin/python crew_chats_viewer.py`
 - `requirements.txt` — `crewai==1.15.20`, `crewai-tools==1.15.20`, `pytest>=8`. **LOCAL-ONLY.**
 - Recreate venv (Linux):

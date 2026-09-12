@@ -300,14 +300,29 @@ class FieldAccess(ExprNode):
         return ()
 
 class FnExpr(ExprNode):
-    """Function value: FN[params...] body."""
+    """Function value: FN[[params], body] with optional effects/caps (Phase 3).
 
-    def __init__(self, params, body, id=None, path=None, label=None):
+    AIR for effects/capabilities is not locked yet; annotations are set on the
+    AST node when present so the checker can attach them to FnType.
+    """
+
+    def __init__(
+        self,
+        params,
+        body,
+        id=None,
+        path=None,
+        label=None,
+        effects=None,
+        caps=None,
+    ):
         self.params = list(params or [])
         self.body = body
         self.id = id
         self.path = path or []
         self.label = label
+        self.effects = effects
+        self.caps = caps
 
     @property
     def children(self):
@@ -317,12 +332,16 @@ class FnExpr(ExprNode):
         return "FnExpr(" + repr(self.params) + ", " + repr(self.body) + ")"
 
     def __eq__(self, other):
-        return (isinstance(other, FnExpr)
-                and self.params == other.params
-                and self.body == other.body)
+        return (
+            isinstance(other, FnExpr)
+            and self.params == other.params
+            and self.body == other.body
+            and self.effects == other.effects
+            and self.caps == other.caps
+        )
 
     def __hash__(self):
-        return hash((tuple(self.params), self.body))
+        return hash((tuple(self.params), self.body, self.effects, self.caps))
 
 
 class CallExpr(ExprNode):
@@ -382,6 +401,512 @@ class HoleExpr(ExprNode):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+
+
+class ErrExpr(ExprNode):
+    """First-class error value in AIR (D-FB9 / Phase 5).
+
+    Canonical: ERR[CODE,PATH,EXPECTED,ACTUAL,FIX...]
+    PATH is a list of structural segments (str|int), not authored node IDs.
+    EXPECTED/ACTUAL are type name strings. FIX nodes are OpExpr suggestions.
+    """
+
+    def __init__(
+        self,
+        code,
+        path=None,
+        expected=None,
+        actual=None,
+        fixes=None,
+        id=None,
+        label=None,
+    ):
+        self.code = str(code)
+        self.path = list(path or [])
+        self.expected = expected  # str type name
+        self.actual = actual
+        self.fixes = list(fixes or [])
+        self.id = id
+        self.label = label
+
+    @property
+    def children(self):
+        return tuple(self.fixes)
+
+    def __repr__(self):
+        return (
+            "ErrExpr("
+            + repr(self.code)
+            + ", "
+            + repr(self.path)
+            + ", "
+            + repr(self.expected)
+            + ", "
+            + repr(self.actual)
+            + ", "
+            + repr(self.fixes)
+            + ")"
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, ErrExpr)
+            and self.code == other.code
+            and self.path == other.path
+            and self.expected == other.expected
+            and self.actual == other.actual
+            and self.fixes == other.fixes
+        )
+
+    def __hash__(self):
+        return hash(
+            (
+                self.code,
+                tuple(self.path),
+                self.expected,
+                self.actual,
+                tuple(self.fixes),
+            )
+        )
+
+    def __str__(self):
+        return repr(self)
+
+
+class InlineCase:
+    """One CASE[in, out] pair."""
+
+    def __init__(self, inp, out):
+        self.inp = inp
+        self.out = out
+
+    def __repr__(self):
+        return "InlineCase(" + repr(self.inp) + ", " + repr(self.out) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, InlineCase)
+            and self.inp == other.inp
+            and self.out == other.out
+        )
+
+    def __hash__(self):
+        return hash((self.inp, self.out))
+
+
+class InlineTest(ExprNode):
+    """Inline test: TEST[name,CASE[in,out],...] (Phase 7)."""
+
+    def __init__(self, name, cases=None, id=None, path=None, label=None):
+        self.name = str(name)
+        self.cases = list(cases or [])
+        self.id = id
+        self.path = path or []
+        self.label = label
+
+    @property
+    def children(self):
+        return tuple(c.inp for c in self.cases) + tuple(c.out for c in self.cases)
+
+    def __repr__(self):
+        return "InlineTest(" + repr(self.name) + ", " + repr(self.cases) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, InlineTest)
+            and self.name == other.name
+            and self.cases == other.cases
+        )
+
+    def __hash__(self):
+        return hash((self.name, tuple(self.cases)))
+
+
+class PropertyDecl(ExprNode):
+    """Property: PROPERTY[name,[[x:T,...],body]] (Phase 7)."""
+
+    def __init__(self, name, params=None, body=None, id=None, path=None, label=None):
+        self.name = str(name)
+        self.params = list(params or [])  # (name, type_str)
+        self.body = body
+        self.id = id
+        self.path = path or []
+        self.label = label
+
+    @property
+    def children(self):
+        return (self.body,) if self.body is not None else ()
+
+    def __repr__(self):
+        return (
+            "PropertyDecl("
+            + repr(self.name)
+            + ", "
+            + repr(self.params)
+            + ", "
+            + repr(self.body)
+            + ")"
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, PropertyDecl)
+            and self.name == other.name
+            and self.params == other.params
+            and self.body == other.body
+        )
+
+    def __hash__(self):
+        return hash((self.name, tuple(self.params), self.body))
+
+
+class ExportList(ExprNode):
+    """EXPORT[n1, n2, ...] inside MODULE."""
+
+    def __init__(self, names=None, id=None):
+        self.names = [str(n) for n in (names or [])]
+        self.id = id
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return "ExportList(" + repr(self.names) + ")"
+
+    def __eq__(self, other):
+        return isinstance(other, ExportList) and self.names == other.names
+
+    def __hash__(self):
+        return hash(tuple(self.names))
+
+
+class ModuleDecl(ExprNode):
+    """MODULE[name, items..., EXPORT[...]] (Phase 8)."""
+
+    def __init__(self, name, body=None, exports=None, version="0", id=None):
+        self.name = str(name)
+        self.body = list(body or [])
+        self.exports = list(exports or [])
+        self.version = str(version)
+        self.id = id
+
+    @property
+    def children(self):
+        return tuple(self.body)
+
+    def __repr__(self):
+        return (
+            "ModuleDecl("
+            + repr(self.name)
+            + ", "
+            + repr(self.body)
+            + ", "
+            + repr(self.exports)
+            + ")"
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, ModuleDecl)
+            and self.name == other.name
+            and self.body == other.body
+            and self.exports == other.exports
+            and self.version == other.version
+        )
+
+    def __hash__(self):
+        return hash((self.name, tuple(self.body), tuple(self.exports), self.version))
+
+
+class ImportDecl(ExprNode):
+    """IMPORT[mod, name...] — empty names means all exports."""
+
+    def __init__(self, module, names=None, id=None):
+        self.module = str(module)
+        self.names = [str(n) for n in (names or [])]
+        self.id = id
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return "ImportDecl(" + repr(self.module) + ", " + repr(self.names) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, ImportDecl)
+            and self.module == other.module
+            and self.names == other.names
+        )
+
+    def __hash__(self):
+        return hash((self.module, tuple(self.names)))
+
+
+class DependsDecl(ExprNode):
+    """DEPENDS[mod, version] or DEPENDS[mod, version, CAPS[...]]."""
+
+    def __init__(self, module, version="0", caps=None, id=None):
+        self.module = str(module)
+        self.version = str(version)
+        self.caps = list(caps or [])  # capability name strings
+        self.id = id
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return (
+            "DependsDecl("
+            + repr(self.module)
+            + ", "
+            + repr(self.version)
+            + ", "
+            + repr(self.caps)
+            + ")"
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, DependsDecl)
+            and self.module == other.module
+            and self.version == other.version
+            and self.caps == other.caps
+        )
+
+    def __hash__(self):
+        return hash((self.module, self.version, tuple(self.caps)))
+
+
+class ModelDecl(ExprNode):
+    """MODEL[name,IN[T],OUT[U],CONF[bool],EFFECTS[...]] (Phase 10)."""
+
+    def __init__(self, name, in_type, out_type, confidence=True, effects=None, id=None):
+        self.name = str(name)
+        self.in_type = str(in_type)
+        self.out_type = str(out_type)
+        self.confidence = bool(confidence)
+        self.effects = list(effects or [])
+        self.id = id
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return (
+            "ModelDecl("
+            + repr(self.name)
+            + ", "
+            + repr(self.in_type)
+            + ", "
+            + repr(self.out_type)
+            + ", "
+            + repr(self.confidence)
+            + ", "
+            + repr(self.effects)
+            + ")"
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, ModelDecl)
+            and self.name == other.name
+            and self.in_type == other.in_type
+            and self.out_type == other.out_type
+            and self.confidence == other.confidence
+            and self.effects == other.effects
+        )
+
+    def __hash__(self):
+        return hash(
+            (self.name, self.in_type, self.out_type, self.confidence, tuple(self.effects))
+        )
+
+
+class ToolDecl(ExprNode):
+    """TOOL[name,IN[T],OUT[U],EFFECTS[...]] (Phase 10)."""
+
+    def __init__(self, name, in_type, out_type, effects=None, id=None):
+        self.name = str(name)
+        self.in_type = str(in_type)
+        self.out_type = str(out_type)
+        self.effects = list(effects or [])
+        self.id = id
+
+    @property
+    def children(self):
+        return ()
+
+    def __repr__(self):
+        return (
+            "ToolDecl("
+            + repr(self.name)
+            + ", "
+            + repr(self.in_type)
+            + ", "
+            + repr(self.out_type)
+            + ", "
+            + repr(self.effects)
+            + ")"
+        )
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, ToolDecl)
+            and self.name == other.name
+            and self.in_type == other.in_type
+            and self.out_type == other.out_type
+            and self.effects == other.effects
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.in_type, self.out_type, tuple(self.effects)))
+
+
+class InvokeExpr(ExprNode):
+    """INVOKE[name,arg...] — call registered MODEL or TOOL (Phase 10)."""
+
+    def __init__(self, name, args=None, id=None):
+        self.name = str(name)
+        self.args = list(args or [])
+        self.id = id
+
+    @property
+    def children(self):
+        return tuple(self.args)
+
+    def __repr__(self):
+        return "InvokeExpr(" + repr(self.name) + ", " + repr(self.args) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, InvokeExpr)
+            and self.name == other.name
+            and self.args == other.args
+        )
+
+    def __hash__(self):
+        return hash((self.name, tuple(self.args)))
+
+
+class ParExpr(ExprNode):
+    """PAR[e1,e2,...] — dataflow-independent branches (Phase 11)."""
+
+    def __init__(self, branches=None, id=None):
+        self.branches = list(branches or [])
+        self.id = id
+
+    @property
+    def children(self):
+        return tuple(self.branches)
+
+    def __repr__(self):
+        return "ParExpr(" + repr(self.branches) + ")"
+
+    def __eq__(self, other):
+        return isinstance(other, ParExpr) and self.branches == other.branches
+
+    def __hash__(self):
+        return hash(tuple(self.branches))
+
+
+class SeqExpr(ExprNode):
+    """SEQ[e1,e2,...] — explicit sequencing (Phase 11)."""
+
+    def __init__(self, steps=None, id=None):
+        self.steps = list(steps or [])
+        self.id = id
+
+    @property
+    def children(self):
+        return tuple(self.steps)
+
+    def __repr__(self):
+        return "SeqExpr(" + repr(self.steps) + ")"
+
+    def __eq__(self, other):
+        return isinstance(other, SeqExpr) and self.steps == other.steps
+
+    def __hash__(self):
+        return hash(tuple(self.steps))
+
+
+class RefExpr(ExprNode):
+    """REF[region,expr] — place value in a named region (Phase 11)."""
+
+    def __init__(self, region, expr, id=None):
+        self.region = str(region)
+        self.expr = expr
+        self.id = id
+
+    @property
+    def children(self):
+        return (self.expr,)
+
+    def __repr__(self):
+        return "RefExpr(" + repr(self.region) + ", " + repr(self.expr) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, RefExpr)
+            and self.region == other.region
+            and self.expr == other.expr
+        )
+
+    def __hash__(self):
+        return hash((self.region, self.expr))
+
+
+class DerefExpr(ExprNode):
+    """DEREF[expr] — unwrap RegionVal (Phase 11)."""
+
+    def __init__(self, expr, id=None):
+        self.expr = expr
+        self.id = id
+
+    @property
+    def children(self):
+        return (self.expr,)
+
+    def __repr__(self):
+        return "DerefExpr(" + repr(self.expr) + ")"
+
+    def __eq__(self, other):
+        return isinstance(other, DerefExpr) and self.expr == other.expr
+
+    def __hash__(self):
+        return hash(self.expr)
+
+
+class UnsafeExpr(ExprNode):
+    """UNSAFE[CAPS[cap...],body] — capability-gated escape (Phase 11)."""
+
+    def __init__(self, caps=None, body=None, id=None):
+        self.caps = list(caps or [])
+        self.body = body
+        self.id = id
+
+    @property
+    def children(self):
+        return (self.body,) if self.body is not None else ()
+
+    def __repr__(self):
+        return "UnsafeExpr(" + repr(self.caps) + ", " + repr(self.body) + ")"
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, UnsafeExpr)
+            and self.caps == other.caps
+            and self.body == other.body
+        )
+
+    def __hash__(self):
+        return hash((tuple(self.caps), self.body))
+
 
 class LitExpr(ExprNode):
     def __init__(self, value):
