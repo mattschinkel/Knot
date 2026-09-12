@@ -77,25 +77,37 @@ const STATUS = {
     publicCandidate: "Golem",
     extension: ".gol",
     siteBrand: "golemlang.com",
-    overallPhase: "§16 + self-host compile-all done; name locked Golem/.gol",
+    github: "https://github.com/mattschinkel/GolemLang",
+    pages: "https://mattschinkel.github.io/GolemLang/",
+    tests: "653",
+    overallPhase: "Post-§16: self-host + golemc CLI green; name/Pages live; next = register golemlang.com + Tier-3/LLVM deferred",
     overallStatus: "done",
     lastUpdated: "2026-09-12",
     updatedBy: "Cursor"
   },
+  whereWeAre: [
+    {item:"§16 Phases 0–12", status:"done", note:"Kernel complete (Cursor-driven after 4B crew abandoned)"},
+    {item:"Self-host Stage 0.5–2", status:"done", note:"golemc in .gol; compile-all AIR; compile_root IMPORT link"},
+    {item:"golemc CLI", status:"done", note:"python -m golem run|compile|rebuild; bridge prefers Stage-1"},
+    {item:"Language name", status:"done", note:"Golem + .gol locked; package src/golem; brand golemlang"},
+    {item:"GitHub / Pages", status:"done", note:"mattschinkel/GolemLang + github.io/GolemLang landing + dashboard"},
+    {item:"Register golemlang.com + USPTO", status:"open", note:"Public brand protection still pending"},
+    {item:"Tier-3 / native LLVM", status:"pending", note:"Deferred post-v1"}
+  ],
   phases: [
-    {n:0, name:"Core data model", status:"done", owner:"R2", notes:"value/type repr, units/dimensions, errors-as-values; 38 tests green"},
-    {n:1, name:"AST + parser + GBNF grammar", status:"done", owner:"R2/R3", notes:"D-FB1–5: DEF/FN[[]], GET-only, T@dim, holes; 321+ tests"},
-    {n:2, name:"Type checker", status:"done", owner:"R2", notes:"T1–T18: unify→check_expr, props, drift gate PASS; T10–T18 mostly manual"},
-    {n:3, name:"Effects / capabilities / contracts", status:"done", owner:"Cursor", notes:"T1–T12 done manually; 4B crew abandoned; 414 tests; drift phase 3"},
-    {n:4, name:"Holes + partial compile", status:"done", owner:"Cursor", notes:"VALID/PARTIAL/INVALID, hole reports, expected= prop, M4=1.0; 439 tests"},
-    {n:5, name:"Structured errors + repairs", status:"done", owner:"Cursor", notes:"ERR AST, diagnose+repairs, canonical print; 460 tests"},
-    {n:6, name:"Edit operations", status:"done", owner:"Cursor", notes:"apply_edit REPLACE/DELETE/INSERT/RENAME/REPLACE_MATCH; blast radius"},
-    {n:7, name:"Tests / properties", status:"done", owner:"Cursor", notes:"TEST/PROPERTY AIR, fuzz_samples, verify_program"},
-    {n:8, name:"Modules + dependencies", status:"done", owner:"Cursor", notes:"MODULE/IMPORT/DEPENDS + link_program + caps"},
-    {n:9, name:"Compiler / VM (sub-200ms)", status:"done", owner:"Cursor", notes:"bytecode VM; M5 pass; deterministic lowering"},
-    {n:10, name:"AI / tool capabilities", status:"done", owner:"Cursor", notes:"MODEL/TOOL/INVOKE, AiResult, constrain, caps"},
-    {n:11, name:"Concurrency / memory / unsafe", status:"done", owner:"Cursor", notes:"PAR/SEQ, REF/DEREF, UNSAFE, RegionType"},
-    {n:12, name:"MCP server + kb + --llm mode", status:"done", owner:"Cursor", notes:"tools + kb + llm_out; python -m golem; no HTTPS"}
+    {n:0, name:"Core data model", status:"done", owner:"R2", notes:"value/type/units/errors; tests green"},
+    {n:1, name:"AST + parser + GBNF grammar", status:"done", owner:"R2/R3", notes:"D-FB1–5: DEF/FN[[]], GET-only, T@dim, holes"},
+    {n:2, name:"Type checker", status:"done", owner:"R2", notes:"unify→check_expr; props; drift PASS"},
+    {n:3, name:"Effects / capabilities / contracts", status:"done", owner:"Cursor", notes:"T1–T12 manual; crew abandoned"},
+    {n:4, name:"Holes + partial compile", status:"done", owner:"Cursor", notes:"VALID/PARTIAL/INVALID; M4=1.0"},
+    {n:5, name:"Structured errors + repairs", status:"done", owner:"Cursor", notes:"ERR AST, diagnose, canonical print"},
+    {n:6, name:"Edit operations", status:"done", owner:"Cursor", notes:"apply_edit + blast_radius"},
+    {n:7, name:"Tests / properties", status:"done", owner:"Cursor", notes:"TEST/PROPERTY, fuzz, verify_program"},
+    {n:8, name:"Modules + dependencies", status:"done", owner:"Cursor", notes:"MODULE/IMPORT/DEPENDS + link"},
+    {n:9, name:"Compiler / VM (sub-200ms)", status:"done", owner:"Cursor", notes:"bytecode VM; M5 pass"},
+    {n:10, name:"AI / tool capabilities", status:"done", owner:"Cursor", notes:"MODEL/TOOL/INVOKE + constrain"},
+    {n:11, name:"Concurrency / memory / unsafe", status:"done", owner:"Cursor", notes:"PAR/SEQ, REF/DEREF, UNSAFE"},
+    {n:12, name:"MCP server + kb + --llm mode", status:"done", owner:"Cursor", notes:"python -m golem; 653 tests total"}
   ],
   crew: [
     {id:"R1", role:"Architect", active:false, job:"design coherence (docs); not driving build via 4B"},
@@ -103,33 +115,35 @@ const STATUS = {
     {id:"R3", role:"AI Front-end Engineer", active:false, job:"GBNF, repairs, MCP, --llm, kb (judgment half)"},
     {id:"R4", role:"Verifier", active:false, job:"pytest + drift gate run by Cursor"},
     {id:"R5", role:"DX Engineer", active:false, job:"formatter, LSP, CLI, sub-200ms loop"},
-    {id:"R6", role:"Scribe", active:true, job:"docs, dashboard, name_changes/fixes (via Cursor)"}
+    {id:"R6", role:"Scribe", active:true, job:"docs, dashboard, Pages, name lock (via Cursor)"}
   ],
   openQuestions: [
     {q:"Phase 0 host language: Python or Rust?", status:"decided", dec:"Python (Rust deferred if sub-200ms forces it — VM path landed Phase 9)"},
     {q:"Architect (R1) as a hierarchical Crew manager, or a peer that drafts tasks out-of-band?", status:"decided", dec:"Peer drafting out-of-band (4B loses coherence managing live)"},
     {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"decided", dec:"Autonomous: agents run whitelisted build/test commands directly"},
-    {q:"Repo layout: src/golem/, src/golem/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; vm implemented under src/golem/vm/"},
-    {q:"Canonical syntax toward 10/10 (external review 8.5→10)?", status:"decided", dec:"D-FB1–12 locked; through Phase 9 landed"},
+    {q:"Repo layout: src/golem/, src/golem/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; vm under src/golem/vm/; selfhost/**/*.gol"},
+    {q:"Canonical syntax toward 10/10 (external review 8.5→10)?", status:"decided", dec:"D-FB1–12 locked; through Phase 12"},
     {q:"Build driver: 4B CrewAI vs Cursor?", status:"decided", dec:"Cursor implements; 4B crew abandoned 2026-09-11"}
   ],
   recentFixes: [
-    {file:"fix_compile_all_finish.md", problem:"IMPORT link + caps drop + INVOKE stub", fix:"compile_root FS_READ merge; _call_def granted_caps; ERR stub"},
+    {file:"GitHub Pages + rename", problem:"Public site still showed old branding", fix:"GolemLang repo; Pages at /docs; name Golem/.gol locked"},
+    {file:"fix_golemc_cli_rebuild.md", problem:"Need golemc run/compile/rebuild UX", fix:"python -m golem run|compile|rebuild + CALL_PROGRAM"},
+    {file:"fix_compile_all_finish.md", problem:"IMPORT link + caps drop + INVOKE stub", fix:"compile_root FS_READ merge; granted_caps; ERR stub"},
     {file:"fix_compile_all_golem.md", problem:"golemc missing full deterministic AIR", fix:"COND/PAR/SEQ/REF/stubs/quotes; compile-all gate"},
-    {file:"phased_full_features", problem:"Extend golemc + post-v1 polish", fix:"A1–A4 surface/modules/check/gates; B golemc_bridge; C pretty/PAR/borrow/MODEL HTTP"},
-    {file:"fix_match_store_local_selfhost.md", problem:"MATCH re-eval hang + lex_number 122→32", fix:"STORE_LOCAL temps; left-to-right lex_number; Stage 2 round-trip"},
-    {file:"runtime_ops + selfhost/", problem:"Need Golem-compiles-Golem bootstrap", fix:"Stage 0.5–2: golemc in Golem self-compiles stage1"},
-    {file:"phase12_spec.md + mcp/", problem:"Need MCP + kb + --llm", fix:"Phase 12: tools, kb budget, llm_out, python -m golem"}
+    {file:"fix_phased_full_features.md", problem:"Extend golemc + post-v1 polish", fix:"A1–A4 + bridge + pretty/PAR/borrow/MODEL"},
+    {file:"fix_stop_crew_cursor_drives.md", problem:"4B crew not converging", fix:"Cursor implements Golem going forward"}
   ],
   designOpen: [
-    {q:"Node ID scheme", status:"decided", dec:"structural path + optional @label; numeric IDs compiler-internal (design 21)"},
-    {q:"Public name", status:"decided", dec:"Golem locked 2026-09-12; .gol extension; site/package golemlang.com"},
-    {q:"GBNF/parser reopen for D-FB1–5", status:"decided", dec:"Landed through Phase 12 (§16 complete)"}
+    {q:"Node ID scheme", status:"decided", dec:"structural path + optional @label; numeric IDs compiler-internal (§21)"},
+    {q:"Public name + extension", status:"decided", dec:"Golem + .gol locked 2026-09-12; site/package golemlang"},
+    {q:"Register golemlang.com + USPTO", status:"open", dec:"Pending author registration"},
+    {q:"Host-only INVOKE/MCP/edits", status:"decided", dec:"Stay Python host; deterministic AIR→VM via golemc"},
+    {q:"Tier-3 / native LLVM", status:"pending", dec:"Deferred post-v1"}
   ],
   drift: {
     phase: 12,
     gate: "pass",
-    note: "Phase 12 baseline: M1–M5 unchanged; MCP/kb/--llm landed. §16 build complete.",
+    note: "§16 complete; self-host + rename landed. 653 tests. M1–M5 baseline still hold.",
     metrics: [
       {m:"M1 token count",       status:"pass", better:"lower",  prereq:"Phase 1 (parser)"},
       {m:"M2 generation accuracy",status:"pass", better:"higher", prereq:"Phase 1 (GBNF)"},
@@ -159,14 +173,27 @@ function render(){
   const m=STATUS.meta;
   document.getElementById("meta").innerHTML =
     "Overall: <b>"+pill(m.overallStatus)+"</b><br>"+esc(m.overallPhase)+
-    "<br>Updated <b>"+esc(m.lastUpdated)+"</b> by <b>"+esc(m.updatedBy)+"</b>";
+    "<br>Tests: <b>"+esc(m.tests||"?")+"</b> &nbsp;|&nbsp; Updated <b>"+esc(m.lastUpdated)+"</b> by <b>"+esc(m.updatedBy)+"</b>";
 
   const done=STATUS.phases.filter(p=>p.status==="done").length;
   const pct=Math.round(done/STATUS.phases.length*100);
   let app="<div class='card full'><h2>Name</h2>"+
     "<div class='namebar'>Language: <span class='n'>"+esc(m.workingName)+"</span> "+
     "(LOCKED) &nbsp;|&nbsp; Extension: <span class='k'>"+esc(m.extension||".gol")+"</span>"+
-    " &nbsp;|&nbsp; Site/package: <span class='k'>"+esc(m.siteBrand||"golemlang.com")+"</span></div></div>";
+    " &nbsp;|&nbsp; Brand: <span class='k'>"+esc(m.siteBrand||"golemlang.com")+"</span>"+
+    (m.github?" &nbsp;|&nbsp; <a href=\""+esc(m.github)+"\" style=\"color:var(--acc)\">GitHub</a>":"")+
+    (m.pages?" &nbsp;|&nbsp; <a href=\""+esc(m.pages)+"\" style=\"color:var(--acc)\">Pages</a>":"")+
+    "</div></div>";
+
+  if (STATUS.whereWeAre && STATUS.whereWeAre.length){
+    app+="<div class='card full'><h2>Where we are now</h2>"+
+      "<table><tr><th>Track</th><th>Status</th><th>Notes</th></tr>";
+    STATUS.whereWeAre.forEach(w=>{
+      app+="<tr class='row'><td>"+esc(w.item)+"</td><td>"+pill(w.status)+"</td>"+
+        "<td style='color:var(--dim)'>"+esc(w.note||"")+"</td></tr>";
+    });
+    app+="</table></div>";
+  }
 
   app+="<div class='card full'><h2>Build phases (design 16) - "+done+"/"+STATUS.phases.length+" done</h2>"+
     "<div class='bar'><i style='width:"+pct+"%'></i></div>"+
