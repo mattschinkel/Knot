@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.drift import (
+from golem.drift import (
     Metric, Status, check, summarize, PREREQ_PHASE, BETTER_LOW,
 )
 

@@ -1,8 +1,8 @@
 """Property-style tests for AST identity, paths, and structural round-trips."""
-from knot.addressing import generate_id, generate_path, reset_ids
-from knot.ast import DefNode, FnExpr, IdentExpr, LitExpr, OpExpr
-from knot.bin import deserialize, serialize
-from knot.parser import parse_def, parse_expr
+from golem.addressing import generate_id, generate_path, reset_ids
+from golem.ast import DefNode, FnExpr, IdentExpr, LitExpr, OpExpr
+from golem.bin import deserialize, serialize
+from golem.parser import parse_def, parse_expr
 
 
 def setup_function():

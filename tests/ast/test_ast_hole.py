@@ -1,4 +1,4 @@
-from knot.ast import HoleExpr
+from golem.ast import HoleExpr
 def test_holeexpr_id():
     expr = HoleExpr(id=1)
     assert expr.id == 1

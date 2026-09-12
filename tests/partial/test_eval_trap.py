@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import HoleExpr, LitExpr, OpExpr
-from knot.partial import evaluate
-from knot.values import ErrorVal, IntVal
+from golem.ast import HoleExpr, LitExpr, OpExpr
+from golem.partial import evaluate
+from golem.values import ErrorVal, IntVal
 
 
 def test_hole_traps():

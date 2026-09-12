@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.parser import parse_expr
-from knot.vm import measure_m5, run
-from knot.values import ErrorVal
+from golem.parser import parse_expr
+from golem.vm import measure_m5, run
+from golem.values import ErrorVal
 
 
 def test_vm_hole_trap():

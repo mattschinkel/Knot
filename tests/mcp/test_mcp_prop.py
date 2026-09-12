@@ -6,8 +6,8 @@ import json
 import subprocess
 import sys
 
-from knot.kb import estimate_tokens, retrieve
-from knot.mcp.tools import call_tool
+from golem.kb import estimate_tokens, retrieve
+from golem.mcp.tools import call_tool
 
 
 def test_tools_never_raise():
@@ -33,7 +33,7 @@ def test_cli_tool_subprocess():
         [
             sys.executable,
             "-m",
-            "knot",
+            "golem",
             "tool",
             "eval",
             "--args",

@@ -1,4 +1,4 @@
-from knot.addressing import assign_label, lookup_label
+from golem.addressing import assign_label, lookup_label
 
 
 def test_assign_label_returns_label():

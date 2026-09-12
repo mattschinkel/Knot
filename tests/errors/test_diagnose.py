@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import LitExpr, OpExpr
-from knot.diagnose import DiagnoseErr, DiagnoseOk, diagnose
-from knot.types import I32
-from knot.values import ErrorVal
+from golem.ast import LitExpr, OpExpr
+from golem.diagnose import DiagnoseErr, DiagnoseOk, diagnose
+from golem.types import I32
+from golem.values import ErrorVal
 
 
 def test_diagnose_ok():
@@ -28,7 +28,7 @@ def test_diagnose_mismatch():
 
 
 def test_diagnose_unbound():
-    from knot.ast import IdentExpr
+    from golem.ast import IdentExpr
 
     r = diagnose(IdentExpr("nope"))
     assert isinstance(r, DiagnoseErr)

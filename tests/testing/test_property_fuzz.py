@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.parser import parse_expr
-from knot.testing import fuzz_samples, run_property
-from knot.values import IntVal
+from golem.parser import parse_expr
+from golem.testing import fuzz_samples, run_property
+from golem.values import IntVal
 
 
 def test_fuzz_deterministic():

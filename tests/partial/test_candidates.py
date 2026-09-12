@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.env import Env
-from knot.partial import suggest_candidates
-from knot.types import BOOL, I32, STRING
+from golem.env import Env
+from golem.partial import suggest_candidates
+from golem.types import BOOL, I32, STRING
 
 
 def test_defaults_for_base_types():

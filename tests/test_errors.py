@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.errors import StructuredError
+from golem.errors import StructuredError
 
 
 def test_error_fields():

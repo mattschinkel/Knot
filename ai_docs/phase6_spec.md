@@ -1,6 +1,6 @@
 # Phase 6 Spec — Edit Operations
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §9 and §21.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §9 and §21.  
 > Status: DECIDED — implementing.
 
 Phase 6 makes **surgical graph edits** the primary modification interface.
@@ -64,7 +64,7 @@ Applying Phase 5 `REPLACE[...]` repair suggestions lands here.
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   edits.py       # paths, apply_edit, pattern match, EditResult, blast_radius
 tests/edits/
   test_paths.py

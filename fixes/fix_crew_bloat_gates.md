@@ -13,7 +13,7 @@ In `phase_crew.py`, reject bad fragments *at the tool boundary* (proper gates, n
 - Lower WriteModule max to 1200 chars; AddClass/AddMethod/AppendTests similarly capped.
 - `_check_fragment_bloat`: reject self-prefixed recursive names, too many defs, filler ordering/arithmetic dunders.
 - Refuse WriteModule overwrite when an existing substantial module would be replaced by a differently sized blob (force AddClass/AddMethod/AddFunction).
-- `_check_test_imports`: reject Capitalized imports not defined in `src/knot/*.py`.
+- `_check_test_imports`: reject Capitalized imports not defined in `src/golem/*.py`.
 
 Landed correct `Env` (bind/lookup + enter_scope/leave_scope over `Type`) + tests manually after T3 hard-stop.
 

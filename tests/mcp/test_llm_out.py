@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.kb import estimate_tokens
-from knot.llm_out import LlmPolicy, format_for_llm
+from golem.kb import estimate_tokens
+from golem.llm_out import LlmPolicy, format_for_llm
 
 
 def test_minimal():

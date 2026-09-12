@@ -1,6 +1,6 @@
 # Phase 5 Spec — Structured Errors + Repairs
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §7 and D-FB5 / D-FB9.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §7 and D-FB5 / D-FB9.  
 > Status: DECIDED — implementing.
 
 Phase 5 makes **errors first-class AIR values** the LLM can consume without prose:
@@ -61,7 +61,7 @@ bridges type-check failures to `ErrorVal` / `ErrExpr`.
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   ast.py          # + ErrExpr
   parser.py       # ERR[...] / path list
   canonical.py    # print_canonical + normalize

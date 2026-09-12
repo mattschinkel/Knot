@@ -1,4 +1,4 @@
-from knot.ast import LetExpr
+from golem.ast import LetExpr
 def test_letexpr_id():
     expr = LetExpr(id=1, path=[1], label=None, children=[1])
     assert expr.id == 1

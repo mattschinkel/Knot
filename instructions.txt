@@ -1,5 +1,7 @@
 Available project instructions
 
+Language: **Golem** (LOCKED). Extension: `.gol`. Brand: golemlang.com. Package: `src/golem`.
+
 - ai_docs/ai.txt — project-wide AI working rules, local-LLM preference, and doc conventions
 - progress.md — highlights, TODOs, previous issues, and important scripts
 - name_changes.md — rename log for variables, functions, and procedures (create when first rename happens)
@@ -25,11 +27,11 @@ Available project instructions
 - ai_docs/phase5_tasks.md — Phase 5 task table
 - ai_docs/phase4_spec.md — Phase 4 holes + VALID/PARTIAL/INVALID (DONE)
 - ai_docs/phase4_tasks.md — Phase 4 task table
-- fixes/fix_stop_crew_cursor_drives.md — stop 4B crew; Cursor implements Knot (Phase 3 done)
+- fixes/fix_stop_crew_cursor_drives.md — stop 4B crew; Cursor implements Golem (Phase 3 done)
 - fixes/fix_linux_port.md — Windows→Linux port (venv, LF line endings, tkinter, test quarantine)
-- selfhost/ — Stage 1 knotc (DEF/FN) + harness; Stage 2 self-compile gate green
+- selfhost/ — Stage 1 golemc (DEF/FN) + harness; Stage 2 self-compile gate green
 - fixes/fix_match_store_local_selfhost.md — MATCH temps + lex_number + self-lex quote
-- fixes/fix_compile_all_knot.md — knotc compile-all deterministic AIR surface
+- fixes/fix_compile_all_golem.md — golemc compile-all deterministic AIR surface
 - fixes/fix_compile_all_finish.md — compile_root IMPORT link + caps + INVOKE stub
 - ai_docs/feedback_syntax_10of10.md — external review pushing canonical syntax to 10/10 for LLMs
 - ai_docs/r1_decisions_feedback_syntax_10of10.md — R1 ACCEPT/AMEND lock for D-FB1–D-FB6
@@ -42,6 +44,6 @@ Linux quick start:
   .venv/bin/pip install -r requirements.txt
   .venv/bin/python -m pytest -q
 
-Build path: Cursor implements Knot (no 4B crew). See fixes/fix_stop_crew_cursor_drives.md.
+Build path: Cursor implements Golem (no 4B crew). See fixes/fix_stop_crew_cursor_drives.md.
 
 If new instruction files are added, list them here.

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from knot.canonical import normalize
-from knot.checker import infer_type
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.types import TupleType
-from knot.values import TupleVal
+from golem.canonical import normalize
+from golem.checker import infer_type
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.types import TupleType
+from golem.values import TupleVal
 
 
 def test_par_infer_tuple():

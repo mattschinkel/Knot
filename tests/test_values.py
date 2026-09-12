@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from knot.values import (
+from golem.values import (
     IntVal, FloatVal, BoolVal, StringVal, BytesVal, UnitVal, MeasuredVal,
     ListVal, SetVal, MapVal, TupleVal, SumVal, RecordVal, HoleVal, ErrorVal,
 )
-from knot.types import (
+from golem.types import (
     BaseType, ListType, SetType, MapType, TupleType, RecordType, SumType,
     UnitType, NEVER, UNIT, I32, I64, F64, STRING,
 )
-from knot.errors import StructuredError
-from knot.units import m, s
+from golem.errors import StructuredError
+from golem.units import m, s
 
 
 def test_intval_type_and_equality_type_aware():

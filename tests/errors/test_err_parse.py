@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.ast import ErrExpr, HoleExpr, OpExpr
-from knot.parser import parse_err, parse_expr
+from golem.ast import ErrExpr, HoleExpr, OpExpr
+from golem.parser import parse_err, parse_expr
 
 
 def test_parse_err_minimal():

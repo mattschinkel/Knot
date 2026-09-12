@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import HoleExpr, IfExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, infer_type
-from knot.partial import CompileStatus, compile_check
-from knot.types import BOOL, I32
+from golem.ast import HoleExpr, IfExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, infer_type
+from golem.partial import CompileStatus, compile_check
+from golem.types import BOOL, I32
 
 
 def test_add_bare_hole_adopts_i32():

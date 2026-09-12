@@ -1,4 +1,4 @@
-"""Pytest path setup: put src/ on sys.path so `import knot` works.
+"""Pytest path setup: put src/ on sys.path so `import golem` works.
 
 (Phase 0: no packaging yet. Once we add a pyproject we can switch to an
 editable install and remove this.)

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.parser import parse_expr
-from knot.vm import compile_expr
-from knot.vm.opcode import Op
-from knot.values import ErrorVal
+from golem.parser import parse_expr
+from golem.vm import compile_expr
+from golem.vm.opcode import Op
+from golem.values import ErrorVal
 
 
 def test_compile_add():

@@ -1,6 +1,6 @@
-from knot.addressing import reset_ids
-from knot.parser import parse_expr, parse_def, parse_hole
-from knot.printer import print_ast
+from golem.addressing import reset_ids
+from golem.parser import parse_expr, parse_def, parse_hole
+from golem.printer import print_ast
 
 
 def setup_function():
@@ -53,7 +53,7 @@ def test_print_ast_def_fn():
 
 
 def test_print_ast_program_list():
-    from knot.parser import parse_program
+    from golem.parser import parse_program
     out = print_ast(parse_program("ADD[1, 2]\nMUL[3, 4]"))
     assert "1 + 2" in out
     assert "3 * 4" in out

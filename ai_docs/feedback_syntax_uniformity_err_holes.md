@@ -62,7 +62,7 @@ Biggest push. Already sketched:
 ERR[code, path, expected, actual, fixes]
 ```
 
-Do **not** treat ERR as merely compiler stdout. Design Knot around:
+Do **not** treat ERR as merely compiler stdout. Design Golem around:
 
 ```
 PROGRAM → PARSE → TYPE → EXECUTE → RESULT / ERR → LLM
@@ -128,7 +128,7 @@ Examples:
 - always `ADD[1, 2]` — never `ADD[1,2]` (spacing locked)
 - never allow `1 + 2` into the canonical parser (pretty-printer only)
 
-Makes Knot suitable for agents that repeatedly manipulate programs.
+Makes Golem suitable for agents that repeatedly manipulate programs.
 
 **Decide as D-FB11.** Lock normalize rules (whitespace, trailing commas, atom
 forms) and whether printer-canonical (= normalize) differs from pretty.

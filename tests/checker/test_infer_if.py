@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import IfExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, infer_if, infer_type
-from knot.types import BOOL, I32
+from golem.ast import IfExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, infer_if, infer_type
+from golem.types import BOOL, I32
 
 
 def test_infer_if_same_branches():

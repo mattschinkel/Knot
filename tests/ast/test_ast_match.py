@@ -1,6 +1,6 @@
 """MatchExpr Stage 0.5 shape: MATCH[scrutinee, CASE...]."""
 
-from knot.ast import LitExpr, MatchCase, MatchExpr
+from golem.ast import LitExpr, MatchCase, MatchExpr
 
 
 def test_matchexpr_repr():

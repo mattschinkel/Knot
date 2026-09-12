@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import LitExpr, OpExpr
-from knot.edits import apply_edit, blast_radius
-from knot.partial import CompileStatus
+from golem.ast import LitExpr, OpExpr
+from golem.edits import apply_edit, blast_radius
+from golem.partial import CompileStatus
 
 
 def test_blast_radius_ancestors():

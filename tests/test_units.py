@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from knot.units import Dimension, DIMENSIONLESS, m, s, kg
+from golem.units import Dimension, DIMENSIONLESS, m, s, kg
 
 
 def test_dimensionless():

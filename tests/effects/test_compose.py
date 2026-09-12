@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.effects import EffectCategory, EffectSet, compose_effects
+from golem.effects import EffectCategory, EffectSet, compose_effects
 
 
 def test_compose_empty():

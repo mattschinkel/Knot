@@ -1,8 +1,8 @@
 """Property-style tests for bin serialize/deserialize."""
-from knot.addressing import reset_ids
-from knot.ast import OpExpr
-from knot.bin import deserialize, serialize
-from knot.parser import parse_def, parse_expr, parse_program
+from golem.addressing import reset_ids
+from golem.ast import OpExpr
+from golem.bin import deserialize, serialize
+from golem.parser import parse_def, parse_expr, parse_program
 
 
 def setup_function():

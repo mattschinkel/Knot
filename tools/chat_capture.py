@@ -12,7 +12,7 @@ Deterministic, no LLM. Public (not local-only). Importable:
     stop()              # after, to unregister listeners
 
 Role mapping: CrewAI agent .role strings are matched (substring) to the
-Knot crew ids R1..R6 (see knot_agents.md).
+Golem crew ids R1..R6 (see golem_agents.md).
 """
 from __future__ import annotations
 

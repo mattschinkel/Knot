@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.vm import measure_m5
+from golem.vm import measure_m5
 
 
 def test_measure_m5_stable_enough():

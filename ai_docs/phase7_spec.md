@@ -1,6 +1,6 @@
 # Phase 7 Spec — Tests / Properties / Fuzz
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §8.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §8.  
 > Status: DECIDED — implementing.
 
 Phase 7 makes **inline tests and properties** first-class AIR. The compiler
@@ -60,7 +60,7 @@ Simpler rule: `CASE[in,out]` means evaluate `OpExpr(test.name, [in])` if in is n
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   ast.py        # InlineTest, PropertyDecl
   parser.py     # TEST / PROPERTY
   canonical.py  # print

@@ -1,6 +1,6 @@
 # Phase 8 Spec — Modules + Dependencies
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §10.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §10.  
 > Status: DECIDED — implementing.
 
 Phase 8 adds **modules**, **exports**, **imports**, and **versioned depends**
@@ -56,7 +56,7 @@ and tests.
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   modules.py    # ModuleDecl helpers, Registry, link_program
   ast.py        # ModuleDecl, ImportDecl, DependsDecl, ExportList
   parser.py     # MODULE/IMPORT/DEPENDS/EXPORT/CAPS

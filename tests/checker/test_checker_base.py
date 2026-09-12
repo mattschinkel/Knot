@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.checker import TypeErrorVal, type_error
+from golem.checker import TypeErrorVal, type_error
 
 
 def test_type_error_creation():

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.types import (
+from golem.types import (
     subtype,
     ListType, SetType, MapType, TupleType, OptionType, NominalType,
     I32, I64, STRING, F64, NEVER,

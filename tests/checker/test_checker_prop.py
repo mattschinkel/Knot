@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, check_expr, infer_type
-from knot.env import Env
-from knot.types import ANY, I32, Type
+from golem.ast import HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, check_expr, infer_type
+from golem.env import Env
+from golem.types import ANY, I32, Type
 
 
 def test_no_raise():

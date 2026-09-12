@@ -1,15 +1,15 @@
-"""Load Stage-1 .knot sources and drive lex/parse/codegen via Stage 0."""
+"""Load Stage-1 .gol sources and drive lex/parse/codegen via Stage 0."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from knot.errors import StructuredError
-from knot.parser import parse_program
-from knot.values import ErrorVal, IntVal, ListVal, StringVal, SumVal, Value
-from knot.vm.chunk import Chunk
-from knot.vm.compiler import FuncInfo, ProgramImage
-from knot.vm.machine import VM
+from golem.errors import StructuredError
+from golem.parser import parse_program
+from golem.values import ErrorVal, IntVal, ListVal, StringVal, SumVal, Value
+from golem.vm.chunk import Chunk
+from golem.vm.compiler import FuncInfo, ProgramImage
+from golem.vm.machine import VM
 
 ROOT = Path(__file__).resolve().parents[1]
 STAGE1 = ROOT / "stage1"
@@ -24,29 +24,29 @@ def _strip_rem(text: str) -> str:
     )
 
 
-def resolve_stage1_imports(root_name: str = "root.knot") -> list[str]:
-    """Resolve IMPORT['name'] from root.knot into ordered .knot file basenames."""
-    from knot.ast import OpExpr
-    from knot.parser import parse_program
-    from knot.values import StringVal
+def resolve_stage1_imports(root_name: str = "root.gol") -> list[str]:
+    """Resolve IMPORT['name'] from root.gol into ordered .gol file basenames."""
+    from golem.ast import OpExpr
+    from golem.parser import parse_program
+    from golem.values import StringVal
 
     root_path = STAGE1 / root_name
     if not root_path.is_file():
         return [
-            "lexer.knot",
-            "parser.knot",
-            "ast.knot",
-            "codegen.knot",
-            "check.knot",
-            "main.knot",
+            "lexer.gol",
+            "parser.gol",
+            "ast.gol",
+            "codegen.gol",
+            "check.gol",
+            "main.gol",
         ]
     nodes = parse_program(_strip_rem(root_path.read_text(encoding="utf-8")))
     files: list[str] = []
     for n in nodes:
-        from knot.ast import ImportDecl, OpExpr, IdentExpr, LitExpr
+        from golem.ast import ImportDecl, OpExpr, IdentExpr, LitExpr
 
         if isinstance(n, ImportDecl):
-            files.append(str(n.module) + ".knot")
+            files.append(str(n.module) + ".gol")
         elif isinstance(n, OpExpr) and str(n.op).upper() == "IMPORT":
             kids = list(n.children or [])
             if not kids:
@@ -58,19 +58,19 @@ def resolve_stage1_imports(root_name: str = "root.knot") -> list[str]:
                 name = str(k0.value)
             else:
                 name = str(k0)
-            files.append(name + ".knot" if not name.endswith(".knot") else name)
+            files.append(name + ".gol" if not name.endswith(".gol") else name)
     return files or [
-        "lexer.knot",
-        "parser.knot",
-        "ast.knot",
-        "codegen.knot",
-        "check.knot",
-        "main.knot",
+        "lexer.gol",
+        "parser.gol",
+        "ast.gol",
+        "codegen.gol",
+        "check.gol",
+        "main.gol",
     ]
 
 
 def load_stage1_program() -> list:
-    """Load Stage-1 sources via root.knot IMPORT graph (not a hard-coded list)."""
+    """Load Stage-1 sources via root.gol IMPORT graph (not a hard-coded list)."""
     nodes: list = []
     for name in resolve_stage1_imports():
         path = STAGE1 / name
@@ -81,8 +81,8 @@ def load_stage1_program() -> list:
 
 def _call_def_values(prog, name, args, *, granted_caps=None):
     """Call DEF with Value args (not AST)."""
-    from knot.ast import DefNode, FnExpr
-    from knot.partial import evaluate
+    from golem.ast import DefNode, FnExpr
+    from golem.partial import evaluate
 
     defs = {}
     for item in prog:
@@ -146,7 +146,7 @@ def program_from_sum(result: Value) -> ProgramImage | ErrorVal:
 
 def _max_local_slots(code: list[int]) -> int:
     """Highest LOAD_LOCAL/STORE_LOCAL index + 1 (0 if none)."""
-    from knot.vm.opcode import Op
+    from golem.vm.opcode import Op
 
     i = 0
     hi = -1

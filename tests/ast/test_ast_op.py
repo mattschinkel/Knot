@@ -1,4 +1,4 @@
-from knot.ast import OpExpr
+from golem.ast import OpExpr
 
 
 def test_opexpr_init():

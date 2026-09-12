@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.contracts import Contract, check_requires
-from knot.env import Env
-from knot.types import F64, I32, STRING
+from golem.contracts import Contract, check_requires
+from golem.env import Env
+from golem.types import F64, I32, STRING
 
 
 def test_check_requires_empty():

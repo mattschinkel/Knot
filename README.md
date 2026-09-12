@@ -1,19 +1,19 @@
-# Knot
+# Golem
 
 > **Don't generate code. Generate computation.**
 
-**Knot is an AI-native programming language designed for LLMs to generate, edit, verify, and reason about programs. It is Knot for humans.**
+**Golem is an AI-native programming language designed for LLMs to generate, edit, verify, and reason about programs — not for humans as the primary authors.** Source files use the `.gol` extension; site/package brand is **golemlang**.
 
-Knot does not treat source code as a pile of text that an AI must repeatedly rewrite.
+Golem does not treat source code as a pile of text that an AI must repeatedly rewrite.
 
 **The program is a semantic graph.  
 Text is only a representation of that graph.**
 
-That distinction is the foundation of Knot.
+That distinction is the foundation of Golem.
 
 ---
 
-## Why Knot Exists
+## Why Golem Exists
 
 Traditional programming languages were designed around humans typing and editing text.
 
@@ -32,9 +32,9 @@ An LLM is exceptionally good at:
 
 It is less reliable when forced to repeatedly regenerate large amounts of fragile text while preserving every unrelated character.
 
-Knot is designed around the first set of strengths.
+Golem is designed around the first set of strengths.
 
-> **Knot is not a language that makes an LLM imitate a human programmer.**
+> **Golem is not a language that makes an LLM imitate a human programmer.**
 >
 > **It is a programming representation designed around what an intelligent system is good at.**
 
@@ -42,7 +42,7 @@ Knot is designed around the first set of strengths.
 
 # The Core Idea
 
-In Knot, the canonical program is a **typed semantic graph with stable node IDs**.
+In Golem, the canonical program is a **typed semantic graph with stable node IDs**.
 
 Text is a serialization.
 
@@ -88,7 +88,7 @@ The text is merely how humans and machines choose to view it.
 
 # Designed for LLMs
 
-Knot treats the LLM as a computational participant rather than simply a code generator.
+Golem treats the LLM as a computational participant rather than simply a code generator.
 
 The design asks:
 
@@ -150,7 +150,7 @@ compiler
 
 A tiny change can cause an LLM to regenerate hundreds of lines.
 
-Knot instead provides **graph operations**.
+Golem instead provides **graph operations**.
 
 ```text
 MODIFY
@@ -172,7 +172,7 @@ This makes program modification a structural operation.
 
 > **Don't regenerate the program. Modify the program.**
 
-Knot can also report the **blast radius** of an edit so an agent can understand what its change affects before committing to it.
+Golem can also report the **blast radius** of an edit so an agent can understand what its change affects before committing to it.
 
 ---
 
@@ -206,7 +206,7 @@ LLMs frequently know that something is missing.
 
 Traditional programming languages generally force the programmer to provide a value immediately.
 
-Knot makes uncertainty explicit.
+Golem makes uncertainty explicit.
 
 ```text
 ?
@@ -226,7 +226,7 @@ It is a first-class statement:
 
 > **The structure is known, but this part has not been resolved yet.**
 
-This allows Knot to distinguish:
+This allows Golem to distinguish:
 
 ```text
 VALID
@@ -252,7 +252,7 @@ error: mismatched types
 
 That is useful to a human.
 
-For an AI, Knot aims for structured diagnostics such as:
+For an AI, Golem aims for structured diagnostics such as:
 
 ```text
 ERROR
@@ -277,9 +277,9 @@ Repair candidates can become part of the machine-to-machine interface between th
 
 # Prevent Invalid Generation
 
-Knot is designed to work with constrained decoding.
+Golem is designed to work with constrained decoding.
 
-With a grammar such as GBNF, an LLM can be restricted to producing syntactically valid Knot representations.
+With a grammar such as GBNF, an LLM can be restricted to producing syntactically valid Golem representations.
 
 Instead of:
 
@@ -301,7 +301,7 @@ This is particularly useful with local and hosted inference systems that support
 
 # Deterministic by Design
 
-Knot separates intelligence from certainty.
+Golem separates intelligence from certainty.
 
 The deterministic kernel handles things that should never depend on an LLM's opinion.
 
@@ -329,9 +329,9 @@ This creates a fundamental boundary:
 
 # LLMs Are Optional
 
-Knot does **not** require an LLM to execute a program.
+Golem does **not** require an LLM to execute a program.
 
-A pure Knot program can compile and run without an LLM.
+A pure Golem program can compile and run without an LLM.
 
 LLMs can participate where intelligence is useful:
 
@@ -345,7 +345,7 @@ LLMs can participate where intelligence is useful:
 
 The deterministic kernel remains deterministic.
 
-This means Knot does not turn every program into an AI program.
+This means Golem does not turn every program into an AI program.
 
 Instead:
 
@@ -359,7 +359,7 @@ AI-powered programs introduce an important question:
 
 > What is the AI actually allowed to do?
 
-Knot treats capabilities as explicit boundaries.
+Golem treats capabilities as explicit boundaries.
 
 An agent can **request** a capability.
 
@@ -387,7 +387,7 @@ The goal is to make authority explicit rather than implicit.
 
 # Types, Effects, and Contracts
 
-Knot moves important correctness information into the program representation itself.
+Golem moves important correctness information into the program representation itself.
 
 The system is designed to reason about:
 
@@ -416,7 +416,7 @@ This allows correctness properties to be represented structurally instead of rel
 
 # Two Halves of the Compiler
 
-Knot intentionally separates two different jobs.
+Golem intentionally separates two different jobs.
 
 ## The AI Front-End
 
@@ -450,7 +450,7 @@ The back-end should never invent intent.
 
 # Compiler as an AI Interface
 
-Knot is designed to expose the compiler as a machine-oriented interface.
+Golem is designed to expose the compiler as a machine-oriented interface.
 
 An agent should be able to ask the compiler to:
 
@@ -465,7 +465,7 @@ query
 
 This makes the compiler something an agent can interact with directly rather than merely something that gets invoked after a file is generated.
 
-Knot's compiler can therefore become a **computational tool for an AI agent**.
+Golem's compiler can therefore become a **computational tool for an AI agent**.
 
 ---
 
@@ -501,14 +501,14 @@ LLM
 rewrite text
 ```
 
-Knot:
+Golem:
 
 ```text
 Human / Agent
        ↓
    semantic intent
        ↓
-   Knot graph
+   Golem graph
        ↓
  ┌─────┴─────┐
  │           │
@@ -537,11 +537,11 @@ They optimize for various combinations of:
 - historical compatibility
 - ecosystem compatibility
 
-Knot starts from a different optimization target:
+Golem starts from a different optimization target:
 
 > **LLM generation, reasoning, modification, verification, and execution.**
 
-Knot does not need to win by being a better Python.
+Golem does not need to win by being a better Python.
 
 It needs to win by being a better **AI programming interface**.
 
@@ -549,7 +549,7 @@ It needs to win by being a better **AI programming interface**.
 
 # The Design Principle
 
-Every feature in Knot should answer one question:
+Every feature in Golem should answer one question:
 
 > **Does this make an intelligent system better at generating, understanding, modifying, verifying, or executing computation?**
 
@@ -561,9 +561,9 @@ But it is not the primary optimization target.
 
 ---
 
-# What Knot Is Trying to Become
+# What Golem Is Trying to Become
 
-Knot is ultimately aiming toward a programming environment where an AI can:
+Golem is ultimately aiming toward a programming environment where an AI can:
 
 1. Understand an existing program as a semantic structure.
 2. Query that structure.
@@ -578,7 +578,7 @@ Knot is ultimately aiming toward a programming environment where an AI can:
 
 And eventually:
 
-> **Knot's compiler will be written in Knot itself.**
+> **Golem's compiler will be written in Golem itself.**
 
 The deterministic core should bootstrap independently, with AI-assisted capabilities layered on afterward.
 
@@ -588,7 +588,7 @@ The deterministic core should bootstrap independently, with AI-assisted capabili
 
 **Design / v0.1**
 
-Knot is currently in the language-design and implementation-planning stage.
+Golem is currently in the language-design and implementation-planning stage.
 
 The repository contains the language design, compiler architecture, agent-building workflow, progress tracking, and supporting documentation.
 
@@ -600,12 +600,12 @@ The project is intentionally being designed before the full compiler is implemen
 
 ```text
 ai_docs/
-  axiom_design.md     # Core language and compiler design
-  knot_agents.md       # LLM agent crew
+  golem_design.md     # Core language and compiler design
+  golem_agents.md       # LLM agent crew
   ai.txt               # Project working rules
 
 grammar/               # Grammar and constrained-generation work
-src/knot/              # Compiler implementation
+src/golem/              # Compiler implementation
 cli/                   # Command-line interface
 fmt/                   # Formatter
 lsp/                   # Language server
@@ -623,7 +623,7 @@ name_changes.md        # Naming history
 
 # The Philosophy in One Sentence
 
-> **Knot is a programming language where the computer program is a semantic structure first and text second, designed around the strengths of intelligent systems rather than the habits of human typists.**
+> **Golem is a programming language where the computer program is a semantic structure first and text second, designed around the strengths of intelligent systems rather than the habits of human typists.**
 
 Or, even shorter:
 

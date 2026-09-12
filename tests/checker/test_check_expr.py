@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import DefNode, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, check_expr
-from knot.env import Env
-from knot.types import ANY, FnType, I32, BOOL
+from golem.ast import DefNode, FnExpr, HoleExpr, IdentExpr, IfExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, check_expr
+from golem.env import Env
+from golem.types import ANY, FnType, I32, BOOL
 
 
 def test_check_expr_lit():

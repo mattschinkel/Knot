@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.values import ErrorVal, IntVal, ListVal, StringVal
-from knot.vm import run
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.values import ErrorVal, IntVal, ListVal, StringVal
+from golem.vm import run
 
 
 def test_string_len_at_concat():
@@ -46,7 +46,7 @@ def test_fact_recursion_eval_and_vm():
             "DEF[fact,FN[[n:i32],IF[LE[n,1],1,MUL[n,fact[SUB[n,1]]]]]]"
         )
     ]
-    from knot.partial import evaluate as ev
+    from golem.partial import evaluate as ev
 
     r = ev(parse_expr("fact[5]"), program=prog)
     assert isinstance(r, IntVal) and r.value == 120

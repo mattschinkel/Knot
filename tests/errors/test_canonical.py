@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.canonical import normalize, print_canonical
-from knot.parser import parse_expr
+from golem.canonical import normalize, print_canonical
+from golem.parser import parse_expr
 
 
 def test_canonical_add_no_spaces():

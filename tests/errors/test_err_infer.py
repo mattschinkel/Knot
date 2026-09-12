@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import ErrExpr, OpExpr
-from knot.checker import TypeErrorVal, infer_type
-from knot.parser import parse_err
-from knot.types import NEVER
+from golem.ast import ErrExpr, OpExpr
+from golem.checker import TypeErrorVal, infer_type
+from golem.parser import parse_err
+from golem.types import NEVER
 
 
 def test_infer_err_is_never():

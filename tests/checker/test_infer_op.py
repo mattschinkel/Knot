@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import LitExpr, OpExpr
-from knot.checker import TypeErrorVal, infer_type
-from knot.types import I32, BOOL, F64
+from golem.ast import LitExpr, OpExpr
+from golem.checker import TypeErrorVal, infer_type
+from golem.types import I32, BOOL, F64
 
 
 def test_infer_add():

@@ -1,21 +1,21 @@
-# Phase 1 Spec — AST + Parser + GBNF Grammar (Knot kernel, Python host)
+# Phase 1 Spec — AST + Parser + GBNF Grammar (Golem kernel, Python host)
 
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
 > Status: DECIDED by R1 (autonomous) — implemented; tests green (Phase 1 closed 2026-09-09).
 
 Phase 1 builds the **AST model** and the **canonical text parser**. It introduces **node IDs**, **structural paths**, and **symbolic labels** as the LLM's addressing scheme. The phase delivers a constrained-decoding GBNF grammar that ensures only valid syntax can be emitted by the LLM. This is the foundation for Phase 2's type checker and beyond.
 
-Per the resolved decisions (`knot_agents.md` §5): host language is **Python**; R1 decides autonomously; shell is autonomous (whitelisted build/test); repo layout is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
+Per the resolved decisions (`golem_agents.md` §5): host language is **Python**; R1 decides autonomously; shell is autonomous (whitelisted build/test); repo layout is `src/golem/`, `src/golem/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
 
 ## 1. Scope
 
 ### In Phase 1
-- AST node model with **numeric IDs** (`src/knot/ast.py`)
-- Canonical text parser (bracket form) (`src/knot/parser.py`)
-- Pretty printer (`src/knot/printer.py`)
-- Binary serializer (`src/knot/bin.py`)
-- GBNF grammar for constrained-decoding (Phase 1) (`src/knot/grammar/gbnf.py`)
-- Node addressing: structural paths and symbolic labels (`src/knot/addressing.py`)
+- AST node model with **numeric IDs** (`src/golem/ast.py`)
+- Canonical text parser (bracket form) (`src/golem/parser.py`)
+- Pretty printer (`src/golem/printer.py`)
+- Binary serializer (`src/golem/bin.py`)
+- GBNF grammar for constrained-decoding (Phase 1) (`src/golem/grammar/gbnf.py`)
+- Node addressing: structural paths and symbolic labels (`src/golem/addressing.py`)
 - Property tests for all AST/serialization (`tests/ast/`, `tests/bin/`, `tests/grammar/`)
 
 ### Explicitly OUT of Phase 1
@@ -43,7 +43,7 @@ These are the choices R1 has made. Each is reversible but locking them now keeps
 - **D6 — AST is immutable after parse.** Once parsed, the AST is frozen; edits produce new nodes, never mutate in place. Rationale: stable node identity + cheap sharing + no aliasing bugs in the deterministic kernel.
 - **D7 — Node IDs are compiler-internal, not author-pinned.** The LLM may read numeric IDs from diagnostics but never writes them into source. Rationale: avoids numeric ID collisions, gaps, and off-by-one errors; numeric IDs survive optimization; author-pinned IDs break multi-editor consistency.
 
-## 3. AST node model (`src/knot/ast.py`)
+## 3. AST node model (`src/golem/ast.py`)
 
 Every expression is a node. Nodes have a numeric ID, a structural path, and optional labels.
 
@@ -90,7 +90,7 @@ Notes:
 - `HoleExpr` is an expression node with optional expected type; it is not a separate AST flag but a value embedded in the AST.
 - The AST is frozen after parse; edits produce new nodes.
 
-## 4. Canonical text parser (`src/knot/parser.py`)
+## 4. Canonical text parser (`src/golem/parser.py`)
 
 Parses input into AST nodes. Input is bracket notation: `OP[arg1, arg2, ...]`.
 
@@ -127,7 +127,7 @@ Unit        = "UNIT"
 - Handles function definitions: `def square = FN[x:i32] MUL[x, x]`.
 - Returns AST with numeric IDs and structural paths.
 
-## 5. Pretty printer (`src/knot/printer.py`)
+## 5. Pretty printer (`src/golem/printer.py`)
 
 Generates human-readable code from AST. Output is not the source of truth.
 
@@ -148,7 +148,7 @@ fn square(x: i32) -> i32 { x * x }
 - Pretty printing is a view; the canonical form is bracket notation.
 - The printer does not emit holes; holes are represented as `?` in the AST.
 
-## 6. Binary serializer (`src/knot/bin.py`)
+## 6. Binary serializer (`src/golem/bin.py`)
 
 Serializes AST to a binary format with node IDs. Used for storage and tool IPC.
 
@@ -162,7 +162,7 @@ Serializes AST to a binary format with node IDs. Used for storage and tool IPC.
 - Node IDs are stable within a session
 - Supports multi-editor scenarios
 
-## 7. GBNF grammar (`src/knot/grammar/gbnf.py`)
+## 7. GBNF grammar (`src/golem/grammar/gbnf.py`)
 
 Enforces constrained decoding: only valid syntax can be emitted by the LLM.
 
@@ -200,7 +200,7 @@ Unit        = "UNIT"
 ## 8. File layout
 
 ```
-src/knot/
+src/golem/
 ├── ast.py           # AST node model
 ├── bin.py           # Binary serializer
 ├── grammar/

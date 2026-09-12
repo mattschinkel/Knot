@@ -1,5 +1,5 @@
-from knot.parser import parse_typed_lit, parse_expr, ParseError
-from knot.ast import TypedLit
+from golem.parser import parse_typed_lit, parse_expr, ParseError
+from golem.ast import TypedLit
 import pytest
 
 

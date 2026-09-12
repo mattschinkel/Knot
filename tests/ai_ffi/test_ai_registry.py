@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ai_ffi import ToolRegistry
-from knot.ast import ModelDecl, ToolDecl
-from knot.values import ErrorVal, StringVal
+from golem.ai_ffi import ToolRegistry
+from golem.ast import ModelDecl, ToolDecl
+from golem.values import ErrorVal, StringVal
 
 
 def test_register_model_requires_ai_effect():

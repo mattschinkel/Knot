@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.effects import Capability, CapabilitySet
-from knot.modules import ModuleRegistry, check_depends, link_program
-from knot.parser import parse_expr
-from knot.values import ErrorVal
+from golem.effects import Capability, CapabilitySet
+from golem.modules import ModuleRegistry, check_depends, link_program
+from golem.parser import parse_expr
+from golem.values import ErrorVal
 
 
 def test_depends_version_mismatch():

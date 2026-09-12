@@ -8,7 +8,7 @@ from spec_lint import Issue, LintReport, lint
 
 # A minimal, clean, autonomous spec that should pass every rule.
 CLEAN = """\
-# Phase 1 Spec — AST + Parser + GBNF Grammar (Knot kernel, Python host)
+# Phase 1 Spec — AST + Parser + GBNF Grammar (Golem kernel, Python host)
 
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer.
 > Status: DECIDED by R1 (autonomous) — DRAFT for crew implementation; no code yet.
@@ -25,12 +25,12 @@ Each decision is FINAL, recorded by R1.
 - **D2 — Canonical form is bracket notation.** `OP[arg1, arg2]`; `F(...)` is a
   pretty-printer alias only.
 
-## 3. AST node model (`src/knot/ast.py`)
+## 3. AST node model (`src/golem/ast.py`)
 Nodes have id, path, label.
 
 ## 4. File layout
 ```
-src/knot/ast.py
+src/golem/ast.py
 ```
 
 ## 5. Definition of done

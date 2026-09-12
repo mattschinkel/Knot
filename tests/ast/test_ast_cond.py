@@ -1,4 +1,4 @@
-from knot.ast import IfExpr
+from golem.ast import IfExpr
 def test_ifexpr_path():
     node = IfExpr(1, None, None)
     assert node.path == [1]
@@ -11,7 +11,7 @@ def test_ifexpr_children():
     assert node.children == (then_branch, else_branch)
 
 
-from knot.ast import IfExpr, ExprNode
+from golem.ast import IfExpr, ExprNode
 
 def test_ifexpr_id():
     node = IfExpr(1, None, None)
@@ -28,7 +28,7 @@ def test_ifexpr_children():
     assert node.children == (then_branch, else_branch)
 
 
-from knot.ast import IfExpr, ExprNode
+from golem.ast import IfExpr, ExprNode
 
 def test_ifexpr_id():
     node = IfExpr(1, None, None)
@@ -45,7 +45,7 @@ def test_ifexpr_children():
     assert node.children == (then_branch, else_branch)
 
 
-from knot.ast import IfExpr, ExprNode
+from golem.ast import IfExpr, ExprNode
 
 def test_ifexpr_id():
     node = IfExpr(1, None, None)

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import OpExpr
-from knot.repairs import Repair, suggest_repairs, validate_fix
-from knot.types import BOOL, I32
+from golem.ast import OpExpr
+from golem.repairs import Repair, suggest_repairs, validate_fix
+from golem.types import BOOL, I32
 
 
 def test_suggest_type_mismatch():

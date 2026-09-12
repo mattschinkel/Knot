@@ -1,4 +1,4 @@
-from knot.addressing import generate_id, reset_ids
+from golem.addressing import generate_id, reset_ids
 
 
 def test_generate_id_increments():

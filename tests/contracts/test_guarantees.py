@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.contracts import Contract, check_guarantees
-from knot.types import F64, I32, OptionType, STRING
+from golem.contracts import Contract, check_guarantees
+from golem.types import F64, I32, OptionType, STRING
 
 
 def test_check_guarantees_empty():

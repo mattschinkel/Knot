@@ -11,11 +11,11 @@ Stage-1 `lex_number` also folded digits as `d*10+rest` once, so `122` became
 
 ## Fix
 1. Allocate a temp local, `STORE_LOCAL` the scrutinee once, then desugar arms
-   against that local (`src/knot/vm/compiler.py`).
+   against that local (`src/golem/vm/compiler.py`).
 2. Short-circuit `AND`/`OR` via `IF` (parity with `evaluate`).
 3. Pad `Frame.locals` to `FuncInfo.nlocals` for temps.
 4. Stage-1 `codegen_match` likewise stores once before desugaring; harness
    derives `nlocals` from bytecode local indices.
-5. Replace `"'"` in `lexer.knot` with `FROM_CODEPOINT[39]` so Stage-1 can
+5. Replace `"'"` in `lexer.gol` with `FROM_CODEPOINT[39]` so Stage-1 can
    re-lex its own sources (double-quote is not a Stage-1 token).
 6. `lex_number` left-to-right accumulate: `acc*10+digit`.

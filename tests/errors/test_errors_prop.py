@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from knot.ast import LitExpr, OpExpr
-from knot.canonical import normalize, print_canonical
-from knot.diagnose import diagnose
-from knot.parser import parse_expr
-from knot.partial import CompileStatus, compile_check
-from knot.types import NEVER
+from golem.ast import LitExpr, OpExpr
+from golem.canonical import normalize, print_canonical
+from golem.diagnose import diagnose
+from golem.parser import parse_expr
+from golem.partial import CompileStatus, compile_check
+from golem.types import NEVER
 
 
 SAMPLES = (
@@ -31,7 +31,7 @@ def test_no_raise():
 
 
 def infer_safe(node):
-    from knot.checker import infer_type
+    from golem.checker import infer_type
 
     return infer_type(node)
 

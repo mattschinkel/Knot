@@ -1,6 +1,6 @@
 # Phase 12 Spec — MCP Server + kb + --llm Mode
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §16 Phase 12, Tier 2 #27–29, A2–A4.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §16 Phase 12, Tier 2 #27–29, A2–A4.  
 > Status: DECIDED — done.
 
 Phase 12 exposes the compiler to agents: **MCP tools**, token-budgeted
@@ -15,14 +15,14 @@ in-process only.
 - MCP tool surface (in-process + stdio JSON-RPC, no HTTPS):
   - `eval` — parse + `evaluate`
   - `typecheck` — `compile_check` / status + type
-  - `run` — `knot.vm.run`
+  - `run` — `golem.vm.run`
   - `constrain` — `ai_ffi.constrain`
   - `doc_query` / `kb` — token-budgeted doc retrieval
   - `query` — graph inspection (path / children / op)
 - `kb.retrieve(topic, max_tokens)` packing docs under a token cap
 - `--llm` formatter: policies `diagnostics_first` | `slices_first` |
   `balanced` | `minimal` with `budget_tokens`
-- CLI: `python -m knot` subcommands (`mcp`, `kb`, `llm`, tools)
+- CLI: `python -m golem` subcommands (`mcp`, `kb`, `llm`, tools)
 - Drift phase bump to 12 (M1–M5 unchanged)
 
 ### Explicitly OUT of Phase 12
@@ -48,7 +48,7 @@ JSON `{ok:false, error:{kind,message}}`, never raised across the MCP boundary.
 
 ### D4 — kb corpus
 **DECISION:** Built-in catalog of short cards (ops, phases, AIR rules) in
-`src/knot/kb_data.py` + optional `docs/kb/*.md` overlay.
+`src/golem/kb_data.py` + optional `docs/kb/*.md` overlay.
 
 ### D5 — --llm policies
 **DECISION:**
@@ -65,7 +65,7 @@ JSON `{ok:false, error:{kind,message}}`, never raised across the MCP boundary.
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   kb.py / kb_data.py
   llm_out.py
   mcp/

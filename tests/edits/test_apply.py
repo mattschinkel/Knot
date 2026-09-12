@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import DefNode, IdentExpr, LitExpr, OpExpr
-from knot.edits import apply_edit, get_at
-from knot.partial import CompileStatus
+from golem.ast import DefNode, IdentExpr, LitExpr, OpExpr
+from golem.edits import apply_edit, get_at
+from golem.partial import CompileStatus
 
 
 def test_apply_replace():

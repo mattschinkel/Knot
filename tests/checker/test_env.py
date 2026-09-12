@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from knot.env import Env
-from knot.types import I32, STRING, ListType
+from golem.env import Env
+from golem.types import I32, STRING, ListType
 
 
 def test_bind_and_lookup():

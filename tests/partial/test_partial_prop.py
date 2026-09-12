@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import HoleExpr, IfExpr, LitExpr, OpExpr
-from knot.partial import CompileStatus, compile_check, evaluate
-from knot.values import ErrorVal, Value
+from golem.ast import HoleExpr, IfExpr, LitExpr, OpExpr
+from golem.partial import CompileStatus, compile_check, evaluate
+from golem.values import ErrorVal, Value
 
 
 # Fixed suite for M4: hole-bearing programs that should be PARTIAL.

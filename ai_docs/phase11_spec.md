@@ -1,6 +1,6 @@
 # Phase 11 Spec — Concurrency / Memory / Unsafe
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §12, §16 Phase 11.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §12, §16 Phase 11.  
 > Status: DECIDED — done.
 
 Phase 11 adds **dataflow concurrency** (`PAR` / `SEQ`), **region-tagged
@@ -58,7 +58,7 @@ capabilities. User code never sees threads, locks, or malloc.
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   concurrency.py
   ast.py            # ParExpr, SeqExpr, RefExpr, DerefExpr, UnsafeExpr
   values.py         # RegionVal

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.modules import ModuleRegistry
-from knot.parser import parse_expr
+from golem.modules import ModuleRegistry
+from golem.parser import parse_expr
 
 
 def test_register_and_get():

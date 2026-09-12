@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from knot.concurrency import check_unsafe, needed_unsafe_caps
-from knot.effects import Capability, CapabilitySet
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.values import ErrorVal, IntVal
+from golem.concurrency import check_unsafe, needed_unsafe_caps
+from golem.effects import Capability, CapabilitySet
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.values import ErrorVal, IntVal
 
 
 def test_needed_always_includes_unsafe():

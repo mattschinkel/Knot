@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import FnExpr, IdentExpr, LitExpr
-from knot.checker import infer_fn
-from knot.effects import Capability, CapabilitySet, EffectCategory, EffectSet
-from knot.types import FnType, I32
+from golem.ast import FnExpr, IdentExpr, LitExpr
+from golem.checker import infer_fn
+from golem.effects import Capability, CapabilitySet, EffectCategory, EffectSet
+from golem.types import FnType, I32
 
 
 def test_infer_fn_no_annotations_pure():

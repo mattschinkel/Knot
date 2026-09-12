@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from knot.mcp.server import handle_line, handle_request
+from golem.mcp.server import handle_line, handle_request
 
 
 def test_tools_list():

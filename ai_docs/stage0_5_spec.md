@@ -1,6 +1,6 @@
 # Stage 0.5 Spec — Self-host language gaps
 
-> Owner: Cursor. Implements `axiom_design.md` §22.5 gaps so Stage 1 knotc can be written in Knot.  
+> Owner: Cursor. Implements `golem_design.md` §22.5 gaps so Stage 1 golemc can be written in Golem.  
 > Status: DECIDED — implementing.
 
 Stage 0 (Python) already parses/checks/runs arith+IF+DEF. Stage 0.5 adds **runtime**
@@ -23,14 +23,14 @@ parity for strings, lists, maps, records, MATCH, and capability-gated IO — in 
 
 ### Out
 - MAP/FILTER higher-order (needs first-class closures in VM)
-- Pretty sugar, LLVM, AI front-end in Knot
+- Pretty sugar, LLVM, AI front-end in Golem
 
 ---
 
 ## 2. Decisions
 
 ### D1 — One runtime module
-**DECISION:** `src/knot/runtime_ops.py` implements `eval_op(op, args, *, granted)`. Both `evaluate` and VM call it.
+**DECISION:** `src/golem/runtime_ops.py` implements `eval_op(op, args, *, granted)`. Both `evaluate` and VM call it.
 
 ### D2 — NATIVE opcode
 **DECISION:** `Op.NATIVE` with const name + arity; args on stack L→R.

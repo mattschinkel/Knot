@@ -1,6 +1,6 @@
-"""spec_lint.py — deterministic consistency linter for Knot phase specs.
+"""spec_lint.py — deterministic consistency linter for Golem phase specs.
 
-This is the proper fix for a gap the drift-check gate (src/knot/drift.py,
+This is the proper fix for a gap the drift-check gate (src/golem/drift.py,
 metrics M1-M5) does NOT cover: the drift gate measures *generation* quality
 (token count, generation accuracy, edit round-trip, ...), but a 4B R1 can
 also introduce *spec-level* contradictions by mirroring its template — e.g.
@@ -10,7 +10,7 @@ numbering, or pre-checked Definition-of-Done boxes.
 
 This linter is fully deterministic (no LLM, no I/O beyond reading the spec
 file) and checks a phaseN_spec.md against a fixed, small rule set derived
-from the design-doc invariants (`ai_docs/axiom_design.md` §21) and the
+from the design-doc invariants (`ai_docs/golem_design.md` §21) and the
 autonomous-spec template (`ai_docs/phase0_spec.md`). Failures are fed back
 to R1 to re-draft — no human gate.
 

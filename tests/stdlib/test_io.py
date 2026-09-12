@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from knot.effects import Capability, CapabilitySet
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.values import BytesVal, ErrorVal, StringVal, UnitVal
+from golem.effects import Capability, CapabilitySet
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.values import BytesVal, ErrorVal, StringVal, UnitVal
 
 
 def test_fs_read_denied():

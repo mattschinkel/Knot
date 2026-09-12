@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from knot.values import ErrorVal, IntVal, ListVal, StringVal, SumVal
+from golem.values import ErrorVal, IntVal, ListVal, StringVal, SumVal
 from selfhost.harness.compile_stage1 import (
     FIXTURES,
     _call_def_values,
@@ -38,7 +38,7 @@ def test_lex_add():
 
 def test_compile_muladd_fixture():
     prog = load_stage1_program()
-    src = (FIXTURES / "expr_muladd.knot").read_text(encoding="utf-8").strip()
+    src = (FIXTURES / "expr_muladd.gol").read_text(encoding="utf-8").strip()
     result = compile_air_source(prog, src)
     assert not isinstance(result, ErrorVal), result
     ch = chunk_from_sum(result)
@@ -66,7 +66,7 @@ def test_lex_number_three_digits():
 
 def test_compile_square():
     prog = load_stage1_program()
-    src = (FIXTURES / "square.knot").read_text(encoding="utf-8").strip()
+    src = (FIXTURES / "square.gol").read_text(encoding="utf-8").strip()
     result = compile_air_source(prog, src)
     assert not isinstance(result, ErrorVal), result
     img = program_from_sum(result)
@@ -77,7 +77,7 @@ def test_compile_square():
 
 def test_compile_fact():
     prog = load_stage1_program()
-    src = (FIXTURES / "fact.knot").read_text(encoding="utf-8").strip()
+    src = (FIXTURES / "fact.gol").read_text(encoding="utf-8").strip()
     result = compile_air_source(prog, src)
     assert not isinstance(result, ErrorVal), result
     img = program_from_sum(result)

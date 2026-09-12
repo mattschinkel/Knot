@@ -1,4 +1,4 @@
-from knot.ast import LitExpr
+from golem.ast import LitExpr
 def test_litexpr_id():
     expr = LitExpr(value=42)
     assert expr.id == 42

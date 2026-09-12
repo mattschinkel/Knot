@@ -1,7 +1,7 @@
 """Stage 2 self-host gate.
 
-Stage 0 host-compiles Stage-1 knotc to bytecode; that image compiles
-fixtures and the Stage-1 sources themselves (Knot compiling Knot).
+Stage 0 host-compiles Stage-1 golemc to bytecode; that image compiles
+fixtures and the Stage-1 sources themselves (Golem compiling Golem).
 """
 
 from __future__ import annotations
@@ -11,11 +11,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from knot.parser import parse_expr, parse_program
-from knot.partial import evaluate
-from knot.values import ErrorVal, IntVal, StringVal, SumVal
-from knot.vm.compiler import compile_program
-from knot.vm.machine import VM
+from golem.parser import parse_expr, parse_program
+from golem.partial import evaluate
+from golem.values import ErrorVal, IntVal, StringVal, SumVal
+from golem.vm.compiler import compile_program
+from golem.vm.machine import VM
 from selfhost.harness.compile_stage1 import (
     FIXTURES,
     STAGE1,
@@ -33,7 +33,7 @@ def _stage1_files():
     return resolve_stage1_imports()
 
 
-def _host_knotc() -> VM:
+def _host_golemc() -> VM:
     nodes = []
     for name in _stage1_files():
         text = (STAGE1 / name).read_text(encoding="utf-8")
@@ -65,7 +65,7 @@ def _chunk_parts(chunk_sum):
 
 def test_stage2_stable_chunk():
     prog = load_stage1_program()
-    src = (FIXTURES / "expr_muladd.knot").read_text(encoding="utf-8").strip()
+    src = (FIXTURES / "expr_muladd.gol").read_text(encoding="utf-8").strip()
     a = compile_air_source(prog, src)
     b = compile_air_source(prog, src)
     assert _chunk_parts(a) == _chunk_parts(b)
@@ -80,11 +80,11 @@ def test_stage2_matches_host_eval():
     assert host.value == kn.value == 42
 
 
-def test_stage2_vm_knotc_square_fact():
-    vm = _host_knotc()
+def test_stage2_vm_golemc_square_fact():
+    vm = _host_golemc()
     for path, name, arg, expect in [
-        (FIXTURES / "square.knot", "square", 7, 49),
-        (FIXTURES / "fact.knot", "fact", 5, 120),
+        (FIXTURES / "square.gol", "square", 7, 49),
+        (FIXTURES / "fact.gol", "fact", 5, 120),
     ]:
         src = path.read_text(encoding="utf-8").strip()
         result = vm.call("compile_source", [StringVal(src)])
@@ -95,9 +95,9 @@ def test_stage2_vm_knotc_square_fact():
         assert isinstance(out, IntVal) and out.value == expect, (name, out)
 
 
-def test_stage2_vm_knotc_compiles_stage1_sources():
-    """Host-compiled knotc compiles each Stage-1 .knot file to a Program."""
-    vm = _host_knotc()
+def test_stage2_vm_golemc_compiles_stage1_sources():
+    """Host-compiled golemc compiles each Stage-1 .gol file to a Program."""
+    vm = _host_golemc()
     total = 0
     for name in _stage1_files():
         result = vm.call("compile_source", [StringVal(_stage1_source(name))])
@@ -107,8 +107,8 @@ def test_stage2_vm_knotc_compiles_stage1_sources():
 
 
 def test_stage2_self_compile_roundtrip_square():
-    """knotc compiles itself; the resulting image compiles square → 49."""
-    vm0 = _host_knotc()
+    """golemc compiles itself; the resulting image compiles square → 49."""
+    vm0 = _host_golemc()
     combined = "\n".join(_stage1_source(n) for n in _stage1_files())
     built = vm0.call("compile_source", [StringVal(combined)])
     assert isinstance(built, SumVal) and built.tag == "Program", built
@@ -116,7 +116,7 @@ def test_stage2_self_compile_roundtrip_square():
     img1 = program_from_sum(built)
     assert not isinstance(img1, ErrorVal), img1
     vm1 = VM(img1)
-    src = (FIXTURES / "square.knot").read_text(encoding="utf-8").strip()
+    src = (FIXTURES / "square.gol").read_text(encoding="utf-8").strip()
     result = vm1.call("compile_source", [StringVal(src)])
     assert isinstance(result, SumVal) and result.tag == "Program", result
     out = run_func(program_from_sum(result), "square", [IntVal(32, 7)])
@@ -124,12 +124,12 @@ def test_stage2_self_compile_roundtrip_square():
 
 
 def test_stage2_self_compile_fact_and_hole():
-    vm0 = _host_knotc()
+    vm0 = _host_golemc()
     combined = "\n".join(_stage1_source(n) for n in _stage1_files())
     vm1 = VM(program_from_sum(vm0.call("compile_source", [StringVal(combined)])))
     fact = vm1.call(
         "compile_source",
-        [StringVal((FIXTURES / "fact.knot").read_text(encoding="utf-8").strip())],
+        [StringVal((FIXTURES / "fact.gol").read_text(encoding="utf-8").strip())],
     )
     assert isinstance(fact, SumVal) and fact.tag == "Program", fact
     assert run_func(program_from_sum(fact), "fact", [IntVal(32, 4)]).value == 24

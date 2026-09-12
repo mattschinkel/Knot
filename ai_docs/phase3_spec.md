@@ -3,7 +3,7 @@
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
 > Status: DECIDED by R1 (autonomous) — implemented; tests green.
 
-Phase 3 introduces **effects**, **capabilities**, and **contracts** as structural features of the Knot kernel. These are not runtime semantics but **first-class type-level constructs** that shape how functions behave, what permissions they require, and what guarantees they provide. The design is grounded in the deterministic kernel's need for composable, sandboxable, and verifiable AI execution.
+Phase 3 introduces **effects**, **capabilities**, and **contracts** as structural features of the Golem kernel. These are not runtime semantics but **first-class type-level constructs** that shape how functions behave, what permissions they require, and what guarantees they provide. The design is grounded in the deterministic kernel's need for composable, sandboxable, and verifiable AI execution.
 
 The key innovation is that **prohibitions become structural constraints**: if a function is forbidden from using a capability, that restriction is encoded in the type system and prevents any path that would violate it — even at runtime.
 
@@ -107,7 +107,7 @@ These are the final, autonomous decisions. Each is recorded with rationale and i
 
 ---
 
-## 3. Value representation (`src/knot/values.py`)
+## 3. Value representation (`src/golem/values.py`)
 
 Add the following to `Value`:
 
@@ -139,7 +139,7 @@ Value (abstract)
 
 ---
 
-## 4. Type algebra (`src/knot/types.py`)
+## 4. Type algebra (`src/golem/types.py`)
 
 Add the following to `Type`:
 
@@ -174,7 +174,7 @@ Type (abstract)
 
 ---
 
-## 5. Units / dimensions (`src/knot/units.py`)
+## 5. Units / dimensions (`src/golem/units.py`)
 
 Units remain as exponent maps (D2). Add:
 
@@ -187,7 +187,7 @@ Units remain as exponent maps (D2). Add:
 
 ## 6. Effect and capability data structures
 
-### `src/knot/effects.py`
+### `src/golem/effects.py`
 
 ```
 EffectCategory = Literal[
@@ -224,7 +224,7 @@ Capability = Literal[
 CapabilitySet = frozenset[Capability]
 ```
 
-### `src/knot/contracts.py`
+### `src/golem/contracts.py`
 
 ```
 ContractAnnotation = Dict[str, Any]
@@ -243,7 +243,7 @@ Contract = Dict[
 ## 7. File layout
 
 ```
-src/knot/
+src/golem/
 ├── values.py          # Value representation (extends Value)
 ├── types.py           # Type algebra (adds EffectType, CapabilityType, ContractType)
 ├── effects.py        # Effect categories and sets

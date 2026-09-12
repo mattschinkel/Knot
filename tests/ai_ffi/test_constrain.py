@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from knot.ai_ffi import ToolRegistry, constrain, invoke, type_from_air
-from knot.ast import ModelDecl
-from knot.effects import Capability, CapabilitySet
-from knot.types import BaseType
-from knot.values import ErrorVal, IntVal, StringVal
+from golem.ai_ffi import ToolRegistry, constrain, invoke, type_from_air
+from golem.ast import ModelDecl
+from golem.effects import Capability, CapabilitySet
+from golem.types import BaseType
+from golem.values import ErrorVal, IntVal, StringVal
 
 
 def test_type_from_air():

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import HoleExpr
-from knot.checker import TypeErrorVal, infer_hole, infer_type
-from knot.types import ANY, I32, F64
+from golem.ast import HoleExpr
+from golem.checker import TypeErrorVal, infer_hole, infer_type
+from golem.types import ANY, I32, F64
 
 
 def test_infer_hole_bare():

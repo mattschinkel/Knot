@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import OpExpr
-from knot.checker import TypeErrorVal, check_collection, infer_type
-from knot.types import BOOL, FnType, I32, ListType, STRING
+from golem.ast import OpExpr
+from golem.checker import TypeErrorVal, check_collection, infer_type
+from golem.types import BOOL, FnType, I32, ListType, STRING
 
 
 def test_len_list():
@@ -47,8 +47,8 @@ def test_filter():
 def test_infer_len_op():
     # LEN needs a typed collection value; bind via env is overkill — use typed list
     # through a Def would need list lit; call check via OpExpr with Ident after bind
-    from knot.ast import IdentExpr
-    from knot.env import Env
+    from golem.ast import IdentExpr
+    from golem.env import Env
     env = Env()
     env.bind("xs", ListType(I32))
     assert infer_type(OpExpr("LEN", [IdentExpr("xs")]), env) is I32

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.effects import Capability, CapabilitySet, EffectCategory, EffectSet
-from knot.types import FnType, I32, STRING
+from golem.effects import Capability, CapabilitySet, EffectCategory, EffectSet
+from golem.types import FnType, I32, STRING
 
 
 def test_fntype_defaults_pure():

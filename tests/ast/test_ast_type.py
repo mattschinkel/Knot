@@ -1,4 +1,4 @@
-from knot.ast import TypeNode
+from golem.ast import TypeNode
 def test_typenode_id():
     node = TypeNode(id=1)
     assert node.id == 1

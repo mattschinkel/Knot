@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import CallExpr, FnExpr, IdentExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, infer_fn, infer_type
-from knot.types import FnType, I32
+from golem.ast import CallExpr, FnExpr, IdentExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, infer_fn, infer_type
+from golem.types import FnType, I32
 
 
 def test_infer_fn_simple():

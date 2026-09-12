@@ -1,4 +1,4 @@
-from knot.ast import FieldAccess
+from golem.ast import FieldAccess
 def test_fieldaccess_id():
     node = FieldAccess(id=1)
     assert node.id == 1

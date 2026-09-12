@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.ast import IdentExpr, LitExpr, OpExpr
-from knot.edits import apply_edit, get_at, replace_at
+from golem.ast import IdentExpr, LitExpr, OpExpr
+from golem.edits import apply_edit, get_at, replace_at
 
 
 def test_no_raise():

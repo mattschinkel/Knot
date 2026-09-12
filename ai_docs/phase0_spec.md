@@ -1,4 +1,4 @@
-# Phase 0 Spec — Core Data Model (Knot kernel, Python host)
+# Phase 0 Spec — Core Data Model (Golem kernel, Python host)
 
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel
 > Engineer. Verification: R4 Verifier. Human observes via the dashboard
@@ -11,18 +11,18 @@ Nothing here calls an LLM, parses text, or lowers code. It is the
 foundation every later phase (parser, type checker, effects, lowering,
 VM) is built on, so it must be small, total, and unambiguous.
 
-Per the resolved decisions (`knot_agents.md` §5): host language is
+Per the resolved decisions (`golem_agents.md` §5): host language is
 **Python**; R1 decides autonomously; shell is autonomous (whitelisted
-build/test); repo layout is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`,
+build/test); repo layout is `src/golem/`, `src/golem/ai/`, `tests/`, `cli/`,
 `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
 
 ## 1. Scope
 
 ### In Phase 0
-- Value representation (`src/knot/values.py`)
-- Type algebra (`src/knot/types.py`)
-- Units / dimensions (`src/knot/units.py`)
-- Structured error value (`src/knot/errors.py`) — minimal, just enough
+- Value representation (`src/golem/values.py`)
+- Type algebra (`src/golem/types.py`)
+- Units / dimensions (`src/golem/units.py`)
+- Structured error value (`src/golem/errors.py`) — minimal, just enough
   to type-check holes (VALID/PARTIAL/INVALID).
 - Property tests for all of the above (`tests/`).
 
@@ -65,7 +65,7 @@ now keeps Phase 1+ stable. Each decision is FINAL, recorded by R1.
   (`()`); `never` is the bottom type with no values (unreachable). Both
   are first-class types, not sentinels.
 
-## 3. Value representation (`src/knot/values.py`)
+## 3. Value representation (`src/golem/values.py`)
 
 Every runtime value is an instance of a `Value` subclass. Values are
 frozen and hashable.
@@ -95,7 +95,7 @@ Notes:
 - `ErrorVal` is a value so a partial computation can *return* it and a
   later phase can decide whether to propagate or repair.
 
-## 4. Type algebra (`src/knot/types.py`)
+## 4. Type algebra (`src/golem/types.py`)
 
 Types are frozen, hashable, and form a small algebraic DSL.
 
@@ -124,7 +124,7 @@ Phase 0 delivers:
   unify) except for the trivial reflexive case. Full unification is
   Phase 2; Phase 0 ships the hook so the value/type tests compile.
 
-## 5. Units / dimensions (`src/knot/units.py`)
+## 5. Units / dimensions (`src/golem/units.py`)
 
 A `Dimension` is a `frozendict[str, int]` of base-dimension → exponent
 (D2). Base dimensions: the 7 SI bases (`m`, `kg`, `s`, `A`, `K`, `mol`,
@@ -147,7 +147,7 @@ Phase 0 delivers:
 - Property tests: mul/div exponent arithmetic, compatible checks,
   round-trip of `to_string`.
 
-## 6. Errors (`src/knot/errors.py`)
+## 6. Errors (`src/golem/errors.py`)
 
 Minimal structured error for Phase 0 (D4). Populated fully in Phase 2.
 
@@ -168,7 +168,7 @@ instead of raising. Phase 0 uses `kind="dim"` for unit mismatches and
 ## 7. File layout (Phase 0)
 
 ```
-src/knot/
+src/golem/
   __init__.py
   values.py      # §3
   types.py       # §4
@@ -181,7 +181,7 @@ tests/
   test_errors.py
 ```
 
-`src/knot/ai/` stays empty in Phase 0 (R3's domain, Phase 1+).
+`src/golem/ai/` stays empty in Phase 0 (R3's domain, Phase 1+).
 
 ## 8. Definition of done (Phase 0)
 
@@ -191,7 +191,7 @@ tests/
 - A `HoleVal` type-checks against any type as PARTIAL (no crash).
 - Unit mismatch (`meters + seconds`) returns an `ErrorVal`, not an
   exception.
-- No LLM, no parser, no I/O anywhere in `src/knot/`.
+- No LLM, no parser, no I/O anywhere in `src/golem/`.
 - R4's harness is green; R1 signs off (R1 decides D1–D6 autonomously).
 
 ## 9. Resolved sub-questions (DECIDED by R1)

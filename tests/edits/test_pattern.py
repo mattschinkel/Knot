@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.ast import IdentExpr, LitExpr, OpExpr
-from knot.edits import apply_edit, find_matches, matches, replace_match
+from golem.ast import IdentExpr, LitExpr, OpExpr
+from golem.edits import apply_edit, find_matches, matches, replace_match
 
 
 def test_wildcard_matches():

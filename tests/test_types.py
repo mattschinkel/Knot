@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from knot.types import (
+from golem.types import (
     BaseType, NominalType, OptionType, ListType, RecordType, SumType,
     UnitType, RegionType, subtype, unify,
     I32, I64, F64, BOOL, STRING, UNIT, NEVER,
 )
-from knot.units import m
+from golem.units import m
 
 
 def test_reflexive():

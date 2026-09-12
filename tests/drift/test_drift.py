@@ -1,5 +1,5 @@
 """Phase-gate drift check tests (T30)."""
-from knot.drift import Metric, Status, check, summarize
+from golem.drift import Metric, Status, check, summarize
 
 
 def test_check_all_pending_passes():
@@ -96,7 +96,7 @@ def test_phase4_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
+    from golem.partial import CompileStatus, compile_check
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -128,7 +128,7 @@ def test_phase5_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
+    from golem.partial import CompileStatus, compile_check
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -159,7 +159,7 @@ def test_phase6_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
+    from golem.partial import CompileStatus, compile_check
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -190,7 +190,7 @@ def test_phase7_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
+    from golem.partial import CompileStatus, compile_check
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -221,7 +221,7 @@ def test_phase8_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
+    from golem.partial import CompileStatus, compile_check
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -252,8 +252,8 @@ def test_phase9_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
-    from knot.vm import measure_m5
+    from golem.partial import CompileStatus, compile_check
+    from golem.vm import measure_m5
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -287,8 +287,8 @@ def test_phase10_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
-    from knot.vm import measure_m5
+    from golem.partial import CompileStatus, compile_check
+    from golem.vm import measure_m5
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -321,8 +321,8 @@ def test_phase11_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
-    from knot.vm import measure_m5
+    from golem.partial import CompileStatus, compile_check
+    from golem.vm import measure_m5
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     ok = sum(
@@ -355,8 +355,8 @@ def test_phase12_gate_vs_baseline():
     from pathlib import Path
 
     from tests.partial.test_partial_prop import PARTIAL_SUITE
-    from knot.partial import CompileStatus, compile_check
-    from knot.vm import measure_m5
+    from golem.partial import CompileStatus, compile_check
+    from golem.vm import measure_m5
 
     raw = json.loads(Path("docs/drift_baseline.json").read_text(encoding="utf-8"))
     assert raw["phase"] == 12

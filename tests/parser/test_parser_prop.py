@@ -1,9 +1,9 @@
 """Property-style tests for the canonical bracket parser."""
 import pytest
 
-from knot.addressing import reset_ids
-from knot.ast import HoleExpr, OpExpr
-from knot.parser import ParseError, parse_expr, parse_hole
+from golem.addressing import reset_ids
+from golem.ast import HoleExpr, OpExpr
+from golem.parser import ParseError, parse_expr, parse_hole
 
 
 def setup_function():

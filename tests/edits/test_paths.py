@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.ast import DefNode, IdentExpr, LitExpr, OpExpr
-from knot.edits import delete_at, get_at, insert_at, replace_at
+from golem.ast import DefNode, IdentExpr, LitExpr, OpExpr
+from golem.edits import delete_at, get_at, insert_at, replace_at
 
 
 def test_get_at_index():

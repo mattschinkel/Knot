@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import DerefExpr, ParExpr, RefExpr, SeqExpr, UnsafeExpr
-from knot.canonical import normalize, print_canonical
-from knot.parser import parse_expr
+from golem.ast import DerefExpr, ParExpr, RefExpr, SeqExpr, UnsafeExpr
+from golem.canonical import normalize, print_canonical
+from golem.parser import parse_expr
 
 
 def test_parse_par_seq():

@@ -1,5 +1,5 @@
-from knot.parser import parse_field_access, parse_expr, ParseError
-from knot.ast import OpExpr, IdentExpr
+from golem.parser import parse_field_access, parse_expr, ParseError
+from golem.ast import OpExpr, IdentExpr
 import pytest
 
 

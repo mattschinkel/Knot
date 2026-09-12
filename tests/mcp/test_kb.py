@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.kb import estimate_tokens, retrieve
+from golem.kb import estimate_tokens, retrieve
 
 
 def test_estimate_tokens():

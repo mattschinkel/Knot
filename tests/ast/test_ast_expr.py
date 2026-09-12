@@ -1,4 +1,4 @@
-from knot.ast import ExprNode
+from golem.ast import ExprNode
 
 
 def test_exprnode_id():

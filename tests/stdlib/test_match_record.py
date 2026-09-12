@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from knot.ast import MatchExpr
-from knot.canonical import normalize, print_canonical
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.values import IntVal, RecordVal, StringVal, SumVal
+from golem.ast import MatchExpr
+from golem.canonical import normalize, print_canonical
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.values import IntVal, RecordVal, StringVal, SumVal
 
 
 def test_parse_match():

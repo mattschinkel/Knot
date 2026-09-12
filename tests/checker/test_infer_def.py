@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import DefNode, FnExpr, IdentExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, infer_def, infer_type
-from knot.env import Env
-from knot.types import FnType, I32
+from golem.ast import DefNode, FnExpr, IdentExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, infer_def, infer_type
+from golem.env import Env
+from golem.types import FnType, I32
 
 
 def test_infer_def_lit():

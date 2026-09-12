@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ast import IdentExpr, LitExpr, OpExpr
-from knot.checker import TypeErrorVal, check_access, infer_type
-from knot.env import Env
-from knot.types import I32, RecordType, STRING, TupleType
+from golem.ast import IdentExpr, LitExpr, OpExpr
+from golem.checker import TypeErrorVal, check_access, infer_type
+from golem.env import Env
+from golem.types import I32, RecordType, STRING, TupleType
 
 
 def _user_rec():

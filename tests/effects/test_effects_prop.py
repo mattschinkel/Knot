@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.effects import (
+from golem.effects import (
     PURE,
     Capability,
     CapabilitySet,
@@ -12,7 +12,7 @@ from knot.effects import (
     compose_effects,
     validate_call_effects,
 )
-from knot.types import FnType, I32
+from golem.types import FnType, I32
 
 
 def test_no_raise():

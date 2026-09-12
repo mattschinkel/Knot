@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from knot.ast import DefNode
-from knot.modules import ModuleRegistry, link_program
-from knot.parser import parse_expr
-from knot.testing import run_test
-from knot.values import ErrorVal
+from golem.ast import DefNode
+from golem.modules import ModuleRegistry, link_program
+from golem.parser import parse_expr
+from golem.testing import run_test
+from golem.values import ErrorVal
 
 
 def test_link_import_def():
@@ -25,7 +25,7 @@ def test_link_import_def():
     assert not isinstance(linked, ErrorVal)
     assert any(isinstance(x, DefNode) and x.name == "square" for x in linked.items)
     # run test against linked items
-    from knot.ast import InlineTest
+    from golem.ast import InlineTest
 
     test = next(x for x in linked.items if isinstance(x, InlineTest))
     assert run_test(list(linked.items), test).ok

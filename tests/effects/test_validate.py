@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from knot.effects import (
+from golem.effects import (
     Capability,
     CapabilitySet,
     EffectCategory,
     EffectSet,
     validate_call_effects,
 )
-from knot.types import FnType, I32, STRING
+from golem.types import FnType, I32, STRING
 
 
 def test_validate_pure_always_ok():

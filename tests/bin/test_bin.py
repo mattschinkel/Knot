@@ -1,7 +1,7 @@
-from knot.bin import serialize, deserialize
-from knot.parser import parse_expr, parse_def, parse_program
-from knot.ast import LitExpr, OpExpr, DefNode
-from knot.addressing import reset_ids
+from golem.bin import serialize, deserialize
+from golem.parser import parse_expr, parse_def, parse_program
+from golem.ast import LitExpr, OpExpr, DefNode
+from golem.addressing import reset_ids
 
 
 def setup_function():

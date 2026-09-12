@@ -25,7 +25,7 @@ Desktop.ini
 .vscode/
 .idea/
 
-# Local-only build tooling (NOT part of the public Knot repo)
+# Local-only build tooling (NOT part of the public Golem repo)
 # CrewAI wiring + demo data + CrewAI-specific fixes. Kept local; the
 # llama-server endpoint/key live in two_agent_crew.py and must not be public.
 two_agent_crew.py
@@ -50,4 +50,4 @@ crew_chats_viewer.py
 # Local run artifacts; not part of the public repo.
 chats/
 
-# Keep: source, docs, web, Knot fixes, progress, instructions
+# Keep: source, docs, web, Golem fixes, progress, instructions

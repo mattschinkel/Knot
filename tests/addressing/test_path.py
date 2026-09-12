@@ -1,4 +1,4 @@
-from knot.addressing import generate_path
+from golem.addressing import generate_path
 
 
 def test_generate_path_empty():

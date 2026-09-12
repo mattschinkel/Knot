@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.ai_ffi import ToolRegistry, invoke
-from knot.ast import ModelDecl, ToolDecl
-from knot.effects import Capability, CapabilitySet
-from knot.values import AiResult, BytesVal, ErrorVal, StringVal
+from golem.ai_ffi import ToolRegistry, invoke
+from golem.ast import ModelDecl, ToolDecl
+from golem.effects import Capability, CapabilitySet
+from golem.values import AiResult, BytesVal, ErrorVal, StringVal
 
 
 def test_model_invoke_returns_ai_result():

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.canonical import normalize
-from knot.modules import ModuleRegistry, link_program
-from knot.parser import parse_expr
+from golem.canonical import normalize
+from golem.modules import ModuleRegistry, link_program
+from golem.parser import parse_expr
 
 
 def test_no_raise():

@@ -1,6 +1,6 @@
 # Phase 9 Spec — Compiler / Bytecode VM
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §16 Phase 9 and §22.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §16 Phase 9 and §22.  
 > Status: DECIDED — done.
 
 Phase 9 delivers the **deterministic lowering half**: AST → bytecode → stack VM.
@@ -16,7 +16,7 @@ hard product constraint; drift metric **M5** measures compile+run latency.
 - `compile(expr) -> Chunk` for literals, arith, compare, IF, holes
 - `compile_program(defs) -> ProgramImage` (named functions from DEF/FN)
 - Stack `VM.run(chunk | call)` returning `Value` / `ErrorVal`
-- `knot.vm.run(source_or_ast, ...)` convenience
+- `golem.vm.run(source_or_ast, ...)` convenience
 - M5: median compile+execute latency (ms) on a fixed suite; lower better
 - Drift baseline phase 9 includes M5
 
@@ -55,7 +55,7 @@ N=21 warm runs after 3 warmup. Target product bar <200ms; baseline records measu
 ## 3. File layout
 
 ```
-src/knot/vm/
+src/golem/vm/
   __init__.py
   opcode.py
   chunk.py

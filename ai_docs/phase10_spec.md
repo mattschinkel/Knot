@@ -1,6 +1,6 @@
 # Phase 10 Spec — AI / Tool Capabilities
 
-> Owner: Cursor. Decisions follow `ai_docs/axiom_design.md` §11, §16 Phase 10, Tier 2 #32–33.  
+> Owner: Cursor. Decisions follow `ai_docs/golem_design.md` §11, §16 Phase 10, Tier 2 #32–33.  
 > Status: DECIDED — done.
 
 Phase 10 adds **typed model and tool declarations**, **INVOKE** with runtime
@@ -60,7 +60,7 @@ still never invents confidence; only MODEL invokes do.
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   ai_ffi.py       # ToolRegistry, invoke, constrain, type_from_air
   values.py       # AiResult
   ast.py          # ModelDecl, ToolDecl, InvokeExpr

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.effects import Capability, CapabilitySet, check_capabilities
+from golem.effects import Capability, CapabilitySet, check_capabilities
 
 
 def test_check_ok():

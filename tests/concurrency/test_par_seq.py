@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from knot.concurrency import schedule_par
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.values import IntVal, TupleVal, UnitVal
+from golem.concurrency import schedule_par
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.values import IntVal, TupleVal, UnitVal
 
 
 def test_eval_par_tuple_order():

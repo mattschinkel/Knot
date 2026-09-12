@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.effects import PURE, EffectCategory, EffectSet
+from golem.effects import PURE, EffectCategory, EffectSet
 
 
 def test_effect_categories_exist():

@@ -1,7 +1,7 @@
 """Property-style tests for the pretty printer view."""
-from knot.addressing import reset_ids
-from knot.parser import parse_def, parse_expr
-from knot.printer import print_ast
+from golem.addressing import reset_ids
+from golem.parser import parse_def, parse_expr
+from golem.printer import print_ast
 
 
 def setup_function():

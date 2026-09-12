@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.checker import TypeErrorVal, check_binary_op
-from knot.types import I32, I64, F64, BOOL, STRING
+from golem.checker import TypeErrorVal, check_binary_op
+from golem.types import I32, I64, F64, BOOL, STRING
 
 
 def test_add_same_int():

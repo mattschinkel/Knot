@@ -1,6 +1,6 @@
-from knot.parser import parse_expr, parse_program, ParseError
-from knot.ast import LitExpr, IdentExpr, OpExpr, HoleExpr, UnitExpr
-from knot.addressing import reset_ids
+from golem.parser import parse_expr, parse_program, ParseError
+from golem.ast import LitExpr, IdentExpr, OpExpr, HoleExpr, UnitExpr
+from golem.addressing import reset_ids
 import pytest
 
 

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from knot.ai_ffi import ToolRegistry, invoke, invoke_expr
-from knot.ast import ModelDecl, ToolDecl
-from knot.canonical import normalize
-from knot.effects import Capability, CapabilitySet
-from knot.parser import parse_expr
-from knot.values import AiResult, BytesVal, StringVal
+from golem.ai_ffi import ToolRegistry, invoke, invoke_expr
+from golem.ast import ModelDecl, ToolDecl
+from golem.canonical import normalize
+from golem.effects import Capability, CapabilitySet
+from golem.parser import parse_expr
+from golem.values import AiResult, BytesVal, StringVal
 
 
 def test_parse_invoke_end_to_end():

@@ -1,4 +1,4 @@
-from knot.grammar.gbnf import (
+from golem.grammar.gbnf import (
     Program,
     Def,
     Expr,

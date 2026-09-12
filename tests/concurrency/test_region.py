@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from knot.checker import infer_type
-from knot.parser import parse_expr
-from knot.partial import evaluate
-from knot.types import I32, RegionType, subtype
-from knot.values import ErrorVal, IntVal, RegionVal
+from golem.checker import infer_type
+from golem.parser import parse_expr
+from golem.partial import evaluate
+from golem.types import I32, RegionType, subtype
+from golem.values import ErrorVal, IntVal, RegionVal
 
 
 def test_ref_deref_roundtrip():

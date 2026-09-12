@@ -1,7 +1,7 @@
 # fix_linux_port — Windows → Linux move
 
 ## Problem
-The Knot project was developed on Windows (PowerShell + `.venv\Scripts\python.exe`, CRLF line endings). After copying to Linux there was no venv, docs/scripts used Windows-only paths, sources were CRLF, `python3-tk` was missing for `crew_chats_viewer.py`, and git refused operations when run as root against a `matt`-owned tree ("dubious ownership"). Mid-Phase-2 WIP also left a broken `tests/checker/test_subtype.py` that aborted pytest collection, and a half-rewritten `subtype()` that failed Phase 0 type tests. Several AST unit tests still called constructors that never matched the real APIs (crew leftovers).
+The Golem project was developed on Windows (PowerShell + `.venv\Scripts\python.exe`, CRLF line endings). After copying to Linux there was no venv, docs/scripts used Windows-only paths, sources were CRLF, `python3-tk` was missing for `crew_chats_viewer.py`, and git refused operations when run as root against a `matt`-owned tree ("dubious ownership"). Mid-Phase-2 WIP also left a broken `tests/checker/test_subtype.py` that aborted pytest collection, and a half-rewritten `subtype()` that failed Phase 0 type tests. Several AST unit tests still called constructors that never matched the real APIs (crew leftovers).
 
 ## Fix
 1. Created Linux venv (Python 3.10) and installed `requirements.txt` + pytest.

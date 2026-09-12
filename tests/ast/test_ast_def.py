@@ -1,4 +1,4 @@
-from knot.ast import DefNode, LitExpr
+from golem.ast import DefNode, LitExpr
 
 
 def test_defnode_name_and_body():

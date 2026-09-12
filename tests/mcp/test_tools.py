@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from knot.mcp.tools import call_tool, list_tools
+from golem.mcp.tools import call_tool, list_tools
 
 
 def test_list_tools_has_core():

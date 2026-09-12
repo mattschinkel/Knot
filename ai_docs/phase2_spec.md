@@ -1,20 +1,20 @@
-# Phase 2 Spec — Type Checker (Knot kernel, Python host)
+# Phase 2 Spec — Type Checker (Golem kernel, Python host)
 
 > Owner: R1 Architect (decides autonomously). Implementation: R2 Kernel Engineer. Verification: R4 Verifier. Human observes via the dashboard (non-blocking); R1 makes all decisions.  
 > Status: DECIDED by R1 (autonomous) — DRAFT for crew implementation; no checker yet.
 
-Phase 2 builds the **type checker** for the Knot kernel. It introduces type rules for kernel operations, partial typing with holes, and structural type inference. The kernel operates on values and types defined in Phase 0; this phase adds the logic to infer and check types at runtime.
+Phase 2 builds the **type checker** for the Golem kernel. It introduces type rules for kernel operations, partial typing with holes, and structural type inference. The kernel operates on values and types defined in Phase 0; this phase adds the logic to infer and check types at runtime.
 
-Per the resolved decisions (`knot_agents.md` §5): host language is **Python**; R1 decides autonomously; shell is autonomous (whitelisted build/test); repo layout is `src/knot/`, `src/knot/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
+Per the resolved decisions (`golem_agents.md` §5): host language is **Python**; R1 decides autonomously; shell is autonomous (whitelisted build/test); repo layout is `src/golem/`, `src/golem/ai/`, `tests/`, `cli/`, `lsp/`, `fmt/`, `grammar/`, `vm/`, `docs/`.
 
 ## 1. Scope
 
 ### In Phase 2
-- Type checker core logic (`src/knot/checker.py`)
+- Type checker core logic (`src/golem/checker.py`)
 - Type inference engine (unification, nominal type resolution)
-- Holes and partial typing (`src/knot/holes.py`)
+- Holes and partial typing (`src/golem/holes.py`)
 - Type rules for kernel operations (ADD, SUB, MUL, DIV, MOD, NEG, EQ, NE, LT, LE, GT, GE, AND, OR, NOT, IF, COND, MATCH, GET, SET, FIELD, MAP, FILTER, REDUCE, FOLD, LEN, AT, APPEND, CONCAT, LET, WITH, FN, CALL, HOLE)
-- Type environment and scope management (`src/knot/env.py`)
+- Type environment and scope management (`src/golem/env.py`)
 - Property tests for type checker (`tests/checker/`)
 
 ### Explicitly OUT of Phase 2
@@ -38,7 +38,7 @@ These are the choices R1 has made. Each is reversible but locking them now keeps
 - **D7 — Nominal types are first-class.** Type definitions like `Distance = f64@meters` are stored as nominal types and can be referenced by name. Rationale: enables reusable, composable types; supports type aliases.
 - **D8 — Region types are shape-only.** `T<region R>` is only used for shape (e.g., `List<region R>`) in Phase 0; Phase 2 does not yet check region constraints. Rationale: region constraints are added in Phase 3; Phase 2 keeps the model minimal.
 
-## 3. Value representation (`src/knot/values.py`)
+## 3. Value representation (`src/golem/values.py`)
 
 Phase 2 uses the value model from Phase 0. All values are frozen, hashable, and carry type information.
 
@@ -64,7 +64,7 @@ Notes:
 - `HoleVal` with `expected=None` is the bare `?`; `expected=T` is `?:T`.
 - `ErrorVal` is a value so a partial computation can *return* it and a later phase can decide whether to propagate or repair.
 
-## 4. Type algebra (`src/knot/types.py`)
+## 4. Type algebra (`src/golem/types.py`)
 
 Types are frozen, hashable, and form a small algebraic DSL.
 
@@ -88,14 +88,14 @@ Phase 2 delivers:
 - `subtype(s, t) -> bool` — structural subtyping for the kernel types only (`never` <: everything, everything <: `unit` for unit-typed expressions, `T` <: `T?`, nominal <: its def). This is **not** full inference — just the base lattice the checker (Phase 2) builds on.
 - `unify(a, b) -> Type | None` — a *stub* that returns `None` (cannot unify) except for the trivial reflexive case. Full unification is Phase 2; Phase 0 ships the hook so the value/type tests compile.
 
-## 5. Units / dimensions (`src/knot/units.py`)
+## 5. Units / dimensions (`src/golem/units.py`)
 
 A `Dimension` is a `frozendict` of base-dimension → integer exponent, e.g., `meters^2 = {m: 2}`. Base dimensions are the 7 SI bases + user-defined ones (money, count, …). Multiplication adds exponents; division subtracts; addition requires equal dimension maps.
 
 - `unit` is the type with exactly one value (`()`); `never` is the bottom type with no values (unreachable).
 - Units are tracked at the type level; e.g., `f64@meters` and `f64@seconds` are distinct types.
 
-## 6. Type checker core (`src/knot/checker.py`)
+## 6. Type checker core (`src/golem/checker.py`)
 
 The type checker is a monolithic module with the following components:
 
@@ -174,7 +174,7 @@ The type checker is a monolithic module with the following components:
 ## 7. File layout
 
 ```
-src/knot/
+src/golem/
 ├── checker/
 │   ├── __init__.py
 │   ├── checker.py        # Type checker core

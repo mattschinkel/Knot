@@ -1,4 +1,4 @@
-from knot.ast import IdentExpr
+from golem.ast import IdentExpr
 def test_identexpr_id():
     node = IdentExpr(id=1)
     assert node.id == 1

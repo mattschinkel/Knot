@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.contracts import Contract, ContractAnnotation
-from knot.types import F64, I32, STRING
+from golem.contracts import Contract, ContractAnnotation
+from golem.types import F64, I32, STRING
 
 
 def test_annotation_empty():

@@ -1,5 +1,5 @@
-from knot.parser import parse_hole, parse_expr, ParseError
-from knot.ast import HoleExpr
+from golem.parser import parse_hole, parse_expr, ParseError
+from golem.ast import HoleExpr
 import pytest
 
 

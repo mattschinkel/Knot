@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.ast import LitExpr, OpExpr
-from knot.parser import parse_expr
-from knot.testing import verify_program
+from golem.ast import LitExpr, OpExpr
+from golem.parser import parse_expr
+from golem.testing import verify_program
 
 
 def test_verify_after_good_edit():

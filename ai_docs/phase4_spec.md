@@ -1,6 +1,6 @@
 # Phase 4 Spec — Holes + Partial Compile
 
-> Owner: Cursor (build path as of 2026-09-11). Decisions follow `ai_docs/axiom_design.md` §6 and D-FB10.  
+> Owner: Cursor (build path as of 2026-09-11). Decisions follow `ai_docs/golem_design.md` §6 and D-FB10.  
 > Status: DECIDED — implementing.
 
 Phase 4 makes **partial programs** a first-class compile state. Holes already parse and infer (Phase 1–2); this phase classifies whole expressions as VALID / PARTIAL / INVALID, reports holes with expected type + candidates, propagates hole constraints from context, and traps holes at evaluation time as error values (no Python exceptions).
@@ -57,7 +57,7 @@ Phase 4 makes **partial programs** a first-class compile state. Holes already pa
 ## 3. File layout
 
 ```
-src/knot/
+src/golem/
   partial.py     # CompileStatus, HoleReport, CompileReport, compile_check,
                  # suggest_candidates, evaluate
   checker.py     # infer_type(..., expected=None); hole propagation

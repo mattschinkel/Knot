@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Knot - Build Dashboard</title>
+<title>Golem - Build Dashboard</title>
 <!--
-  Knot (working name) - one-page build dashboard.
+  Golem — one-page build dashboard. Extension: .gol
   Owner: R6 Scribe.  Plain HTTP or file://.  No HTTPS.
   HOW AGENTS UPDATE: edit only the STATUS object in the <script>. The
   page re-renders from it. Do not hand-edit <div id="app">.
@@ -64,7 +64,7 @@
 <body>
 <div class="wrap">
   <header class="top">
-    <h1>Knot <span class="wk">- AI-native language build dashboard</span></h1>
+    <h1>Golem <span class="wk">- AI-native language build dashboard</span></h1>
     <div class="meta" id="meta"></div>
   </header>
   <div class="grid" id="app"></div>
@@ -73,9 +73,11 @@
 <script>
 const STATUS = {
   meta: {
-    workingName: "Knot",
-    publicCandidate: "Nodigma",
-    overallPhase: "§16 + self-host compile-all done",
+    workingName: "Golem",
+    publicCandidate: "Golem",
+    extension: ".gol",
+    siteBrand: "golemlang.com",
+    overallPhase: "§16 + self-host compile-all done; name locked Golem/.gol",
     overallStatus: "done",
     lastUpdated: "2026-09-12",
     updatedBy: "Cursor"
@@ -93,7 +95,7 @@ const STATUS = {
     {n:9, name:"Compiler / VM (sub-200ms)", status:"done", owner:"Cursor", notes:"bytecode VM; M5 pass; deterministic lowering"},
     {n:10, name:"AI / tool capabilities", status:"done", owner:"Cursor", notes:"MODEL/TOOL/INVOKE, AiResult, constrain, caps"},
     {n:11, name:"Concurrency / memory / unsafe", status:"done", owner:"Cursor", notes:"PAR/SEQ, REF/DEREF, UNSAFE, RegionType"},
-    {n:12, name:"MCP server + kb + --llm mode", status:"done", owner:"Cursor", notes:"tools + kb + llm_out; python -m knot; no HTTPS"}
+    {n:12, name:"MCP server + kb + --llm mode", status:"done", owner:"Cursor", notes:"tools + kb + llm_out; python -m golem; no HTTPS"}
   ],
   crew: [
     {id:"R1", role:"Architect", active:false, job:"design coherence (docs); not driving build via 4B"},
@@ -107,21 +109,21 @@ const STATUS = {
     {q:"Phase 0 host language: Python or Rust?", status:"decided", dec:"Python (Rust deferred if sub-200ms forces it — VM path landed Phase 9)"},
     {q:"Architect (R1) as a hierarchical Crew manager, or a peer that drafts tasks out-of-band?", status:"decided", dec:"Peer drafting out-of-band (4B loses coherence managing live)"},
     {q:"Shell-execution tool: agents run builds/tests directly, or gate every shell call behind human approval?", status:"decided", dec:"Autonomous: agents run whitelisted build/test commands directly"},
-    {q:"Repo layout: src/knot/, src/knot/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; vm implemented under src/knot/vm/"},
+    {q:"Repo layout: src/golem/, src/golem/ai/, tests/, cli/, lsp/, fmt/, grammar/ - confirm or amend?", status:"decided", dec:"Confirmed; vm implemented under src/golem/vm/"},
     {q:"Canonical syntax toward 10/10 (external review 8.5→10)?", status:"decided", dec:"D-FB1–12 locked; through Phase 9 landed"},
     {q:"Build driver: 4B CrewAI vs Cursor?", status:"decided", dec:"Cursor implements; 4B crew abandoned 2026-09-11"}
   ],
   recentFixes: [
     {file:"fix_compile_all_finish.md", problem:"IMPORT link + caps drop + INVOKE stub", fix:"compile_root FS_READ merge; _call_def granted_caps; ERR stub"},
-    {file:"fix_compile_all_knot.md", problem:"knotc missing full deterministic AIR", fix:"COND/PAR/SEQ/REF/stubs/quotes; compile-all gate"},
-    {file:"phased_full_features", problem:"Extend knotc + post-v1 polish", fix:"A1–A4 surface/modules/check/gates; B knotc_bridge; C pretty/PAR/borrow/MODEL HTTP"},
+    {file:"fix_compile_all_golem.md", problem:"golemc missing full deterministic AIR", fix:"COND/PAR/SEQ/REF/stubs/quotes; compile-all gate"},
+    {file:"phased_full_features", problem:"Extend golemc + post-v1 polish", fix:"A1–A4 surface/modules/check/gates; B golemc_bridge; C pretty/PAR/borrow/MODEL HTTP"},
     {file:"fix_match_store_local_selfhost.md", problem:"MATCH re-eval hang + lex_number 122→32", fix:"STORE_LOCAL temps; left-to-right lex_number; Stage 2 round-trip"},
-    {file:"runtime_ops + selfhost/", problem:"Need Knot-compiles-Knot bootstrap", fix:"Stage 0.5–2: knotc in Knot self-compiles stage1"},
-    {file:"phase12_spec.md + mcp/", problem:"Need MCP + kb + --llm", fix:"Phase 12: tools, kb budget, llm_out, python -m knot"}
+    {file:"runtime_ops + selfhost/", problem:"Need Golem-compiles-Golem bootstrap", fix:"Stage 0.5–2: golemc in Golem self-compiles stage1"},
+    {file:"phase12_spec.md + mcp/", problem:"Need MCP + kb + --llm", fix:"Phase 12: tools, kb budget, llm_out, python -m golem"}
   ],
   designOpen: [
     {q:"Node ID scheme", status:"decided", dec:"structural path + optional @label; numeric IDs compiler-internal (design 21)"},
-    {q:"Public name", status:"open", dec:"working name Knot (collides); Nodigma verified clean, not yet registered"},
+    {q:"Public name", status:"decided", dec:"Golem locked 2026-09-12; .gol extension; site/package golemlang.com"},
     {q:"GBNF/parser reopen for D-FB1–5", status:"decided", dec:"Landed through Phase 12 (§16 complete)"}
   ],
   drift: {
@@ -162,9 +164,9 @@ function render(){
   const done=STATUS.phases.filter(p=>p.status==="done").length;
   const pct=Math.round(done/STATUS.phases.length*100);
   let app="<div class='card full'><h2>Name</h2>"+
-    "<div class='namebar'>Working name: <span class='k'>"+esc(m.workingName)+"</span>"+
-    " (collides - not for release) &nbsp;|&nbsp; Public candidate: <span class='n'>"+
-    esc(m.publicCandidate)+"</span> (verified clean, not yet registered)</div></div>";
+    "<div class='namebar'>Language: <span class='n'>"+esc(m.workingName)+"</span> "+
+    "(LOCKED) &nbsp;|&nbsp; Extension: <span class='k'>"+esc(m.extension||".gol")+"</span>"+
+    " &nbsp;|&nbsp; Site/package: <span class='k'>"+esc(m.siteBrand||"golemlang.com")+"</span></div></div>";
 
   app+="<div class='card full'><h2>Build phases (design 16) - "+done+"/"+STATUS.phases.length+" done</h2>"+
     "<div class='bar'><i style='width:"+pct+"%'></i></div>"+
@@ -184,7 +186,7 @@ function render(){
   });
   app+="</div></div>";
 
-  app+="<div class='card'><h2>Open questions (knot_agents 5)</h2><ul class='q'>";
+  app+="<div class='card'><h2>Open questions (golem_agents 5)</h2><ul class='q'>";
   STATUS.openQuestions.forEach(q=>{
     app+="<li><span class='qq'>"+esc(q.q)+"</span> "+pill(q.status)+"</li>";
   });
@@ -229,7 +231,7 @@ function render(){
 
   document.getElementById("app").innerHTML=app;
   document.getElementById("foot").textContent=
-    "Knot build dashboard - maintained by R6 Scribe. Edit the STATUS object in "+
+    "Golem build dashboard - maintained by R6 Scribe. Edit the STATUS object in "+
     "web/index.html to update. Plain HTTP only (no HTTPS).";
 }
 render();

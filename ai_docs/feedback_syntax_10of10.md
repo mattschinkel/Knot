@@ -37,7 +37,7 @@ Structured repairable errors in canonical form, e.g.
 `path`, `expected`, `actual`, `fixes:[...]`. Optimize generate→check→repair loop.
 
 ### D-FB6 — Direction statement
-Public thesis: Knot is for LLM generate/self-correct loops, not "easier for
+Public thesis: Golem is for LLM generate/self-correct loops, not "easier for
 LLMs to read human code." Canonical more rigid/redundant/structural;
 pretty-printer owns human readability.
 

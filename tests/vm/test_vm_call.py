@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from knot.parser import parse_expr
-from knot.vm import run
-from knot.values import IntVal
+from golem.parser import parse_expr
+from golem.vm import run
+from golem.values import IntVal
 
 
 def test_vm_square():

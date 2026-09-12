@@ -1,5 +1,5 @@
 """Property-style tests for GBNF grammar constraints."""
-from knot.grammar.gbnf import RULES, grammar_text, has_numeric_node_ids, uses_paren_shorthand
+from golem.grammar.gbnf import RULES, grammar_text, has_numeric_node_ids, uses_paren_shorthand
 
 
 def test_valid_syntax():

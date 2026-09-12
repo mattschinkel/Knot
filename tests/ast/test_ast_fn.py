@@ -1,4 +1,4 @@
-from knot.ast import FnExpr, LitExpr
+from golem.ast import FnExpr, LitExpr
 
 
 def test_fnexpr_params_and_body():

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from knot.checker import TypeErrorVal, check_compare_op
-from knot.types import I32, I64, F64, BOOL, STRING
+from golem.checker import TypeErrorVal, check_compare_op
+from golem.types import I32, I64, F64, BOOL, STRING
 
 
 def test_eq_ne_same_type():
